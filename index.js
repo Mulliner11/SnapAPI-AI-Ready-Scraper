@@ -160,9 +160,19 @@ async function start() {
     global: true,
     max: 5,
     timeWindow: "1 minute",
+    // Railway healthcheck can hit this route frequently; exclude it from rate limiting.
+    allowList: (request) => {
+      const pathname = (request.url || "").split("?")[0];
+      return pathname === "/health";
+    },
   });
 
   fastify.addHook("onRequest", async (request, reply) => {
+    // Railway healthcheck hits `GET /health` without headers.
+    // Skip API key validation for this route so healthchecks can pass.
+    const pathname = (request.url || "").split("?")[0];
+    if (pathname === "/health") return;
+
     if (!apiKeyAuthorized(headerApiKey(request))) {
       return reply.code(401).send({ error: "Unauthorized" });
     }
