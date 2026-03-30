@@ -1,0 +1,28 @@
+{
+  "name": "screenshot-api",
+  "version": "1.0.0",
+  "description": "Web screenshot API service (Fastify)",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "fastify",
+    "screenshot",
+    "api"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1019.0",
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/static": "^9.0.0",
+    "dotenv": "^17.3.1",
+    "fastify": "^5.2.1",
+    "playwright": "^1.58.2"
+  }
+}
