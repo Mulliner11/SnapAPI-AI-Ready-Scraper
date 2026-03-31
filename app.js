@@ -69,4 +69,3 @@ generateBtn.addEventListener("click", generateScreenshot);
 urlInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") generateScreenshot();
 });
-

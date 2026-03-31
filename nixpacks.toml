@@ -1,0 +1,4 @@
+[phases.chromium]
+dependsOn = ["install"]
+cmds = ["npx playwright install --with-deps chromium"]
+

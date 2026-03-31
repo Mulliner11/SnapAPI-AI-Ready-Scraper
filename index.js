@@ -5,16 +5,15 @@ require("dotenv").config();
 
 import { timingSafeEqual } from "node:crypto";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import { chromium } from "playwright";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
 
-const ROOT_DIR = dirname(fileURLToPath(import.meta.url));
-const PUBLIC_DIR = join(ROOT_DIR, "public");
+/** Static assets live in project root (index.html, app.js, etc.) */
+const PUBLIC_DIR = process.cwd();
 
 const MASTER_API_KEY = process.env.MASTER_API_KEY;
 if (!MASTER_API_KEY || MASTER_API_KEY.length === 0) {
