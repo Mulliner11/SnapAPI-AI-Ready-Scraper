@@ -13,8 +13,8 @@ import Fastify from "fastify";
 import { chromium } from "playwright";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PUBLIC_DIR = join(__dirname, "public");
+const ROOT_DIR = dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = join(ROOT_DIR, "public");
 
 const MASTER_API_KEY = process.env.MASTER_API_KEY;
 if (!MASTER_API_KEY || MASTER_API_KEY.length === 0) {
@@ -87,6 +87,11 @@ async function withPage(sourceUrl, fn) {
 }
 
 async function registerRoutes() {
+  // Fallback route: always serve homepage entry explicitly.
+  fastify.get("/", async (request, reply) => {
+    return reply.sendFile("index.html");
+  });
+
   fastify.post(
     "/screenshot",
     {
@@ -205,6 +210,7 @@ async function start() {
   await registerRoutes();
 
   try {
+    fastify.log.info({ PUBLIC_DIR }, "Static public directory resolved");
     await fastify.listen({ port: PORT, host: HOST });
     fastify.log.info(`Server listening on http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`);
   } catch (err) {
