@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SnapAPI - Developer-First Screenshot & PDF API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              panel: "#0b1020",
+              panelSoft: "#111a31",
+              accent: "#7c3aed"
+            },
+            boxShadow: {
+              glow: "0 0 80px rgba(124, 58, 237, 0.28)"
+            }
+          }
+        }
+      };
+    </script>
+  </head>
+  <body class="bg-slate-950 text-slate-100 antialiased">
+    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div class="absolute left-1/2 top-[-220px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/30 blur-[130px]"></div>
+      <div class="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-indigo-500/25 blur-[120px]"></div>
+      <div class="absolute bottom-[-140px] left-[-120px] h-[320px] w-[320px] rounded-full bg-cyan-400/20 blur-[110px]"></div>
+    </div>
+
+    <div class="mx-auto max-w-6xl px-6 py-10">
+      <!-- Hero -->
+      <header class="mb-16 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div class="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs tracking-wide text-slate-300 backdrop-blur">
+            Production Grade API Infrastructure
+          </div>
+          <h1 class="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+            SnapAPI
+            <span class="block bg-gradient-to-r from-fuchsia-300 via-indigo-300 to-cyan-200 bg-clip-text text-transparent">
+              开发者首选的网页截图与 PDF 生成工具
+            </span>
+          </h1>
+          <p class="mt-5 max-w-2xl text-base leading-7 text-slate-300">
+            专为 SaaS 和自动化场景打造的 screenshot-as-a-service。稳定、可扩展、可计费，输出直接存储到 Cloudflare R2，
+            让你的产品更快上线。
+          </p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-300 shadow-glow backdrop-blur">
+          <p class="font-medium text-white">Commercial Metrics</p>
+          <p class="mt-2">毛利率 93%</p>
+          <p>100 Pro 用户时预估 MRR $2.9k</p>
+          <p>API-first 架构，可线性横向扩展</p>
+        </div>
+      </header>
+
+      <!-- Live Demo -->
+      <section class="mb-16 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur">
+        <h2 class="text-xl font-medium text-white">Live Demo</h2>
+        <p class="mt-2 text-sm text-slate-400">输入 URL，点击 Generate 即可调用 `/screenshot`，实时获得 R2 图片链接与预览。</p>
+
+        <div class="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <input
+            id="urlInput"
+            class="w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none ring-0 transition duration-300 focus:border-indigo-300"
+            type="url"
+            placeholder="https://example.com"
+          />
+          <button
+            id="generateBtn"
+            class="group relative overflow-hidden rounded-xl border border-indigo-300/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-6 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+            type="button"
+          >
+            <span class="relative z-10">Generate</span>
+            <span class="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 group-hover:translate-x-0"></span>
+          </button>
+        </div>
+
+        <div class="mt-3">
+          <input
+            id="apiKeyInput"
+            class="w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2 text-xs text-slate-300 outline-none transition duration-300 focus:border-indigo-300"
+            type="password"
+            placeholder="Optional: x-api-key (for protected environments)"
+          />
+        </div>
+
+        <div id="result" class="mt-6 hidden rounded-xl border border-white/10 bg-slate-900/70 p-4">
+          <p id="statusText" class="text-sm text-slate-300"></p>
+          <a
+            id="resultLink"
+            class="mt-2 hidden break-all text-sm text-indigo-300 underline-offset-2 transition hover:text-indigo-200 hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          ></a>
+          <img
+            id="previewImage"
+            class="mt-4 hidden max-h-[380px] w-full rounded-lg border border-white/10 object-contain transition-opacity duration-500"
+            alt="Screenshot preview"
+          />
+        </div>
+      </section>
+
+      <!-- Pricing -->
+      <section class="mb-16">
+        <h2 class="mb-5 text-2xl font-medium text-white">Pricing</h2>
+        <div class="grid gap-5 md:grid-cols-3">
+          <!-- Free -->
+          <article class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+            <h3 class="text-lg font-medium text-white">Free</h3>
+            <p class="mt-1 text-3xl font-semibold">
+              $0<span class="text-sm font-normal text-slate-400"> / month</span>
+            </p>
+            <ul class="mt-5 space-y-2 text-sm text-slate-300">
+              <li>100 screenshots / month</li>
+              <li>1280x800 resolution</li>
+              <li>Response latency &lt; 5s</li>
+              <li>Community support</li>
+            </ul>
+            <button class="mt-6 w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm transition duration-300 hover:bg-white/10">
+              Get Started
+            </button>
+          </article>
+
+          <!-- Pro -->
+          <article class="relative rounded-2xl border border-indigo-300/50 bg-gradient-to-b from-indigo-500/20 to-white/5 p-6 shadow-xl shadow-indigo-900/30 backdrop-blur">
+            <span class="absolute right-4 top-4 rounded-full bg-indigo-500 px-2 py-1 text-xs font-medium text-white">Most Popular</span>
+            <h3 class="text-lg font-medium text-white">Pro</h3>
+            <p class="mt-1 text-3xl font-semibold">
+              $29<span class="text-sm font-normal text-slate-300"> / month</span>
+            </p>
+            <ul class="mt-5 space-y-2 text-sm text-slate-200">
+              <li>5,000 screenshots / month</li>
+              <li>Full resolution + full-page capture</li>
+              <li>Built-in PDF generation</li>
+              <li>Webhook async callbacks</li>
+              <li>Email support</li>
+            </ul>
+            <button class="mt-6 w-full rounded-xl border border-indigo-200/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/30">
+              Subscribe Pro
+            </button>
+          </article>
+
+          <!-- Business -->
+          <article class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+            <h3 class="text-lg font-medium text-white">Business</h3>
+            <p class="mt-1 text-3xl font-semibold">
+              $99<span class="text-sm font-normal text-slate-400"> / month</span>
+            </p>
+            <ul class="mt-5 space-y-2 text-sm text-slate-300">
+              <li>50,000 screenshots / month</li>
+              <li>10 concurrent pipelines</li>
+              <li>Dedicated IP pool</li>
+              <li>SLA 99.9% uptime</li>
+              <li>Priority response support</li>
+            </ul>
+            <button class="mt-6 w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium transition duration-300 hover:bg-white/10">
+              Contact Sales
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <!-- Docs -->
+      <section class="mb-10 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+        <h2 class="text-xl font-medium text-white">API Quickstart</h2>
+        <p class="mt-2 text-sm text-slate-400">Use curl to call the screenshot endpoint:</p>
+        <pre class="mt-4 overflow-x-auto rounded-xl bg-slate-900/80 p-4 text-xs text-slate-100"><code>curl -X POST https://snapapi.up.railway.app/screenshot \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d '{"url":"https://example.com"}'</code></pre>
+      </section>
+
+      <footer class="text-xs text-slate-500">
+        <p>SnapAPI is engineered for modern SaaS teams: secure endpoints, predictable pricing, and production-ready performance.</p>
+      </footer>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
+

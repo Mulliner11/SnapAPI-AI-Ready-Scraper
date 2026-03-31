@@ -5,11 +5,16 @@ require("dotenv").config();
 
 import { timingSafeEqual } from "node:crypto";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import rateLimit from "@fastify/rate-limit";
+import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import { chromium } from "playwright";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = join(__dirname, "public");
 
 const MASTER_API_KEY = process.env.MASTER_API_KEY;
 if (!MASTER_API_KEY || MASTER_API_KEY.length === 0) {
@@ -156,6 +161,12 @@ async function registerRoutes() {
 }
 
 async function start() {
+  await fastify.register(fastifyStatic, {
+    root: PUBLIC_DIR,
+    prefix: "/",
+    index: ["index.html"],
+  });
+
   await fastify.register(rateLimit, {
     global: true,
     max: 5,
@@ -168,12 +179,24 @@ async function start() {
   });
 
   fastify.addHook("onRequest", async (request, reply) => {
-    // Railway healthcheck hits `GET /health` without headers.
-    // Skip API key validation for this route so healthchecks can pass.
     const pathname = (request.url || "").split("?")[0];
-    if (pathname === "/health") return;
 
-    if (!apiKeyAuthorized(headerApiKey(request))) {
+    // 不校验的路径：健康检查 + 静态站点（根路径、index.html 和所有静态资源）
+    if (
+      pathname === "/health" ||
+      pathname === "/" ||
+      pathname === "/index.html" ||
+      request.method === "GET"
+    ) {
+      return;
+    }
+
+    // 只有 /screenshot 与 /pdf 的 POST 请求才需要 API Key
+    const needsApiKey =
+      request.method === "POST" &&
+      (pathname === "/screenshot" || pathname === "/pdf");
+
+    if (needsApiKey && !apiKeyAuthorized(headerApiKey(request))) {
       return reply.code(401).send({ error: "Unauthorized" });
     }
   });
