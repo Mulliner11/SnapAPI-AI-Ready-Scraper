@@ -9,9 +9,12 @@ const previewImage = document.getElementById("previewImage");
 const savedKey = localStorage.getItem("snapapi_demo_key");
 if (savedKey) apiKeyInput.value = savedKey;
 
-apiKeyInput.addEventListener("change", () => {
+function persistApiKey() {
   localStorage.setItem("snapapi_demo_key", apiKeyInput.value.trim());
-});
+}
+
+apiKeyInput.addEventListener("change", persistApiKey);
+apiKeyInput.addEventListener("input", persistApiKey);
 
 async function generateScreenshot() {
   const url = urlInput.value.trim();
@@ -34,17 +37,26 @@ async function generateScreenshot() {
   try {
     const headers = { "Content-Type": "application/json" };
     const apiKey = apiKeyInput.value.trim();
-    if (apiKey) headers["x-api-key"] = apiKey;
+    if (apiKey) {
+      headers["x-api-key"] = apiKey;
+    }
 
     const res = await fetch("/screenshot", {
       method: "POST",
       headers,
       body: JSON.stringify({ url }),
     });
-    const data = await res.json();
+
+    let data;
+    const text = await res.text();
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(text || `HTTP ${res.status}`);
+    }
 
     if (!res.ok) {
-      throw new Error(data.error || data.message || "请求失败");
+      throw new Error(data.error || data.message || `请求失败 (${res.status})`);
     }
 
     statusText.textContent = "生成成功";

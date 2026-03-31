@@ -67,18 +67,38 @@ function publicUrlForKey(publicBaseUrl, key) {
 /**
  * Uploads a local file to R2, deletes the local file, returns HTTPS public URL.
  */
+function r2ErrorMessage(err) {
+  if (!err || typeof err !== "object") return String(err);
+  const code = err.name || err.Code || err.code || err.$fault;
+  const msg = err.message || String(err);
+  const http = err.$metadata?.httpStatusCode;
+  const parts = ["R2 upload failed"];
+  if (code) parts.push(`[${code}]`);
+  if (http) parts.push(`HTTP ${http}`);
+  parts.push(msg);
+  return parts.join(" ");
+}
+
 export async function uploadLocalFileAndRemove(client, config, { localPath, objectName, contentType }) {
   const key = buildObjectKey(config.keyPrefix, objectName);
   try {
     const body = await readFile(localPath);
-    await client.send(
-      new PutObjectCommand({
-        Bucket: config.bucket,
-        Key: key,
-        Body: body,
-        ContentType: contentType,
-      })
-    );
+    try {
+      await client.send(
+        new PutObjectCommand({
+          Bucket: config.bucket,
+          Key: key,
+          Body: body,
+          ContentType: contentType,
+        })
+      );
+    } catch (err) {
+      const e = new Error(r2ErrorMessage(err));
+      const http = err.$metadata?.httpStatusCode;
+      e.statusCode =
+        typeof http === "number" && http >= 400 && http < 600 ? http : 502;
+      throw e;
+    }
     return publicUrlForKey(config.publicBaseUrl, key);
   } finally {
     await unlink(localPath).catch(() => {});

@@ -15,18 +15,47 @@ import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js"
 /** Static assets live in project root (index.html, app.js, etc.) */
 const PUBLIC_DIR = process.cwd();
 
-const MASTER_API_KEY = process.env.MASTER_API_KEY;
-if (!MASTER_API_KEY || MASTER_API_KEY.length === 0) {
-  console.error("MASTER_API_KEY environment variable is required");
-  process.exit(1);
+const MASTER_API_KEY_RAW = (process.env.MASTER_API_KEY || "").trim();
+const MASTER_API_KEY_CONFIGURED = MASTER_API_KEY_RAW.length > 0;
+
+if (!MASTER_API_KEY_CONFIGURED) {
+  console.warn(
+    "[SnapAPI] MASTER_API_KEY is not set. UI and /health remain available; POST /screenshot and POST /pdf will return 503 until you configure MASTER_API_KEY in Railway."
+  );
 }
 
-const MASTER_KEY_BUF = Buffer.from(MASTER_API_KEY, "utf8");
+const MASTER_KEY_BUF = MASTER_API_KEY_CONFIGURED ? Buffer.from(MASTER_API_KEY_RAW, "utf8") : null;
 
 const fastify = Fastify({ logger: true });
 
+fastify.setErrorHandler((error, request, reply) => {
+  console.error("[SnapAPI error]", request.method, request.url, error);
+  console.error("[SnapAPI error] message:", error?.message);
+  if (error?.stack) {
+    console.error("[SnapAPI error] stack:\n" + error.stack);
+  } else {
+    console.error("[SnapAPI error] (no stack)", String(error));
+  }
+  if (error.validation) {
+    console.error("[SnapAPI validation]", JSON.stringify(error.validation, null, 2));
+  }
+
+  const statusCode =
+    typeof error.statusCode === "number" && error.statusCode >= 400 && error.statusCode < 600
+      ? error.statusCode
+      : 500;
+
+  const message = error.message || "Internal Server Error";
+  return reply.status(statusCode).send({ error: message });
+});
+
+const CHROMIUM_LAUNCH_OPTIONS = {
+  args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+};
+
 const PORT = Number(process.env.PORT) || 3000;
-const HOST = process.env.HOST || "0.0.0.0";
+/** Railway / containers must bind all interfaces */
+const LISTEN_HOST = "0.0.0.0";
 const gotoTimeoutMs = Number(process.env.SCREENSHOT_GOTO_TIMEOUT_MS) || 60_000;
 
 let r2Config;
@@ -68,6 +97,7 @@ function headerApiKey(request) {
 }
 
 function apiKeyAuthorized(provided) {
+  if (!MASTER_KEY_BUF) return false;
   if (typeof provided !== "string") return false;
   const buf = Buffer.from(provided, "utf8");
   if (buf.length !== MASTER_KEY_BUF.length) return false;
@@ -75,7 +105,7 @@ function apiKeyAuthorized(provided) {
 }
 
 async function withPage(sourceUrl, fn) {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
   try {
     const page = await browser.newPage();
     await page.goto(sourceUrl, { waitUntil: "load", timeout: gotoTimeoutMs });
@@ -201,8 +231,15 @@ async function start() {
       request.method === "POST" &&
       (pathname === "/screenshot" || pathname === "/pdf");
 
-    if (needsApiKey && !apiKeyAuthorized(headerApiKey(request))) {
-      return reply.code(401).send({ error: "Unauthorized" });
+    if (needsApiKey) {
+      if (!MASTER_API_KEY_CONFIGURED) {
+        return reply.code(503).send({
+          error: "Server misconfiguration: MASTER_API_KEY is not set",
+        });
+      }
+      if (!apiKeyAuthorized(headerApiKey(request))) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
     }
   });
 
@@ -210,9 +247,11 @@ async function start() {
 
   try {
     fastify.log.info({ PUBLIC_DIR }, "Static public directory resolved");
-    await fastify.listen({ port: PORT, host: HOST });
-    fastify.log.info(`Server listening on http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`);
+    await fastify.listen({ port: PORT, host: LISTEN_HOST });
+    fastify.log.info(`Server listening on http://0.0.0.0:${PORT} (public URL uses your Railway domain)`);
   } catch (err) {
+    console.error("[SnapAPI listen failed]", err);
+    if (err?.stack) console.error(err.stack);
     fastify.log.error(err);
     process.exit(1);
   }
