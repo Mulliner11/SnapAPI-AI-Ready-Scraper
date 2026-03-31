@@ -1,4 +1,6 @@
-[phases.chromium]
-dependsOn = ["install"]
-cmds = ["npx playwright install --with-deps chromium"]
+[phases.setup]
+nixPkgs = ["...", "nodejs"]
+aptPkgs = ["...", "wget", "ca-certificates"]
 
+[phases.build]
+cmds = ["npm install", "npx playwright install --with-deps chromium"]

@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "postinstall": "npx playwright install --with-deps chromium",
+    "build": "npx playwright install --with-deps chromium"
   },
   "engines": {
     "node": ">=18"
