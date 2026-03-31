@@ -181,13 +181,14 @@ async function start() {
   fastify.addHook("onRequest", async (request, reply) => {
     const pathname = (request.url || "").split("?")[0];
 
-    // 不校验的路径：健康检查 + 静态站点（根路径、index.html 和所有静态资源）
-    if (
-      pathname === "/health" ||
+    // 第一优先级：放行首页、健康检查和静态资源
+    const isPublicPath =
       pathname === "/" ||
       pathname === "/index.html" ||
-      request.method === "GET"
-    ) {
+      pathname === "/health" ||
+      /\.(js|css|png|jpg|svg)$/i.test(pathname);
+
+    if (isPublicPath) {
       return;
     }
 
