@@ -42,10 +42,42 @@ function setOutputMode(mode) {
     modeScreenshotBtn.className = inactive;
     modePdfBtn.className = active;
   }
+  showPreviewPlaceholder();
 }
 
 modeScreenshotBtn.addEventListener("click", () => setOutputMode(MODE_SCREENSHOT));
 modePdfBtn.addEventListener("click", () => setOutputMode(MODE_PDF));
+
+function normalizeInputUrl(raw) {
+  let value = String(raw || "").trim();
+  if (!value) return "";
+
+  value = value.replace(/^hyttp:\/\//i, "http://");
+  value = value.replace(/^hyttps:\/\//i, "https://");
+
+  if (!/^https?:\/\//i.test(value)) {
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(value)) {
+      value = "https://" + value.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "");
+    } else {
+      value = "https://" + value;
+    }
+  }
+
+  try {
+    const parsed = new URL(value);
+    if (!["http:", "https:"].includes(parsed.protocol)) return "";
+    return parsed.toString();
+  } catch {
+    return "";
+  }
+}
+
+function showPreviewPlaceholder() {
+  hidePreviewOutputs();
+  previewState.classList.remove("hidden", "text-red-400", "animate-pulse");
+  previewState.classList.add("text-slate-400", "animate-none");
+  previewState.textContent = "截图预览将在这里显示";
+}
 
 function hidePreviewOutputs() {
   previewImage.classList.add("hidden");
@@ -94,14 +126,15 @@ function showPreviewFromPath(path) {
 }
 
 async function generate() {
-  const url = urlInput.value.trim();
-  if (!url) {
+  const normalizedUrl = normalizeInputUrl(urlInput.value);
+  if (!normalizedUrl) {
     result.classList.remove("hidden");
-    statusText.textContent = "请输入 URL";
+    statusText.textContent = "请输入有效 URL";
     resultLink.classList.add("hidden");
-    showPreviewError("请输入有效的 URL");
+    showPreviewError("URL 无效，已支持自动补全 https://");
     return;
   }
+  urlInput.value = normalizedUrl;
 
   generateBtn.disabled = true;
   generateBtn.textContent = "Generating...";
@@ -123,7 +156,7 @@ async function generate() {
     const res = await fetch(endpoint, {
       method: "POST",
       headers,
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url: normalizedUrl }),
     });
 
     let data;
@@ -172,3 +205,6 @@ generateBtn.addEventListener("click", generate);
 urlInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") generate();
 });
+
+
+showPreviewPlaceholder();

@@ -109,6 +109,42 @@ function headerApiKey(request) {
   return Array.isArray(raw) ? raw[0] : raw;
 }
 
+
+function normalizeSourceUrl(input) {
+  const raw = String(input || "").trim();
+  if (!raw) {
+    const err = new Error("url is required");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  let candidate = raw;
+  if (!/^https?:\/\//i.test(candidate)) {
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(candidate)) {
+      candidate = "https://" + candidate.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "");
+    } else {
+      candidate = "https://" + candidate;
+    }
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(candidate);
+  } catch {
+    const err = new Error("Invalid url");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    const err = new Error("url must use http or https protocol");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  return parsed.toString();
+}
+
 /** @param {{ width: number; height: number } | null} viewport */
 async function withPage(sourceUrl, viewport, fn) {
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
@@ -300,7 +336,8 @@ async function registerRoutes() {
     },
     async (request, reply) => {
       const user = request.snapUser;
-      const { url: sourceUrl, fullPage } = request.body;
+      const { fullPage } = request.body;
+      const sourceUrl = normalizeSourceUrl(request.body.url);
       const viewport = viewportFromBody(request.body);
       const useFullPage = fullPage !== false;
       const localPath = tempFilePath("png");
@@ -338,7 +375,7 @@ async function registerRoutes() {
     },
     async (request, reply) => {
       const user = request.snapUser;
-      const { url: sourceUrl } = request.body;
+      const sourceUrl = normalizeSourceUrl(request.body.url);
       const viewport = viewportFromBody(request.body);
       const localPath = tempFilePath("pdf");
       const objectName = `export-${Date.now()}.pdf`;
