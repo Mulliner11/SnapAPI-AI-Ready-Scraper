@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SnapAPI · 登录</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-950 text-slate-100 antialiased">
+    <div class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
+      <h1 class="text-2xl font-semibold">SnapAPI Dashboard</h1>
+      <p class="mt-2 text-sm text-slate-400">使用注册邮箱收取验证码登录（MVP：验证码会打印在服务器日志中）。</p>
+
+      <div class="mt-8 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div>
+          <label class="text-xs text-slate-400">邮箱</label>
+          <input
+            id="email"
+            type="email"
+            class="mt-1 w-full rounded-xl border border-white/15 bg-slate-900/80 px-3 py-2 text-sm"
+            placeholder="you@example.com"
+          />
+        </div>
+        <button
+          type="button"
+          id="sendCode"
+          class="w-full rounded-xl bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+        >
+          发送验证码
+        </button>
+
+        <div>
+          <label class="text-xs text-slate-400">验证码</label>
+          <input
+            id="code"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            class="mt-1 w-full rounded-xl border border-white/15 bg-slate-900/80 px-3 py-2 text-sm tracking-widest"
+            placeholder="6 位数字"
+          />
+        </div>
+        <button
+          type="button"
+          id="verify"
+          class="w-full rounded-xl border border-white/20 py-2 text-sm font-medium hover:bg-white/5"
+        >
+          验证并登录
+        </button>
+        <p id="msg" class="text-center text-sm text-red-400"></p>
+      </div>
+      <a href="/" class="mt-6 text-center text-sm text-indigo-400 hover:underline">返回首页</a>
+    </div>
+    <script>
+      const emailEl = document.getElementById("email");
+      const codeEl = document.getElementById("code");
+      const msg = document.getElementById("msg");
+
+      document.getElementById("sendCode").onclick = async () => {
+        msg.textContent = "";
+        const email = emailEl.value.trim();
+        if (!email) return (msg.textContent = "请输入邮箱");
+        const r = await fetch("/auth/request-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) return (msg.textContent = d.error || "发送失败");
+        msg.className = "text-center text-sm text-emerald-400";
+        msg.textContent = d.message || "已发送（请查看服务日志中的验证码）";
+      };
+
+      document.getElementById("verify").onclick = async () => {
+        msg.textContent = "";
+        msg.className = "text-center text-sm text-red-400";
+        const email = emailEl.value.trim();
+        const code = codeEl.value.trim();
+        if (!email || !code) return (msg.textContent = "请填写邮箱和验证码");
+        const r = await fetch("/auth/verify-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, code }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) return (msg.textContent = d.error || "验证失败");
+        window.location.href = "/dashboard";
+      };
+    </script>
+  </body>
+</html>

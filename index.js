@@ -3,30 +3,45 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 require("dotenv").config();
 
-import { timingSafeEqual } from "node:crypto";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
+import session from "@fastify/session";
 import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import { chromium } from "playwright";
+import {
+  consumeLoginCode,
+  findUserByEmail,
+  findUserForApiKey,
+  getPool,
+  getRecentLogs,
+  getUserDashboardRow,
+  initDb,
+  isOverQuota,
+  recordApiUsage,
+  saveLoginCode,
+} from "./db.js";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
 
-/** Static assets live in project root (index.html, app.js, etc.) */
-const PUBLIC_DIR = process.cwd();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+/** Static HTML/JS/CSS live in ./public */
+const PUBLIC_DIR = join(__dirname, "public");
 
-const MASTER_API_KEY_RAW = (process.env.MASTER_API_KEY || "").trim();
-const MASTER_API_KEY_CONFIGURED = MASTER_API_KEY_RAW.length > 0;
-
-if (!MASTER_API_KEY_CONFIGURED) {
-  console.warn(
-    "[SnapAPI] MASTER_API_KEY is not set. UI and /health remain available; POST /screenshot and POST /pdf will return 503 until you configure MASTER_API_KEY in Railway."
-  );
+const SESSION_SECRET_RAW = process.env.SESSION_SECRET || "snapapi-development-session-secret-min-32-chars-long!!";
+const SESSION_SECRET =
+  SESSION_SECRET_RAW.length >= 32
+    ? SESSION_SECRET_RAW
+    : SESSION_SECRET_RAW.padEnd(32, "0");
+if (!process.env.SESSION_SECRET) {
+  console.warn("[SnapAPI] SESSION_SECRET not set; using a development default. Set SESSION_SECRET in production.");
 }
 
-const MASTER_KEY_BUF = MASTER_API_KEY_CONFIGURED ? Buffer.from(MASTER_API_KEY_RAW, "utf8") : null;
-
 const fastify = Fastify({ logger: true });
+
+fastify.decorateRequest("snapUser", null);
 
 fastify.setErrorHandler((error, request, reply) => {
   console.error("[SnapAPI error]", request.method, request.url, error);
@@ -54,7 +69,6 @@ const CHROMIUM_LAUNCH_OPTIONS = {
 };
 
 const PORT = Number(process.env.PORT) || 3000;
-/** Railway / containers must bind all interfaces */
 const LISTEN_HOST = "0.0.0.0";
 const gotoTimeoutMs = Number(process.env.SCREENSHOT_GOTO_TIMEOUT_MS) || 60_000;
 
@@ -83,6 +97,9 @@ const requestBodySchema = {
   required: ["url"],
   properties: {
     url: { type: "string", minLength: 1 },
+    fullPage: { type: "boolean" },
+    width: { type: "integer", minimum: 320, maximum: 4096 },
+    height: { type: "integer", minimum: 240, maximum: 4096 },
   },
 };
 
@@ -96,18 +113,14 @@ function headerApiKey(request) {
   return Array.isArray(raw) ? raw[0] : raw;
 }
 
-function apiKeyAuthorized(provided) {
-  if (!MASTER_KEY_BUF) return false;
-  if (typeof provided !== "string") return false;
-  const buf = Buffer.from(provided, "utf8");
-  if (buf.length !== MASTER_KEY_BUF.length) return false;
-  return timingSafeEqual(buf, MASTER_KEY_BUF);
-}
-
-async function withPage(sourceUrl, fn) {
+/** @param {{ width: number; height: number } | null} viewport */
+async function withPage(sourceUrl, viewport, fn) {
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
   try {
     const page = await browser.newPage();
+    if (viewport && viewport.width != null && viewport.height != null) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    }
     await page.goto(sourceUrl, { waitUntil: "load", timeout: gotoTimeoutMs });
     await fn(page);
   } finally {
@@ -115,10 +128,133 @@ async function withPage(sourceUrl, fn) {
   }
 }
 
+function viewportFromBody(body) {
+  const w = body.width;
+  const h = body.height;
+  if (w == null && h == null) return null;
+  if (w == null || h == null) {
+    return null;
+  }
+  return { width: w, height: h };
+}
+
 async function registerRoutes() {
-  // Fallback route: always serve homepage entry explicitly.
   fastify.get("/", async (request, reply) => {
     return reply.sendFile("index.html");
+  });
+
+  fastify.get("/login", async (request, reply) => {
+    return reply.sendFile("login.html");
+  });
+
+  fastify.get("/dashboard", async (request, reply) => {
+    if (!request.session?.userId) {
+      return reply.redirect(302, "/login");
+    }
+    return reply.sendFile("dashboard.html");
+  });
+
+  fastify.get("/docs", async (request, reply) => {
+    return reply.sendFile("docs.html");
+  });
+
+  fastify.get("/privacy", async (request, reply) => {
+    return reply.sendFile("privacy.html");
+  });
+
+  fastify.get("/terms", async (request, reply) => {
+    return reply.sendFile("terms.html");
+  });
+
+  fastify.post(
+    "/auth/request-code",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["email"],
+          properties: { email: { type: "string", minLength: 3 } },
+        },
+      },
+    },
+    async (request, reply) => {
+      const pool = getPool();
+      if (!pool) {
+        return reply.code(503).send({ error: "Database not configured (DATABASE_URL)" });
+      }
+      const { email } = request.body;
+      const user = await findUserByEmail(email);
+      if (!user) {
+        return reply.code(404).send({ error: "Email not registered" });
+      }
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      await saveLoginCode(email, code, 10);
+      console.log(`[SnapAPI login code] ${email.trim()} -> ${code} (expires in 10 min, MVP: check Railway logs)`);
+      return reply.send({
+        message: "Verification code issued. In MVP, check server logs for the code.",
+      });
+    }
+  );
+
+  fastify.post(
+    "/auth/verify-code",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["email", "code"],
+          properties: {
+            email: { type: "string" },
+            code: { type: "string", minLength: 4, maxLength: 12 },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const pool = getPool();
+      if (!pool) {
+        return reply.code(503).send({ error: "Database not configured" });
+      }
+      const { email, code } = request.body;
+      const ok = await consumeLoginCode(email, code);
+      if (!ok) {
+        return reply.code(401).send({ error: "Invalid or expired code" });
+      }
+      const user = await findUserByEmail(email);
+      if (!user) {
+        return reply.code(404).send({ error: "User not found" });
+      }
+      request.session.userId = user.id;
+      return reply.send({ ok: true });
+    }
+  );
+
+  fastify.post("/auth/logout", async (request, reply) => {
+    await request.session.destroy();
+    return reply.send({ ok: true });
+  });
+
+  fastify.get("/api/dashboard/summary", async (request, reply) => {
+    const pool = getPool();
+    if (!pool) {
+      return reply.code(503).send({ error: "Database not configured" });
+    }
+    const uid = request.session?.userId;
+    if (!uid) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    const row = await getUserDashboardRow(uid);
+    if (!row) {
+      return reply.code(404).send({ error: "User not found" });
+    }
+    const logs = await getRecentLogs(uid, 20);
+    return reply.send({
+      api_key: row.api_key,
+      plan: row.plan,
+      usage_count: row.usage_count,
+      max_limit: row.max_limit,
+      logs,
+    });
   });
 
   fastify.post(
@@ -130,12 +266,15 @@ async function registerRoutes() {
       },
     },
     async (request, reply) => {
-      const { url: sourceUrl } = request.body;
+      const user = request.snapUser;
+      const { url: sourceUrl, fullPage } = request.body;
+      const viewport = viewportFromBody(request.body);
+      const useFullPage = fullPage !== false;
       const localPath = tempFilePath("png");
       const objectName = `screenshot-${Date.now()}.png`;
 
-      await withPage(sourceUrl, async (page) => {
-        await page.screenshot({ path: localPath, fullPage: true });
+      await withPage(sourceUrl, viewport, async (page) => {
+        await page.screenshot({ path: localPath, fullPage: useFullPage });
       });
 
       const url = await uploadLocalFileAndRemove(s3Client, r2Config, {
@@ -143,6 +282,8 @@ async function registerRoutes() {
         objectName,
         contentType: "image/png",
       });
+
+      await recordApiUsage(user.id, "screenshot", sourceUrl, url);
 
       return reply.send({
         status: "success",
@@ -161,17 +302,28 @@ async function registerRoutes() {
       },
     },
     async (request, reply) => {
+      const user = request.snapUser;
       const { url: sourceUrl } = request.body;
+      const viewport = viewportFromBody(request.body);
       const localPath = tempFilePath("pdf");
       const objectName = `export-${Date.now()}.pdf`;
 
-      await withPage(sourceUrl, async (page) => {
-        const width = await page.evaluate(() => document.documentElement.scrollWidth);
-        const height = await page.evaluate(() => document.documentElement.scrollHeight);
+      await withPage(sourceUrl, viewport, async (page) => {
+        let pdfW;
+        let pdfH;
+        if (viewport) {
+          pdfW = `${viewport.width}px`;
+          pdfH = `${viewport.height}px`;
+        } else {
+          const width = await page.evaluate(() => document.documentElement.scrollWidth);
+          const height = await page.evaluate(() => document.documentElement.scrollHeight);
+          pdfW = `${width}px`;
+          pdfH = `${height}px`;
+        }
         await page.pdf({
           path: localPath,
-          width: `${width}px`,
-          height: `${height}px`,
+          width: pdfW,
+          height: pdfH,
           printBackground: true,
           margin: { top: "0px", right: "0px", bottom: "0px", left: "0px" },
         });
@@ -182,6 +334,8 @@ async function registerRoutes() {
         objectName,
         contentType: "application/pdf",
       });
+
+      await recordApiUsage(user.id, "pdf", sourceUrl, url);
 
       return reply.send({
         status: "success",
@@ -195,17 +349,25 @@ async function registerRoutes() {
 }
 
 async function start() {
-  await fastify.register(fastifyStatic, {
-    root: PUBLIC_DIR,
-    prefix: "/",
-    index: ["index.html"],
+  await initDb();
+
+  await fastify.register(cookie);
+  await fastify.register(session, {
+    secret: SESSION_SECRET,
+    cookieName: "snap_session",
+    cookie: {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60,
+    },
   });
 
   await fastify.register(rateLimit, {
     global: true,
     max: 5,
     timeWindow: "1 minute",
-    // Railway healthcheck can hit this route frequently; exclude it from rate limiting.
     allowList: (request) => {
       const pathname = (request.url || "").split("?")[0];
       return pathname === "/health";
@@ -215,35 +377,58 @@ async function start() {
   fastify.addHook("onRequest", async (request, reply) => {
     const pathname = (request.url || "").split("?")[0];
 
-    // 第一优先级：放行首页、健康检查和静态资源
     const isPublicPath =
       pathname === "/" ||
       pathname === "/index.html" ||
       pathname === "/health" ||
-      /\.(js|css|png|jpg|svg)$/i.test(pathname);
+      pathname === "/docs" ||
+      pathname === "/docs.html" ||
+      pathname === "/privacy" ||
+      pathname === "/privacy.html" ||
+      pathname === "/terms" ||
+      pathname === "/terms.html" ||
+      pathname === "/login" ||
+      pathname === "/login.html" ||
+      pathname === "/dashboard" ||
+      /\.(js|css|png|jpg|svg)$/i.test(pathname) ||
+      pathname === "/auth/request-code" ||
+      pathname === "/auth/verify-code" ||
+      pathname === "/auth/logout";
 
     if (isPublicPath) {
       return;
     }
 
-    // 只有 /screenshot 与 /pdf 的 POST 请求才需要 API Key
     const needsApiKey =
-      request.method === "POST" &&
-      (pathname === "/screenshot" || pathname === "/pdf");
+      request.method === "POST" && (pathname === "/screenshot" || pathname === "/pdf");
 
     if (needsApiKey) {
-      if (!MASTER_API_KEY_CONFIGURED) {
-        return reply.code(503).send({
-          error: "Server misconfiguration: MASTER_API_KEY is not set",
-        });
+      const pool = getPool();
+      if (!pool) {
+        return reply.code(503).send({ error: "Database not configured (set DATABASE_URL)" });
       }
-      if (!apiKeyAuthorized(headerApiKey(request))) {
-        return reply.code(401).send({ error: "Unauthorized" });
+      const key = headerApiKey(request);
+      if (!key) {
+        return reply.code(401).send({ error: "Missing x-api-key header" });
       }
+      const user = await findUserForApiKey(key);
+      if (!user) {
+        return reply.code(401).send({ error: "Invalid API key" });
+      }
+      if (isOverQuota(user)) {
+        return reply.code(429).send({ error: "Quota exceeded for current period" });
+      }
+      request.snapUser = user;
     }
   });
 
   await registerRoutes();
+
+  await fastify.register(fastifyStatic, {
+    root: PUBLIC_DIR,
+    prefix: "/",
+    index: ["index.html"],
+  });
 
   try {
     fastify.log.info({ PUBLIC_DIR }, "Static public directory resolved");

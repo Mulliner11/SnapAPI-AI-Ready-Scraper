@@ -21,6 +21,20 @@
         }
       };
     </script>
+    <style>
+      .doc-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.75rem;
+        line-height: 1.65;
+      }
+      .doc-code::-webkit-scrollbar {
+        height: 6px;
+      }
+      .doc-code::-webkit-scrollbar-thumb {
+        background: rgba(124, 58, 237, 0.35);
+        border-radius: 3px;
+      }
+    </style>
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased">
     <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
@@ -50,7 +64,26 @@
       <!-- Live Demo -->
       <section class="mb-16 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur">
         <h2 class="text-xl font-medium text-white">Live Demo</h2>
-        <p class="mt-2 text-sm text-slate-400">输入 URL，点击 Generate 即可调用 `/screenshot`，实时获得 R2 图片链接与预览。</p>
+        <p class="mt-2 text-sm text-slate-400">
+          输入 URL，选择 Screenshot 或 PDF，点击 Generate 调用 API，在下方查看预览或下载 PDF。
+        </p>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            id="modeScreenshot"
+            class="rounded-full border border-indigo-400/60 bg-indigo-500/30 px-4 py-1.5 text-xs font-medium text-white transition"
+          >
+            Screenshot
+          </button>
+          <button
+            type="button"
+            id="modePdf"
+            class="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10"
+          >
+            PDF
+          </button>
+        </div>
 
         <div class="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
           <input
@@ -86,11 +119,30 @@
             target="_blank"
             rel="noreferrer"
           ></a>
-          <img
-            id="previewImage"
-            class="mt-4 hidden max-h-[380px] w-full rounded-lg border border-white/10 object-contain transition-opacity duration-500"
-            alt="Screenshot preview"
-          />
+          <div
+            id="previewPanel"
+            class="mt-4 flex min-h-[220px] items-center justify-center rounded-lg border border-white/10 bg-slate-950/50"
+          >
+            <p
+              id="previewState"
+              class="hidden px-4 py-8 text-center text-sm text-slate-400 animate-pulse"
+            ></p>
+            <img
+              id="previewImage"
+              class="hidden max-h-[380px] w-full rounded-lg object-contain p-2 transition-opacity duration-500"
+              alt="Screenshot preview"
+            />
+            <a
+              id="downloadPdfBtn"
+              href="#"
+              class="hidden rounded-xl border border-indigo-300/50 bg-gradient-to-r from-indigo-500/80 to-fuchsia-500/80 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
+              download
+              target="_blank"
+              rel="noreferrer"
+            >
+              下载 PDF
+            </a>
+          </div>
         </div>
       </section>
 
@@ -154,21 +206,174 @@
         </div>
       </section>
 
-      <!-- Docs -->
-      <section class="mb-10 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+      <!-- Docs / Quickstart -->
+      <section class="mb-10 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur">
         <h2 class="text-xl font-medium text-white">API Quickstart</h2>
-        <p class="mt-2 text-sm text-slate-400">Use curl to call the screenshot endpoint:</p>
-        <pre class="mt-4 overflow-x-auto rounded-xl bg-slate-900/80 p-4 text-xs text-slate-100"><code>curl -X POST https://snapapi.up.railway.app/screenshot \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -d '{"url":"https://example.com"}'</code></pre>
+        <p class="mt-2 text-sm text-slate-400">
+          使用 <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">curl</code> 调用接口；将示例中的域名与
+          <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">YOUR_API_KEY</code> 换成你的环境值。
+        </p>
+
+        <div class="mt-5 inline-flex flex-wrap gap-1 rounded-xl border border-white/10 bg-slate-950/60 p-1">
+          <button
+            type="button"
+            id="docTabScreenshot"
+            data-doc-tab="screenshot"
+            class="rounded-lg border border-indigo-400/50 bg-indigo-500/25 px-4 py-2 text-xs font-medium text-white shadow-[0_0_20px_rgba(99,102,241,0.15)] transition"
+          >
+            Screenshot
+          </button>
+          <button
+            type="button"
+            id="docTabPdf"
+            data-doc-tab="pdf"
+            class="rounded-lg border border-transparent bg-transparent px-4 py-2 text-xs font-medium text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+          >
+            PDF
+          </button>
+        </div>
+
+        <div id="docPanelScreenshot" class="doc-panel mt-4">
+          <pre
+            class="doc-code overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-left text-slate-200 shadow-inner shadow-black/40 ring-1 ring-inset ring-indigo-500/10"
+          ><code><span class="text-cyan-300">curl</span> <span class="text-slate-500">-X POST</span> https://snapapi.up.railway.app/screenshot \
+  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"Content-Type: application/json"</span> \
+  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"x-api-key: YOUR_API_KEY"</span> \
+  <span class="text-violet-300">-d</span> <span class="text-emerald-300/90">'{"url":"https://example.com"}'</span></code></pre>
+        </div>
+
+        <div id="docPanelPdf" class="doc-panel mt-4 hidden">
+          <pre
+            class="doc-code overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-left text-slate-200 shadow-inner shadow-black/40 ring-1 ring-inset ring-fuchsia-500/10"
+          ><code><span class="text-cyan-300">curl</span> <span class="text-slate-500">-X POST</span> https://snapapi.up.railway.app/pdf \
+  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"Content-Type: application/json"</span> \
+  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"x-api-key: YOUR_API_KEY"</span> \
+  <span class="text-violet-300">-d</span> <span class="text-emerald-300/90">'{"url":"https://example.com","width":1280,"height":720}'</span></code></pre>
+          <p class="mt-3 text-xs text-slate-500">
+            <span class="text-slate-400">可选</span>
+            <code class="text-indigo-200/80">width</code> 与
+            <code class="text-indigo-200/80">height</code> 需成对传入，用于设置浏览器视口并作为 PDF 页面尺寸；省略时按页面滚动尺寸自动计算。
+          </p>
+        </div>
+
+        <div class="mt-8">
+          <h3 class="text-sm font-medium tracking-wide text-slate-300">请求体参数</h3>
+          <div class="mt-3 overflow-x-auto rounded-xl border border-white/10 bg-slate-950/40">
+            <table class="w-full min-w-[520px] border-collapse text-left text-sm">
+              <thead>
+                <tr class="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-slate-500">
+                  <th class="px-4 py-3 font-medium">参数</th>
+                  <th class="px-4 py-3 font-medium">类型</th>
+                  <th class="px-4 py-3 font-medium">必填</th>
+                  <th class="px-4 py-3 font-medium">说明</th>
+                </tr>
+              </thead>
+              <tbody class="text-slate-300">
+                <tr class="border-b border-white/[0.06]">
+                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">url</td>
+                  <td class="px-4 py-3 text-slate-400">string</td>
+                  <td class="px-4 py-3"><span class="rounded bg-rose-500/15 px-2 py-0.5 text-xs text-rose-200">required</span></td>
+                  <td class="px-4 py-3 text-slate-400">要打开的页面地址。</td>
+                </tr>
+                <tr class="border-b border-white/[0.06]">
+                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">fullPage</td>
+                  <td class="px-4 py-3 text-slate-400">boolean</td>
+                  <td class="px-4 py-3 text-slate-500">—</td>
+                  <td class="px-4 py-3 text-slate-400">仅 <span class="text-slate-300">Screenshot</span>：是否截取整页，默认 <code class="text-indigo-200/80">true</code>；传 <code class="text-indigo-200/80">false</code> 则仅当前视口。</td>
+                </tr>
+                <tr class="border-b border-white/[0.06]">
+                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">width</td>
+                  <td class="px-4 py-3 text-slate-400">integer</td>
+                  <td class="px-4 py-3 text-slate-500">—</td>
+                  <td class="px-4 py-3 text-slate-400">视口宽度（320–4096）；须与 <code class="text-indigo-200/80">height</code> 同时传入方生效。</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">height</td>
+                  <td class="px-4 py-3 text-slate-400">integer</td>
+                  <td class="px-4 py-3 text-slate-500">—</td>
+                  <td class="px-4 py-3 text-slate-400">视口高度（240–4096）；PDF 模式下与 width 共同决定导出页面尺寸。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="mt-8">
+          <h3 class="text-sm font-medium tracking-wide text-slate-300">成功响应 <span class="text-slate-500">(HTTP 200)</span></h3>
+          <pre
+            class="doc-code mt-3 overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-left shadow-inner shadow-black/40 ring-1 ring-inset ring-cyan-500/10"
+          ><code>{
+  <span class="text-fuchsia-300/90">"status"</span>: <span class="text-emerald-300/90">"success"</span>,
+  <span class="text-fuchsia-300/90">"message"</span>: <span class="text-emerald-300/90">"Screenshot saved"</span>,
+  <span class="text-fuchsia-300/90">"path"</span>: <span class="text-emerald-300/90">"https://your-bucket.r2.dev/screenshot-1712345678901.png"</span>
+}</code></pre>
+          <p class="mt-2 text-xs text-slate-500">
+            PDF 接口的 <code class="text-indigo-200/80">message</code> 为 <code class="text-indigo-200/80">"PDF saved"</code>；<code class="text-indigo-200/80">path</code> 为可下载的公网 URL。
+          </p>
+        </div>
       </section>
 
-      <footer class="text-xs text-slate-500">
-        <p>SnapAPI is engineered for modern SaaS teams: secure endpoints, predictable pricing, and production-ready performance.</p>
+      <footer class="mt-4 border-t border-white/10 pt-10 pb-6">
+        <div class="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+          <div class="max-w-md">
+            <p class="text-sm font-medium text-white">SnapAPI</p>
+            <p class="mt-2 text-xs leading-relaxed text-slate-500">
+              Engineered for modern SaaS teams: secure endpoints, predictable pricing, and production-ready performance.
+            </p>
+            <p class="mt-4 text-xs text-slate-500">
+              <span class="text-slate-400">99.9% Uptime Guaranteed for Business Plan</span>
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-x-8 gap-y-3 text-xs">
+            <div class="flex flex-col gap-2">
+              <span class="font-medium uppercase tracking-wider text-slate-500">Legal</span>
+              <a class="text-slate-400 transition hover:text-indigo-300" href="/privacy">Privacy Policy</a>
+              <a class="text-slate-400 transition hover:text-indigo-300" href="/terms">Terms of Service</a>
+            </div>
+            <div class="flex flex-col gap-2">
+              <span class="font-medium uppercase tracking-wider text-slate-500">Resources</span>
+              <a
+                class="text-slate-400 transition hover:text-indigo-300"
+                href="https://status.snapapi.up.railway.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                >System Status</a
+              >
+              <a
+                class="text-slate-400 transition hover:text-indigo-300"
+                href="mailto:ritchiemulliner@outlook.com"
+                >Support</a
+              >
+            </div>
+          </div>
+        </div>
+        <p class="mt-8 text-center text-[11px] text-slate-600 lg:text-left">© SnapAPI. All rights reserved.</p>
       </footer>
     </div>
 
+    <script>
+      (function () {
+        const tabShot = document.getElementById("docTabScreenshot");
+        const tabPdf = document.getElementById("docTabPdf");
+        const panelShot = document.getElementById("docPanelScreenshot");
+        const panelPdf = document.getElementById("docPanelPdf");
+        const activeTab =
+          "rounded-lg border border-indigo-400/50 bg-indigo-500/25 px-4 py-2 text-xs font-medium text-white shadow-[0_0_20px_rgba(99,102,241,0.15)] transition";
+        const inactiveTab =
+          "rounded-lg border border-transparent bg-transparent px-4 py-2 text-xs font-medium text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200";
+
+        function show(which) {
+          const isShot = which === "screenshot";
+          tabShot.className = isShot ? activeTab : inactiveTab;
+          tabPdf.className = isShot ? inactiveTab : activeTab;
+          panelShot.classList.toggle("hidden", !isShot);
+          panelPdf.classList.toggle("hidden", isShot);
+        }
+
+        tabShot.addEventListener("click", () => show("screenshot"));
+        tabPdf.addEventListener("click", () => show("pdf"));
+      })();
+    </script>
     <script src="/app.js"></script>
   </body>
 </html>
