@@ -3,12 +3,12 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 require("dotenv").config();
 
+import { readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import session from "@fastify/session";
-import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import { chromium } from "playwright";
 import {
@@ -24,9 +24,6 @@ import {
   saveLoginCode,
 } from "./db.js";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
-
-/** HTML/JS/CSS and sendFile root: project working directory (Railway cwd = repo root) */
-const PUBLIC_DIR = process.cwd();
 
 const SESSION_SECRET_RAW = process.env.SESSION_SECRET || "snapapi-development-session-secret-min-32-chars-long!!";
 const SESSION_SECRET =
@@ -136,32 +133,69 @@ function viewportFromBody(body) {
   return { width: w, height: h };
 }
 
+/** Read a file from process.cwd() and send, or 404 with plain text (no @fastify/static). */
+function sendCwdFile(reply, filename, contentType) {
+  const full = join(process.cwd(), filename);
+  if (!existsSync(full)) {
+    return reply
+      .code(404)
+      .type("text/plain; charset=utf-8")
+      .send(`Not found: ${filename}\ncwd=${process.cwd()}`);
+  }
+  const buf = readFileSync(full);
+  return reply.type(contentType).send(buf);
+}
+
 async function registerRoutes() {
   fastify.get("/", async (request, reply) => {
-    return reply.sendFile("index.html");
+    return sendCwdFile(reply, "index.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/index.html", async (request, reply) => {
+    return sendCwdFile(reply, "index.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/app.js", async (request, reply) => {
+    return sendCwdFile(reply, "app.js", "application/javascript; charset=utf-8");
   });
 
   fastify.get("/login", async (request, reply) => {
-    return reply.sendFile("login.html");
+    return sendCwdFile(reply, "login.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/login.html", async (request, reply) => {
+    return sendCwdFile(reply, "login.html", "text/html; charset=utf-8");
   });
 
   fastify.get("/dashboard", async (request, reply) => {
     if (!request.session?.userId) {
       return reply.redirect(302, "/login");
     }
-    return reply.sendFile("dashboard.html");
+    return sendCwdFile(reply, "dashboard.html", "text/html; charset=utf-8");
   });
 
   fastify.get("/docs", async (request, reply) => {
-    return reply.sendFile("docs.html");
+    return sendCwdFile(reply, "docs.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/docs.html", async (request, reply) => {
+    return sendCwdFile(reply, "docs.html", "text/html; charset=utf-8");
   });
 
   fastify.get("/privacy", async (request, reply) => {
-    return reply.sendFile("privacy.html");
+    return sendCwdFile(reply, "privacy.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/privacy.html", async (request, reply) => {
+    return sendCwdFile(reply, "privacy.html", "text/html; charset=utf-8");
   });
 
   fastify.get("/terms", async (request, reply) => {
-    return reply.sendFile("terms.html");
+    return sendCwdFile(reply, "terms.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/terms.html", async (request, reply) => {
+    return sendCwdFile(reply, "terms.html", "text/html; charset=utf-8");
   });
 
   fastify.post(
@@ -373,29 +407,11 @@ async function start() {
   });
 
   fastify.addHook("onRequest", async (request, reply) => {
-    const pathname = (request.url || "").split("?")[0];
-
-    const isPublicPath =
-      pathname === "/" ||
-      pathname === "/index.html" ||
-      pathname === "/health" ||
-      pathname === "/docs" ||
-      pathname === "/docs.html" ||
-      pathname === "/privacy" ||
-      pathname === "/privacy.html" ||
-      pathname === "/terms" ||
-      pathname === "/terms.html" ||
-      pathname === "/login" ||
-      pathname === "/login.html" ||
-      pathname === "/dashboard" ||
-      /\.(js|css|png|jpg|svg)$/i.test(pathname) ||
-      pathname === "/auth/request-code" ||
-      pathname === "/auth/verify-code" ||
-      pathname === "/auth/logout";
-
-    if (isPublicPath) {
+    if (request.method === "GET") {
       return;
     }
+
+    const pathname = (request.url || "").split("?")[0];
 
     const needsApiKey =
       request.method === "POST" && (pathname === "/screenshot" || pathname === "/pdf");
@@ -422,23 +438,8 @@ async function start() {
 
   await registerRoutes();
 
-  await fastify.register(fastifyStatic, {
-    root: PUBLIC_DIR,
-    prefix: "/",
-    index: false,
-    allowedPath: (pathname) => {
-      const p = pathname.split("?")[0];
-      if (
-        /^\/(app\.js|index\.html|login\.html|dashboard\.html|docs\.html|privacy\.html|terms\.html)$/.test(p)
-      ) {
-        return true;
-      }
-      return /\.(css|png|jpg|jpeg|gif|svg|webp|ico)$/i.test(p);
-    },
-  });
-
   try {
-    fastify.log.info({ PUBLIC_DIR }, "Static public directory resolved");
+    console.log("当前目录下的文件清单:", require("fs").readdirSync(process.cwd()));
     await fastify.listen({ port: PORT, host: LISTEN_HOST });
     fastify.log.info(`Server listening on http://0.0.0.0:${PORT} (public URL uses your Railway domain)`);
   } catch (err) {
