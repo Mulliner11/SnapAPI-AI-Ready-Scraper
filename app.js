@@ -17,7 +17,11 @@ const MODE_PDF = "pdf";
 let outputMode = MODE_SCREENSHOT;
 
 const savedKey = localStorage.getItem("snapapi_demo_key");
-if (savedKey) apiKeyInput.value = savedKey;
+if (savedKey) {
+  apiKeyInput.value = savedKey;
+} else {
+  apiKeyInput.value = "sk-test-666";
+}
 
 function persistApiKey() {
   localStorage.setItem("snapapi_demo_key", apiKeyInput.value.trim());
@@ -79,9 +83,11 @@ function showPreviewFromPath(path) {
     return;
   }
 
-  previewState.classList.add("hidden");
   downloadPdfBtn.classList.add("hidden");
   downloadPdfBtn.removeAttribute("href");
+  previewState.classList.remove("hidden", "text-red-400", "animate-none");
+  previewState.classList.add("text-slate-400", "animate-pulse");
+  previewState.textContent = "图片加载中...";
   const bust = path.includes("?") ? "&" : "?";
   previewImage.src = `${path}${bust}t=${Date.now()}`;
   previewImage.classList.remove("hidden");
@@ -152,6 +158,10 @@ async function generate() {
     generateBtn.classList.remove("opacity-80", "scale-[0.99]");
   }
 }
+
+previewImage.addEventListener("load", () => {
+  previewState.classList.add("hidden");
+});
 
 previewImage.addEventListener("error", () => {
   previewImage.classList.add("hidden");

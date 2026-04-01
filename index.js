@@ -66,6 +66,7 @@ const CHROMIUM_LAUNCH_OPTIONS = {
 const PORT = Number(process.env.PORT) || 3000;
 const LISTEN_HOST = "0.0.0.0";
 const gotoTimeoutMs = Number(process.env.SCREENSHOT_GOTO_TIMEOUT_MS) || 60_000;
+const DEMO_API_KEY = process.env.DEMO_API_KEY || "sk-test-666";
 
 let r2Config;
 let s3Client;
@@ -315,7 +316,9 @@ async function registerRoutes() {
         contentType: "image/png",
       });
 
-      await recordApiUsage(user.id, "screenshot", sourceUrl, url);
+      if (user?.id && getPool()) {
+        await recordApiUsage(user.id, "screenshot", sourceUrl, url);
+      }
 
       return reply.send({
         status: "success",
@@ -367,7 +370,9 @@ async function registerRoutes() {
         contentType: "application/pdf",
       });
 
-      await recordApiUsage(user.id, "pdf", sourceUrl, url);
+      if (user?.id && getPool()) {
+        await recordApiUsage(user.id, "pdf", sourceUrl, url);
+      }
 
       return reply.send({
         status: "success",
@@ -417,14 +422,22 @@ async function start() {
       request.method === "POST" && (pathname === "/screenshot" || pathname === "/pdf");
 
     if (needsApiKey) {
-      const pool = getPool();
-      if (!pool) {
-        return reply.code(503).send({ error: "Database not configured (set DATABASE_URL)" });
-      }
       const key = headerApiKey(request);
       if (!key) {
         return reply.code(401).send({ error: "Missing x-api-key header" });
       }
+
+      const pool = getPool();
+      if (!pool) {
+        if (key !== DEMO_API_KEY) {
+          return reply.code(401).send({
+            error: "Invalid API key for demo mode. Use sk-test-666 or set DATABASE_URL for real keys.",
+          });
+        }
+        request.snapUser = null;
+        return;
+      }
+
       const user = await findUserForApiKey(key);
       if (!user) {
         return reply.code(401).send({ error: "Invalid API key" });
