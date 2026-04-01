@@ -9,7 +9,11 @@
       tailwind.config = {
         theme: {
           extend: {
-            colors: { panel: "#0b1020", accent: "#7c3aed" },
+            colors: {
+              panel: "#0b1020",
+              panelSoft: "#111a31",
+              accent: "#7c3aed"
+            },
             boxShadow: { glow: "0 0 80px rgba(124, 58, 237, 0.28)" }
           }
         }
@@ -18,8 +22,9 @@
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased">
     <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div class="absolute right-1/3 top-[-160px] h-[400px] w-[400px] rounded-full bg-indigo-500/15 blur-[95px]"></div>
-      <div class="absolute bottom-[-100px] left-1/4 h-[320px] w-[320px] rounded-full bg-cyan-500/10 blur-[85px]"></div>
+      <div class="absolute left-1/2 top-[-220px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/30 blur-[130px]"></div>
+      <div class="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-indigo-500/25 blur-[120px]"></div>
+      <div class="absolute bottom-[-140px] left-[-120px] h-[320px] w-[320px] rounded-full bg-cyan-400/20 blur-[110px]"></div>
     </div>
 
     <header class="border-b border-white/10 bg-slate-950/80 backdrop-blur-md">

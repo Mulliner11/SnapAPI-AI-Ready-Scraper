@@ -4,8 +4,7 @@ const require = createRequire(import.meta.url);
 require("dotenv").config();
 
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import session from "@fastify/session";
@@ -26,9 +25,8 @@ import {
 } from "./db.js";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-/** Static HTML/JS/CSS live in ./public */
-const PUBLIC_DIR = join(__dirname, "public");
+/** HTML/JS/CSS and sendFile root: project working directory (Railway cwd = repo root) */
+const PUBLIC_DIR = process.cwd();
 
 const SESSION_SECRET_RAW = process.env.SESSION_SECRET || "snapapi-development-session-secret-min-32-chars-long!!";
 const SESSION_SECRET =
@@ -427,7 +425,16 @@ async function start() {
   await fastify.register(fastifyStatic, {
     root: PUBLIC_DIR,
     prefix: "/",
-    index: ["index.html"],
+    index: false,
+    allowedPath: (pathname) => {
+      const p = pathname.split("?")[0];
+      if (
+        /^\/(app\.js|index\.html|login\.html|dashboard\.html|docs\.html|privacy\.html|terms\.html)$/.test(p)
+      ) {
+        return true;
+      }
+      return /\.(css|png|jpg|jpeg|gif|svg|webp|ico)$/i.test(p);
+    },
   });
 
   try {
