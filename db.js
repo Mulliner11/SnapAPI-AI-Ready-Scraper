@@ -38,6 +38,7 @@ export async function initDb() {
       email TEXT UNIQUE NOT NULL,
       api_key TEXT UNIQUE NOT NULL,
       plan TEXT NOT NULL DEFAULT 'free',
+      status TEXT NOT NULL DEFAULT 'active',
       usage_count INT NOT NULL DEFAULT 0,
       max_limit INT NOT NULL DEFAULT 100,
       usage_month TEXT NOT NULL DEFAULT (to_char(timezone('utc', now()), 'YYYY-MM'))
@@ -79,7 +80,9 @@ export async function findUserForApiKey(apiKey) {
   if (!pool || !apiKey || typeof apiKey !== "string") return null;
 
   const r = await pool.query(
-    `SELECT id, email, api_key, plan, usage_count, max_limit, usage_month FROM users WHERE api_key = $1`,
+    `SELECT id, email, api_key, plan, status, usage_count, max_limit, usage_month
+     FROM users
+     WHERE api_key = $1 AND status = 'active'`,
     [apiKey.trim()]
   );
   const row = r.rows[0];
@@ -93,6 +96,19 @@ export async function findUserForApiKey(apiKey) {
   }
 
   return row;
+}
+
+export async function upsertPaidUserByEmail(email, plan, apiKey, status = "active") {
+  if (!pool) throw new Error("Database not configured");
+  const r = await pool.query(
+    `INSERT INTO users (email, api_key, plan, status)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (email)
+     DO UPDATE SET plan = EXCLUDED.plan, status = EXCLUDED.status, api_key = EXCLUDED.api_key
+     RETURNING id, email, api_key, plan, status, usage_count, max_limit, usage_month`,
+    [email.trim(), apiKey.trim(), plan, status]
+  );
+  return r.rows[0];
 }
 
 export function isOverQuota(user) {

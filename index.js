@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 require("dotenv").config();
 
+import crypto from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -22,6 +23,7 @@ import {
   isOverQuota,
   recordApiUsage,
   saveLoginCode,
+  upsertPaidUserByEmail,
 } from "./db.js";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
 
@@ -67,6 +69,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const LISTEN_HOST = "0.0.0.0";
 const gotoTimeoutMs = Number(process.env.SCREENSHOT_GOTO_TIMEOUT_MS) || 60_000;
 const DEMO_API_KEY = process.env.DEMO_API_KEY || "sk-test-666";
+const NOWPAYMENTS_IPN_SECRET = process.env.NOWPAYMENTS_IPN_SECRET || "";
 
 let r2Config;
 let s3Client;
@@ -143,6 +146,55 @@ function normalizeSourceUrl(input) {
   }
 
   return parsed.toString();
+}
+
+function stableStringify(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  const keys = Object.keys(value).sort();
+  return `{${keys.map((k) => JSON.stringify(k) + ":" + stableStringify(value[k])).join(",")}}`;
+}
+
+function verifyNowPaymentsSignature(rawBody, signature) {
+  if (!NOWPAYMENTS_IPN_SECRET) return false;
+  if (!signature) return false;
+  let payload;
+  try {
+    payload = JSON.parse(rawBody.toString("utf8"));
+  } catch {
+    return false;
+  }
+  const sorted = stableStringify(payload);
+  const expected = crypto.createHmac("sha512", NOWPAYMENTS_IPN_SECRET).update(sorted).digest("hex");
+  return expected === String(signature).toLowerCase();
+}
+
+function extractEmailFromNowPayments(payload) {
+  const direct =
+    payload?.email ||
+    payload?.customer_email ||
+    payload?.payer_email ||
+    payload?.buyer_email ||
+    payload?.order_email;
+  if (typeof direct === "string" && direct.includes("@")) return direct.trim();
+  const hay = [payload?.order_description, payload?.order_id, payload?.payment_id]
+    .filter((x) => typeof x === "string")
+    .join(" ");
+  const m = hay.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  return m ? m[0].trim() : "";
+}
+
+function planFromNowPayments(payload) {
+  const amt = Number(payload?.price_amount ?? payload?.actually_paid ?? payload?.pay_amount);
+  if (Number.isFinite(amt)) {
+    if (Math.abs(amt - 99) < 0.01) return "business";
+    if (Math.abs(amt - 29) < 0.01) return "pro";
+  }
+  return "pro";
+}
+
+function generateLiveApiKey() {
+  return `sk-live-${crypto.randomBytes(18).toString("hex")}`;
 }
 
 /** @param {{ width: number; height: number } | null} viewport */
@@ -233,6 +285,68 @@ async function registerRoutes() {
 
   fastify.get("/terms.html", async (request, reply) => {
     return sendCwdFile(reply, "terms.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/success", async (request, reply) => {
+    return sendCwdFile(reply, "success.html", "text/html; charset=utf-8");
+  });
+
+  // NOWPayments webhook (encapsulated raw-body JSON parser)
+  fastify.register(async (instance) => {
+    instance.addContentTypeParser(
+      "application/json",
+      { parseAs: "buffer" },
+      (req, body, done) => done(null, body)
+    );
+
+    instance.post("/webhooks/nowpayments", async (request, reply) => {
+      const rawBody = request.body;
+      const sig = request.headers["x-nowpayments-sig"] || request.headers["X-NOWPAYMENTS-SIG"];
+      if (!verifyNowPaymentsSignature(rawBody, sig)) {
+        return reply.code(401).send({ error: "Invalid signature" });
+      }
+
+      let payload;
+      try {
+        payload = JSON.parse(rawBody.toString("utf8"));
+      } catch {
+        return reply.code(400).send({ error: "Invalid JSON" });
+      }
+
+      const status = String(payload?.payment_status || "").toLowerCase();
+      if (status !== "finished") {
+        return reply.send({ ok: true });
+      }
+
+      const pool = getPool();
+      if (!pool) {
+        return reply.code(503).send({ error: "Database not configured" });
+      }
+
+      const email = extractEmailFromNowPayments(payload);
+      if (!email) {
+        return reply.code(400).send({ error: "Missing email in order payload" });
+      }
+
+      const plan = planFromNowPayments(payload);
+      // best-effort collision avoidance via retry
+      let user;
+      for (let i = 0; i < 5; i++) {
+        const apiKey = generateLiveApiKey();
+        try {
+          user = await upsertPaidUserByEmail(email, plan, apiKey, "active");
+          break;
+        } catch (e) {
+          if (String(e?.message || "").includes("duplicate") || e?.code === "23505") continue;
+          throw e;
+        }
+      }
+      if (!user) {
+        return reply.code(500).send({ error: "Failed to provision user" });
+      }
+
+      return reply.send({ ok: true, email: user.email, plan: user.plan });
+    });
   });
 
   fastify.post(
