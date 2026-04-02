@@ -1,5 +1,5 @@
 import axios from "axios";
-import { prisma } from "../lib/prisma.js";
+import { prisma } from "./prismaClient.js";
 
 const NP_BASE = (process.env.NP_API_BASE || "https://api.nowpayments.io").replace(/\/$/, "");
 

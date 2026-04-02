@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
-import { prisma } from "../lib/prisma.js";
-import { signAccessToken } from "../lib/authContext.js";
-import { ensureUserByEmail } from "../db.js";
+import { prisma } from "./prismaClient.js";
+import { signAccessToken } from "./authContext.js";
+import { ensureUserByEmail } from "./db.js";
 
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
 const RESEND_FROM = String(process.env.RESEND_FROM || "").trim() || "SnapAPI <support@getsnapapi.uk";

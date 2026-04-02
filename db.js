@@ -27,13 +27,14 @@ export async function initDb() {
     return;
   }
 
-  pool = new Pool({
+  const newPool = new Pool({
     connectionString: url,
     max: 10,
     ssl: sslOption(url),
   });
 
-  await pool.query(`
+  try {
+    await newPool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
@@ -76,24 +77,30 @@ export async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_magic_login_expires ON magic_login_tokens (expires_at);
   `);
 
-  await pool.query(`
+    await newPool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
   `);
 
-  await pool.query(`
+    await newPool.query(`
     ALTER TABLE users ALTER COLUMN plan SET DEFAULT 'free';
   `);
 
-  await pool.query(`
+    await newPool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS nowpayments_subscription_id TEXT;
   `);
 
-  await pool.query(`
+    await newPool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nowpayments_subscription_id
     ON users (nowpayments_subscription_id) WHERE nowpayments_subscription_id IS NOT NULL;
   `);
 
-  console.log("[SnapAPI] PostgreSQL schema ready.");
+    pool = newPool;
+    console.log("[SnapAPI] PostgreSQL schema ready.");
+  } catch (e) {
+    await newPool.end().catch(() => {});
+    pool = null;
+    console.error("[SnapAPI] PostgreSQL connection or schema init failed:", e?.message || e);
+  }
 }
 
 function generateLiveApiKey() {

@@ -1,5 +1,5 @@
 // SnapAPI — Prisma models (separate tables from legacy pg `users` via @@map)
-// npx prisma migrate dev && npx prisma generate
+// Import client from ./prismaClient.js at repo root. Run: npx prisma migrate deploy && npx prisma generate
 
 generator client {
   provider = "prisma-client-js"

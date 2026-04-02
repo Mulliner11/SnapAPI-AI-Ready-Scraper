@@ -1,4 +1,4 @@
 {
   "build": { "builder": "NIXPACKS" },
-  "deploy": { "startCommand": "node index.js" }
+  "deploy": { "startCommand": "node server.js" }
 }
