@@ -70,6 +70,9 @@ const LISTEN_HOST = "0.0.0.0";
 const gotoTimeoutMs = Number(process.env.SCREENSHOT_GOTO_TIMEOUT_MS) || 60_000;
 const DEMO_API_KEY = process.env.DEMO_API_KEY || "sk-test-666";
 const NOWPAYMENTS_IPN_SECRET = process.env.NOWPAYMENTS_IPN_SECRET || "";
+/** Resend: API key required to send; `from` overridable via env */
+const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || "";
+const RESEND_FROM = process.env.RESEND_FROM?.trim() || "SnapAPI <support@getsnapapi.uk>";
 
 let r2Config;
 let s3Client;
@@ -195,6 +198,30 @@ function planFromNowPayments(payload) {
 
 function generateLiveApiKey() {
   return `sk-live-${crypto.randomBytes(18).toString("hex")}`;
+}
+
+async function sendLoginCodeEmail(to, code) {
+  if (!RESEND_API_KEY) {
+    return { sent: false, reason: "no_api_key" };
+  }
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: RESEND_FROM,
+      to: [to.trim()],
+      subject: "Your SnapAPI verification code",
+      html: `<p>Your verification code is: <strong>${code}</strong></p><p>It expires in 10 minutes.</p>`,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Resend failed: ${res.status} ${text}`);
+  }
+  return { sent: true };
 }
 
 /** @param {{ width: number; height: number } | null} viewport */
@@ -372,9 +399,22 @@ async function registerRoutes() {
       }
       const code = String(Math.floor(100000 + Math.random() * 900000));
       await saveLoginCode(email, code, 10);
-      console.log(`[SnapAPI login code] ${email.trim()} -> ${code} (expires in 10 min, MVP: check Railway logs)`);
+      if (RESEND_API_KEY) {
+        try {
+          await sendLoginCodeEmail(email, code);
+          return reply.send({
+            message: "Verification code sent to your email.",
+          });
+        } catch (err) {
+          console.error("[SnapAPI] Resend failed:", err?.message || err);
+          return reply.code(502).send({ error: "Failed to send verification email. Try again later." });
+        }
+      }
+      console.log(
+        `[SnapAPI login code] ${email.trim()} -> ${code} (expires in 10 min; set RESEND_API_KEY to email codes)`
+      );
       return reply.send({
-        message: "Verification code issued. In MVP, check server logs for the code.",
+        message: "Verification code issued. Email is not configured; check server logs for the code.",
       });
     }
   );
