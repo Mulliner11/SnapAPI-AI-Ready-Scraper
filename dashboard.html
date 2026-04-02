@@ -60,8 +60,17 @@
       </section>
     </div>
     <script>
+      const JWT_KEY = "snapapi_jwt";
+
+      function authHeaders() {
+        const t = localStorage.getItem(JWT_KEY);
+        const h = { "Content-Type": "application/json" };
+        if (t) h.Authorization = "Bearer " + t;
+        return h;
+      }
+
       async function load() {
-        const r = await fetch("/api/dashboard/summary", { credentials: "include" });
+        const r = await fetch("/api/dashboard/summary", { headers: authHeaders(), credentials: "include" });
         if (r.status === 401) {
           window.location.href = "/login";
           return;
@@ -105,6 +114,7 @@
       };
 
       document.getElementById("logout").onclick = async () => {
+        localStorage.removeItem(JWT_KEY);
         await fetch("/auth/logout", { method: "POST", credentials: "include" });
         window.location.href = "/login";
       };

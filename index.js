@@ -3,7 +3,6 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 require("dotenv").config();
 
-import crypto from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,10 +12,6 @@ import session from "@fastify/session";
 import Fastify from "fastify";
 import { chromium } from "playwright";
 import {
-  consumeMagicLoginToken,
-  createMagicLoginToken,
-  ensureUserByEmail,
-  finalizeSubscriptionFromIpn,
   findUserForApiKey,
   getPool,
   getRecentLogs,
@@ -26,6 +21,11 @@ import {
   recordApiUsage,
 } from "./db.js";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
+import { prisma } from "./lib/prisma.js";
+import { postSubscribeHandler } from "./routes/subscribeInvoice.js";
+import { postNowpaymentsWebhook } from "./routes/nowpaymentsWebhook.js";
+import { getUserIdFromRequest } from "./lib/authContext.js";
+import { postAuthSendLink, postAuthVerify } from "./routes/authMagicLinkApi.js";
 
 const SESSION_SECRET_RAW = process.env.SESSION_SECRET || "snapapi-development-session-secret-min-32-chars-long!!";
 const SESSION_SECRET =
@@ -72,14 +72,6 @@ const PORT = Number(process.env.PORT) || 3000;
 const LISTEN_HOST = "0.0.0.0";
 const gotoTimeoutMs = Number(process.env.SCREENSHOT_GOTO_TIMEOUT_MS) || 60_000;
 const DEMO_API_KEY = process.env.DEMO_API_KEY || "sk-test-666";
-const NOWPAYMENTS_IPN_SECRET = process.env.NOWPAYMENTS_IPN_SECRET || "";
-/** NOWPayments subscription / payment API (create checkout links) */
-const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY?.trim() || "";
-const NOWPAYMENTS_PRO_PLAN_ID = process.env.NOWPAYMENTS_PRO_PLAN_ID || "1609279275";
-const NOWPAYMENTS_BUSINESS_PLAN_ID = process.env.NOWPAYMENTS_BUSINESS_PLAN_ID || "404010249";
-/** Resend: API key required to send; `from` overridable via env */
-const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || "";
-const RESEND_FROM = process.env.RESEND_FROM?.trim() || "SnapAPI <support@getsnapapi.uk>";
 
 let r2Config;
 let s3Client;
@@ -158,212 +150,6 @@ function normalizeSourceUrl(input) {
   return parsed.toString();
 }
 
-function stableStringify(value) {
-  if (value === null || typeof value !== "object") return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
-  const keys = Object.keys(value).sort();
-  return `{${keys.map((k) => JSON.stringify(k) + ":" + stableStringify(value[k])).join(",")}}`;
-}
-
-function verifyNowPaymentsSignature(rawBody, signature) {
-  if (!NOWPAYMENTS_IPN_SECRET) return false;
-  if (!signature) return false;
-  let payload;
-  try {
-    payload = JSON.parse(rawBody.toString("utf8"));
-  } catch {
-    return false;
-  }
-  const sorted = stableStringify(payload);
-  const expected = crypto.createHmac("sha512", NOWPAYMENTS_IPN_SECRET).update(sorted).digest("hex");
-  return expected === String(signature).toLowerCase();
-}
-
-function extractEmailFromNowPayments(payload) {
-  const directFields = [
-    payload?.subscription_email,
-    payload?.email,
-    payload?.customer_email,
-    payload?.payer_email,
-    payload?.buyer_email,
-    payload?.order_email,
-  ];
-  for (const v of directFields) {
-    if (typeof v === "string" && v.includes("@")) return v.trim().toLowerCase();
-  }
-  const payAddr = payload?.pay_address;
-  if (typeof payAddr === "string" && payAddr.includes("@")) {
-    return payAddr.trim().toLowerCase();
-  }
-  const orderId = payload?.order_id;
-  if (typeof orderId === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderId.trim())) {
-    return orderId.trim().toLowerCase();
-  }
-  const hay = [
-    payload?.order_description,
-    payload?.order_id,
-    payload?.payment_id,
-    typeof payAddr === "string" ? payAddr : "",
-  ]
-    .filter((x) => typeof x === "string")
-    .join(" ");
-  const m = hay.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
-  return m ? m[0].trim().toLowerCase() : "";
-}
-
-function planFromNowPayments(payload) {
-  const amt = Number(payload?.price_amount ?? payload?.actually_paid ?? payload?.pay_amount);
-  if (Number.isFinite(amt)) {
-    if (Math.abs(amt - 99) < 0.01) return "business";
-    if (Math.abs(amt - 29) < 0.01) return "pro";
-  }
-  return "pro";
-}
-
-function planTierFromNowPaymentsPayload(payload) {
-  const pid = String(payload?.subscription_plan_id ?? payload?.plan_id ?? "").trim();
-  if (pid && pid === String(NOWPAYMENTS_BUSINESS_PLAN_ID)) return "business";
-  if (pid && pid === String(NOWPAYMENTS_PRO_PLAN_ID)) return "pro";
-  return planFromNowPayments(payload);
-}
-
-function extractNowPaymentsSubscriptionId(payload) {
-  const v = payload?.subscription_id ?? payload?.subscriptionId ?? payload?.subscriber_id;
-  if (v != null && String(v).trim() !== "") return String(v).trim();
-  return null;
-}
-
-function pickNowPaymentsCheckoutUrl(obj) {
-  if (!obj || typeof obj !== "object") return null;
-  const candidates = [
-    obj.payment_url,
-    obj.pay_url,
-    obj.invoice_url,
-    obj.payment_link,
-    obj.paymentUrl,
-    obj.url,
-    obj.result?.payment_url,
-    obj.data?.payment_url,
-  ];
-  for (const c of candidates) {
-    if (typeof c === "string" && /^https?:\/\//i.test(c)) return c;
-  }
-  return null;
-}
-
-async function createNowPaymentsSubscription({ email, planType }) {
-  if (!NOWPAYMENTS_API_KEY) {
-    const err = new Error("NOWPayments API is not configured");
-    err.statusCode = 503;
-    throw err;
-  }
-  const planId = planType === "business" ? NOWPAYMENTS_BUSINESS_PLAN_ID : NOWPAYMENTS_PRO_PLAN_ID;
-  const subscriptionEmail = String(email || "").trim();
-  const numPlanId = Number(planId);
-  const body = {
-    subscription_plan_id: Number.isFinite(numPlanId) ? numPlanId : planId,
-    subscription_email: subscriptionEmail,
-    email: subscriptionEmail,
-  };
-  const res = await fetch("https://api.nowpayments.io/v1/subscriptions", {
-    method: "POST",
-    headers: {
-      "x-api-key": NOWPAYMENTS_API_KEY,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  const text = await res.text();
-  let data;
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    const err = new Error(`NOWPayments returned non-JSON: ${text.slice(0, 200)}`);
-    err.statusCode = 502;
-    throw err;
-  }
-  if (!res.ok) {
-    const msg = data.message || data.error || `NOWPayments HTTP ${res.status}`;
-    const err = new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
-    err.statusCode = 502;
-    throw err;
-  }
-  const paymentUrl = pickNowPaymentsCheckoutUrl(data);
-  if (!paymentUrl) {
-    const err = new Error("NOWPayments response did not include a payment URL");
-    err.statusCode = 502;
-    throw err;
-  }
-  return { payment_url: paymentUrl, raw: data };
-}
-
-function escapeHtmlText(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/"/g, "&quot;");
-}
-
-async function sendSubscriptionWelcomeEmail(to, apiKey, plan) {
-  if (!RESEND_API_KEY) {
-    console.warn(`[SnapAPI] RESEND_API_KEY not set; skipping welcome email to ${to}`);
-    return;
-  }
-  const safeKey = escapeHtmlText(apiKey);
-  const safePlan = escapeHtmlText(plan);
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: RESEND_FROM,
-      to: [to.trim()],
-      subject: "Your SnapAPI subscription is active",
-      html: `<p>Thanks for subscribing to SnapAPI.</p>
-        <p>Plan: <strong>${safePlan}</strong></p>
-        <p>Your API key (store it securely):</p>
-        <pre style="background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;word-break:break-all;">${safeKey}</pre>
-        <p><a href="${escapeHtmlText(
-          (process.env.PUBLIC_APP_URL || "https://getsnapapi.uk").replace(/\/$/, "")
-        )}/dashboard">Open your dashboard</a></p>`,
-    }),
-  });
-  if (!res.ok) {
-    const t = await res.text().catch(() => "");
-    throw new Error(`Resend welcome email failed: ${res.status} ${t}`);
-  }
-}
-
-function publicAppBaseUrl(request) {
-  const env = process.env.PUBLIC_APP_URL?.trim().replace(/\/$/, "");
-  if (env) return env;
-  const host = request.headers["x-forwarded-host"] || request.headers.host || `localhost:${PORT}`;
-  const proto = (request.headers["x-forwarded-proto"] || request.protocol || "http").split(",")[0].trim();
-  return `${proto}://${host}`;
-}
-
-async function sendMagicLinkEmail(to, magicLink) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: RESEND_FROM,
-      to: [to.trim()],
-      subject: "Sign in to SnapAPI",
-      html: `<p>Click the link below to sign in to SnapAPI (expires in 15 minutes):</p><p><a href="${magicLink}">Sign in</a></p><p>If you did not request this, you can ignore this email.</p>`,
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Resend failed: ${res.status} ${text}`);
-  }
-}
-
 /** @param {{ width: number; height: number } | null} viewport */
 async function withPage(sourceUrl, viewport, fn) {
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
@@ -425,9 +211,6 @@ async function registerRoutes() {
   });
 
   fastify.get("/dashboard", async (request, reply) => {
-    if (!request.session?.userId) {
-      return reply.redirect(302, "/login");
-    }
     return sendCwdFile(reply, "dashboard.html", "text/html; charset=utf-8");
   });
 
@@ -465,32 +248,16 @@ async function registerRoutes() {
       schema: {
         body: {
           type: "object",
-          required: ["email", "plan_type"],
+          required: ["email"],
           properties: {
             email: { type: "string", minLength: 3 },
+            planType: { type: "string", enum: ["pro", "business"] },
             plan_type: { type: "string", enum: ["pro", "business"] },
           },
         },
       },
     },
-    async (request, reply) => {
-      if (!NOWPAYMENTS_API_KEY) {
-        return reply.code(503).send({ error: "NOWPayments API is not configured (NOWPAYMENTS_API_KEY)" });
-      }
-      const email = String(request.body.email || "").trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return reply.code(400).send({ error: "Invalid email" });
-      }
-      const planType = String(request.body.plan_type || "").toLowerCase();
-      try {
-        const { payment_url: paymentUrl } = await createNowPaymentsSubscription({ email, planType });
-        return reply.send({ payment_url: paymentUrl });
-      } catch (e) {
-        request.log.error(e, "[NOWPayments] POST /api/subscribe failed");
-        const code = typeof e.statusCode === "number" ? e.statusCode : 502;
-        return reply.code(code).send({ error: e.message || "NOWPayments request failed" });
-      }
-    }
+    postSubscribeHandler
   );
 
   // NOWPayments webhook (encapsulated raw-body JSON parser)
@@ -501,65 +268,11 @@ async function registerRoutes() {
       (req, body, done) => done(null, body)
     );
 
-    instance.post("/webhooks/nowpayments", async (request, reply) => {
-      const rawBody = request.body;
-      const sig = request.headers["x-nowpayments-sig"] || request.headers["X-NOWPAYMENTS-SIG"];
-      if (!verifyNowPaymentsSignature(rawBody, sig)) {
-        return reply.code(401).send({ error: "Invalid signature" });
-      }
-
-      let payload;
-      try {
-        payload = JSON.parse(rawBody.toString("utf8"));
-      } catch {
-        return reply.code(400).send({ error: "Invalid JSON" });
-      }
-
-      const status = String(payload?.payment_status || "").toLowerCase();
-      if (status !== "finished") {
-        return reply.send({ ok: true });
-      }
-
-      const pool = getPool();
-      if (!pool) {
-        return reply.code(503).send({ error: "Database not configured" });
-      }
-
-      const email = extractEmailFromNowPayments(payload);
-      if (!email) {
-        request.log.warn(
-          { keys: Object.keys(payload || {}) },
-          "[NOWPayments] finished payment but could not resolve customer email (set order_description or standard email fields)"
-        );
-        return reply.code(400).send({ error: "Could not resolve user email from IPN payload" });
-      }
-
-      const plan = planTierFromNowPaymentsPayload(payload);
-      const subId = extractNowPaymentsSubscriptionId(payload);
-      let result;
-      try {
-        result = await finalizeSubscriptionFromIpn(email, plan, subId);
-      } catch (e) {
-        request.log.error(e, "[NOWPayments] finalizeSubscriptionFromIpn failed");
-        return reply.code(500).send({ error: "Failed to update subscription" });
-      }
-
-      const { user, rotatedKey } = result;
-      if (rotatedKey) {
-        try {
-          await sendSubscriptionWelcomeEmail(user.email, user.api_key, user.plan);
-        } catch (e) {
-          request.log.error(e, "[NOWPayments] welcome email failed (subscription still saved)");
-        }
-      }
-
-      return reply.send({ ok: true, email: user.email, plan: user.plan });
-    });
+    instance.post("/webhooks/nowpayments", postNowpaymentsWebhook);
   });
 
-  /** Magic link: email contains one-time token; callback sets session cookie */
   fastify.post(
-    "/auth/login",
+    "/api/auth/send-link",
     {
       schema: {
         body: {
@@ -569,71 +282,27 @@ async function registerRoutes() {
         },
       },
     },
-    async (request, reply) => {
-      const pool = getPool();
-      if (!pool) {
-        return reply.code(503).send({ error: "Database not configured (DATABASE_URL)" });
-      }
-      const email = String(request.body.email || "").trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return reply.code(400).send({ error: "Invalid email" });
-      }
-      const token = await createMagicLoginToken(email);
-      if (!token) {
-        return reply.code(500).send({ error: "Could not create login token" });
-      }
-      const base = publicAppBaseUrl(request);
-      const magicLink = `${base}/auth/callback?token=${encodeURIComponent(token)}`;
-
-      if (!RESEND_API_KEY) {
-        if (process.env.NODE_ENV === "production") {
-          return reply.code(503).send({ error: "Email delivery not configured (RESEND_API_KEY)" });
-        }
-        request.log.warn({ magicLink }, "[SnapAPI] Magic link (dev, RESEND_API_KEY unset)");
-        return reply.send({
-          ok: true,
-          message: "Development: open the magic link below or set RESEND_API_KEY.",
-          dev: true,
-          magicLink,
-        });
-      }
-
-      try {
-        await sendMagicLinkEmail(email, magicLink);
-      } catch (err) {
-        console.error("[SnapAPI] Resend failed:", err?.message || err);
-        return reply.code(502).send({ error: "Failed to send login email. Try again later." });
-      }
-      return reply.send({ ok: true, message: "Check your email for the login link." });
-    }
+    postAuthSendLink
   );
 
-  fastify.get("/auth/callback", async (request, reply) => {
-    const pool = getPool();
-    const raw = request.query?.token;
-    const token = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : "";
-    if (!token) {
-      return reply.redirect(302, "/login?error=missing_token");
-    }
-    if (!pool) {
-      return reply.redirect(302, "/login?error=no_db");
-    }
-    const email = await consumeMagicLoginToken(token);
-    if (!email) {
-      return reply.redirect(302, "/login?error=invalid_or_expired");
-    }
-    const user = await ensureUserByEmail(email);
-    if (!user) {
-      return reply.redirect(302, "/login?error=user");
-    }
-    request.session.userId = user.id;
-    return reply.redirect(302, "/dashboard");
-  });
+  fastify.post(
+    "/api/auth/verify",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["token"],
+          properties: { token: { type: "string", minLength: 16 } },
+        },
+      },
+    },
+    postAuthVerify
+  );
 
-  /** Current user: API key + usage (session cookie from @fastify/session) */
+  /** Current user: session cookie or Bearer JWT (same pg user as dashboard). */
   fastify.get("/api/user/me", async (request, reply) => {
     const pool = getPool();
-    const uid = request.session?.userId;
+    const uid = await getUserIdFromRequest(request);
     if (!uid || !pool) {
       return reply.send({ loggedIn: false });
     }
@@ -661,7 +330,7 @@ async function registerRoutes() {
     if (!pool) {
       return reply.code(503).send({ error: "Database not configured" });
     }
-    const uid = request.session?.userId;
+    const uid = await getUserIdFromRequest(request);
     if (!uid) {
       return reply.code(401).send({ error: "Unauthorized" });
     }
@@ -778,14 +447,26 @@ async function registerRoutes() {
 async function start() {
   await initDb();
 
+  try {
+    await prisma.$connect();
+  } catch (e) {
+    console.warn(
+      "[SnapAPI] Prisma could not connect (run `npx prisma migrate deploy` and ensure DATABASE_URL). /api/subscribe will fail until fixed:",
+      e?.message || e
+    );
+  }
+
   if (process.env.NODE_ENV === "production") {
     if (!String(process.env.NOWPAYMENTS_IPN_SECRET || "").trim()) {
       console.warn(
-        "[SnapAPI] Set NOWPAYMENTS_IPN_SECRET on Railway (from NOWPayments dashboard); without it POST /webhooks/nowpayments returns 401."
+        "[SnapAPI] Set NOWPAYMENTS_IPN_SECRET on Railway; without it POST /webhooks/nowpayments will reject signatures (403)."
       );
     }
-    if (!String(process.env.NOWPAYMENTS_API_KEY || "").trim()) {
-      console.warn("[SnapAPI] Set NOWPAYMENTS_API_KEY on Railway for POST /api/subscribe checkout links.");
+    if (!String(process.env.NP_API_KEY || "").trim()) {
+      console.warn("[SnapAPI] Set NP_API_KEY on Railway for POST /api/subscribe (NOWPayments invoice).");
+    }
+    if (!String(process.env.JWT_SECRET || "").trim() || String(process.env.JWT_SECRET).trim().length < 32) {
+      console.warn("[SnapAPI] Set JWT_SECRET (min 32 chars) for POST /api/auth/verify.");
     }
   }
 
@@ -809,7 +490,8 @@ async function start() {
     allowList: (request) => {
       const pathname = (request.url || "").split("?")[0];
       if (pathname === "/health") return true;
-      if (pathname === "/auth/login" && request.method === "POST") return true;
+      if (pathname === "/api/auth/send-link" && request.method === "POST") return true;
+      if (pathname === "/api/auth/verify" && request.method === "POST") return true;
       if (pathname === "/webhooks/nowpayments" && request.method === "POST") return true;
       if (pathname === "/api/subscribe" && request.method === "POST") return true;
       return false;

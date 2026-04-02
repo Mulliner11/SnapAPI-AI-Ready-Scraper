@@ -304,11 +304,12 @@ urlInput.addEventListener("keydown", (event) => {
         errEl.classList.remove("hidden");
         return;
       }
-      if (data.payment_url) {
-        window.location.href = data.payment_url;
+      const checkout = data.invoice_url || data.payment_url;
+      if (checkout) {
+        window.location.href = checkout;
         return;
       }
-      errEl.textContent = "No payment URL returned";
+      errEl.textContent = "No checkout URL returned";
       errEl.classList.remove("hidden");
     } catch {
       errEl.textContent = "Network error";

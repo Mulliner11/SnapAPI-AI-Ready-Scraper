@@ -533,7 +533,10 @@
         injectFooterEmail();
         (async function () {
           try {
-            var r = await fetch("/api/user/me", { credentials: "include" });
+            var jwt = localStorage.getItem("snapapi_jwt");
+            var headers = {};
+            if (jwt) headers.Authorization = "Bearer " + jwt;
+            var r = await fetch("/api/user/me", { credentials: "include", headers: headers });
             var d = await r.json().catch(function () {
               return {};
             });

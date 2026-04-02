@@ -48,6 +48,8 @@
       const devLinkBox = document.getElementById("devLinkBox");
       const devMagicLink = document.getElementById("devMagicLink");
 
+      const JWT_KEY = "snapapi_jwt";
+
       const errMap = {
         missing_token: "This link is invalid. Request a new sign-in email.",
         invalid_or_expired: "This link has expired or was already used. Send a new one.",
@@ -61,6 +63,30 @@
         errorBanner.classList.remove("hidden");
       }
 
+      (async function consumeTokenFromUrl() {
+        const token = params.get("token");
+        if (!token) return;
+        window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+        try {
+          const r = await fetch("/api/auth/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.ok && d.token) {
+            localStorage.setItem(JWT_KEY, d.token);
+            window.location.replace("/dashboard");
+            return;
+          }
+          errorBanner.textContent = d.error || "This link is invalid or has expired. Request a new email.";
+          errorBanner.classList.remove("hidden");
+        } catch {
+          errorBanner.textContent = "Could not verify the link. Try again.";
+          errorBanner.classList.remove("hidden");
+        }
+      })();
+
       async function go() {
         msg.textContent = "";
         msg.className = "text-center text-sm text-red-400";
@@ -70,10 +96,9 @@
         const btn = document.getElementById("continueBtn");
         btn.disabled = true;
         try {
-          const r = await fetch("/auth/login", {
+          const r = await fetch("/api/auth/send-link", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            credentials: "include",
             body: JSON.stringify({ email }),
           });
           const d = await r.json().catch(() => ({}));

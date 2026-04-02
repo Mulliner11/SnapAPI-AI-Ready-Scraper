@@ -364,39 +364,6 @@ export async function consumeLoginCode(email, code) {
   return r.rowCount > 0;
 }
 
-function hashMagicToken(plain) {
-  return crypto.createHash("sha256").update(String(plain).trim(), "utf8").digest("hex");
-}
-
-/**
- * @returns {Promise<string | null>} raw token to embed in magic link (single-use)
- */
-export async function createMagicLoginToken(email) {
-  if (!pool) return null;
-  const normalized = String(email || "").trim().toLowerCase();
-  if (!normalized || !normalized.includes("@")) return null;
-  const plain = crypto.randomBytes(32).toString("base64url");
-  const tokenHash = hashMagicToken(plain);
-  const expires = new Date(Date.now() + 15 * 60 * 1000);
-  await pool.query(`DELETE FROM magic_login_tokens WHERE email = $1 OR expires_at < now()`, [normalized]);
-  await pool.query(
-    `INSERT INTO magic_login_tokens (token_hash, email, expires_at) VALUES ($1, $2, $3)`,
-    [tokenHash, normalized, expires]
-  );
-  return plain;
-}
-
-/** @returns {Promise<string | null>} normalized email */
-export async function consumeMagicLoginToken(plainToken) {
-  if (!pool || !plainToken) return null;
-  const tokenHash = hashMagicToken(plainToken);
-  const r = await pool.query(
-    `DELETE FROM magic_login_tokens WHERE token_hash = $1 AND expires_at > now() RETURNING email`,
-    [tokenHash]
-  );
-  return r.rows[0]?.email || null;
-}
-
 export async function getUserDashboardRow(userId) {
   if (!pool) return null;
   const month = currentUsageMonth();
