@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" class="scroll-smooth">
+<html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -56,7 +56,7 @@
           <a
             href="/"
             class="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-slate-300 transition hover:border-indigo-400/40 hover:bg-white/10"
-            >首页</a
+            >Home</a
           >
         </div>
       </div>
@@ -67,31 +67,31 @@
       <aside
         class="border-b border-white/10 lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:w-52 lg:shrink-0 lg:border-b-0 lg:border-r lg:border-white/10 lg:overflow-y-auto"
       >
-        <nav class="flex gap-1 overflow-x-auto px-4 py-4 lg:flex-col lg:gap-0.5 lg:px-5 lg:py-8" id="docNav" aria-label="文档目录">
+        <nav class="flex gap-1 overflow-x-auto px-4 py-4 lg:flex-col lg:gap-0.5 lg:px-5 lg:py-8" id="docNav" aria-label="Documentation">
           <a
             href="#authentication"
             class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
-            >鉴权</a
+            >Authentication</a
           >
           <a
             href="#endpoints"
             class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
-            >端点</a
+            >Endpoints</a
           >
           <a
             href="#parameters"
             class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
-            >参数</a
+            >Parameters</a
           >
           <a
             href="#errors"
             class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
-            >错误码</a
+            >Errors</a
           >
           <a
             href="#limits"
             class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
-            >限制</a
+            >Limits</a
           >
           <a
             href="#sdk"
@@ -106,31 +106,32 @@
         <p class="text-xs font-medium uppercase tracking-widest text-indigo-300/80">Reference</p>
         <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">SnapAPI HTTP API</h1>
         <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-          所有业务接口均为 <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">POST</code>，
-          <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">Content-Type: application/json</code>。
-          生产环境基址示例：<code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-cyan-200/80">https://snapapi.up.railway.app</code>
+          All API routes use <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">POST</code> with
+          <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">Content-Type: application/json</code>.
+          Example production base URL:
+          <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-cyan-200/80">https://snapapi.up.railway.app</code>
         </p>
 
         <!-- Authentication -->
         <section id="authentication" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">鉴权 · Authentication</h2>
+          <h2 class="text-xl font-semibold text-white">Authentication</h2>
           <p class="mt-3 text-sm leading-relaxed text-slate-400">
-            调用 <code class="text-indigo-200/90">/screenshot</code> 与 <code class="text-indigo-200/90">/pdf</code> 时，必须在请求头携带
-            <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-fuchsia-200/90">x-api-key</code>，值为你在数据库中为用户配置的
-            API Key（与 Dashboard 中展示的一致）。
+            Calls to <code class="text-indigo-200/90">/screenshot</code> and <code class="text-indigo-200/90">/pdf</code> must include
+            <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-fuchsia-200/90">x-api-key</code> with your user&rsquo;s API key
+            (the same value shown in the Dashboard).
           </p>
           <div class="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <p class="text-xs font-medium uppercase tracking-wider text-slate-500">请求头</p>
+            <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Header</p>
             <pre class="doc-code mt-2 overflow-x-auto text-slate-200"><code>x-api-key: &lt;YOUR_API_KEY&gt;</code></pre>
           </div>
           <p class="mt-3 text-xs text-slate-500">
-            请勿将 Key 提交到公开仓库；生产环境建议使用环境变量或密钥管理服务注入。
+            Never commit keys to public repositories; inject them from environment variables or a secrets manager in production.
           </p>
         </section>
 
         <!-- Endpoints -->
         <section id="endpoints" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">端点 · Endpoints</h2>
+          <h2 class="text-xl font-semibold text-white">Endpoints</h2>
 
           <article class="mt-8">
             <div class="flex flex-wrap items-center gap-2">
@@ -138,11 +139,11 @@
               <code class="text-base text-indigo-200">/screenshot</code>
             </div>
             <p class="mt-3 text-sm leading-relaxed text-slate-400">
-              使用无头浏览器打开目标 URL，截取页面为 PNG 并上传至对象存储，响应体返回可访问的图片 URL。
+              Opens the URL in headless Chromium, captures a PNG, uploads it to object storage, and returns a public image URL.
             </p>
             <ul class="mt-4 list-inside list-disc space-y-1.5 text-sm text-slate-400">
-              <li>默认整页截图（<code class="text-indigo-200/80">fullPage</code> 默认为真）；可改为仅视口。</li>
-              <li>可选 <code class="text-indigo-200/80">width</code> / <code class="text-indigo-200/80">height</code> 成对指定视口，影响布局与截图区域。</li>
+              <li>Full-page capture by default (<code class="text-indigo-200/80">fullPage</code> defaults to true); set false for viewport only.</li>
+              <li>Optional paired <code class="text-indigo-200/80">width</code> / <code class="text-indigo-200/80">height</code> set the viewport and affect layout.</li>
             </ul>
           </article>
 
@@ -152,16 +153,17 @@
               <code class="text-base text-indigo-200">/pdf</code>
             </div>
             <p class="mt-3 text-sm leading-relaxed text-slate-400">
-              同样基于 Chromium 渲染页面并导出 PDF，上传后返回下载链接。<code class="text-indigo-200/80">fullPage</code> 对 PDF 无单独语义；页面尺寸由视口与内容决定。
+              Renders the page with Chromium and exports PDF; response includes a download URL.
+              <code class="text-indigo-200/80">fullPage</code> is not used for PDF; page size follows viewport and content.
             </p>
             <ul class="mt-4 list-inside list-disc space-y-1.5 text-sm text-slate-400">
-              <li>若同时提供 <code class="text-indigo-200/80">width</code> 与 <code class="text-indigo-200/80">height</code>，将用该视口渲染，并以相同尺寸作为 PDF 页面大小。</li>
-              <li>若省略二者，则按文档滚动宽高自动计算 PDF 页面尺寸。</li>
+              <li>If both <code class="text-indigo-200/80">width</code> and <code class="text-indigo-200/80">height</code> are set, that viewport is used and defines the PDF page size.</li>
+              <li>If both are omitted, the PDF page size is derived from the document scroll dimensions.</li>
             </ul>
           </article>
 
           <div class="mt-8 rounded-xl border border-white/10 bg-[#060a12] p-4 ring-1 ring-inset ring-indigo-500/10">
-            <p class="text-xs font-medium text-slate-500">成功响应 JSON</p>
+            <p class="text-xs font-medium text-slate-500">Successful JSON response</p>
             <pre class="doc-code mt-2 overflow-x-auto text-slate-200"><code>{
   <span class="text-fuchsia-300/90">"status"</span>: <span class="text-emerald-300/90">"success"</span>,
   <span class="text-fuchsia-300/90">"message"</span>: <span class="text-emerald-300/90">"Screenshot saved"</span> | <span class="text-emerald-300/90">"PDF saved"</span>,
@@ -172,46 +174,47 @@
 
         <!-- Parameters -->
         <section id="parameters" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">请求体参数 · Parameters</h2>
-          <p class="mt-3 text-sm text-slate-400">JSON 对象字段说明如下。</p>
+          <h2 class="text-xl font-semibold text-white">Request body parameters</h2>
+          <p class="mt-3 text-sm text-slate-400">JSON fields supported by both endpoints:</p>
 
           <div class="mt-6 overflow-x-auto rounded-xl border border-white/10 bg-slate-950/50">
             <table class="w-full min-w-[640px] border-collapse text-left text-sm">
               <thead>
                 <tr class="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-slate-500">
-                  <th class="px-4 py-3 font-medium">字段</th>
-                  <th class="px-4 py-3 font-medium">类型</th>
-                  <th class="px-4 py-3 font-medium">默认值</th>
-                  <th class="px-4 py-3 font-medium">说明</th>
+                  <th class="px-4 py-3 font-medium">Field</th>
+                  <th class="px-4 py-3 font-medium">Type</th>
+                  <th class="px-4 py-3 font-medium">Default</th>
+                  <th class="px-4 py-3 font-medium">Description</th>
                 </tr>
               </thead>
               <tbody class="text-slate-300">
                 <tr class="border-b border-white/[0.06]">
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">url</td>
                   <td class="px-4 py-3 text-slate-400">string</td>
-                  <td class="px-4 py-3 text-rose-300/90">—（必填）</td>
-                  <td class="px-4 py-3 text-slate-400">要加载的 HTTP(S) 页面地址。两个端点均必填。</td>
+                  <td class="px-4 py-3 text-rose-300/90">— (required)</td>
+                  <td class="px-4 py-3 text-slate-400">HTTP(S) page to load. Required for both endpoints.</td>
                 </tr>
                 <tr class="border-b border-white/[0.06]">
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">fullPage</td>
                   <td class="px-4 py-3 text-slate-400">boolean</td>
                   <td class="px-4 py-3 font-mono text-xs text-cyan-200/80">true</td>
                   <td class="px-4 py-3 text-slate-400">
-                    仅影响 <strong class="text-slate-300">/screenshot</strong>：<code class="text-indigo-200/80">true</code> 截取完整可滚动页面；
-                    <code class="text-indigo-200/80">false</code> 仅当前视口。PDF 端点忽略此字段。
+                    <strong class="text-slate-300">/screenshot</strong> only:
+                    <code class="text-indigo-200/80">true</code> captures the full scrollable page;
+                    <code class="text-indigo-200/80">false</code> captures the viewport. Ignored for PDF.
                   </td>
                 </tr>
                 <tr class="border-b border-white/[0.06]">
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">width</td>
                   <td class="px-4 py-3 text-slate-400">integer</td>
-                  <td class="px-4 py-3 text-slate-500">Playwright 默认视口</td>
-                  <td class="px-4 py-3 text-slate-400">视口宽度，范围 320–4096。必须与 <code class="text-indigo-200/80">height</code> 同时传入才会生效；仅传其一将被忽略。</td>
+                  <td class="px-4 py-3 text-slate-500">Playwright default</td>
+                  <td class="px-4 py-3 text-slate-400">Viewport width, 320–4096. Applied only if <code class="text-indigo-200/80">height</code> is also sent; a lone dimension is ignored.</td>
                 </tr>
                 <tr>
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">height</td>
                   <td class="px-4 py-3 text-slate-400">integer</td>
-                  <td class="px-4 py-3 text-slate-500">Playwright 默认视口</td>
-                  <td class="px-4 py-3 text-slate-400">视口高度，范围 240–4096。PDF 模式下与 width 一起决定页面尺寸。</td>
+                  <td class="px-4 py-3 text-slate-500">Playwright default</td>
+                  <td class="px-4 py-3 text-slate-400">Viewport height, 240–4096. With width, defines PDF page dimensions.</td>
                 </tr>
               </tbody>
             </table>
@@ -220,8 +223,8 @@
 
         <!-- Errors -->
         <section id="errors" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">错误码 · Error codes</h2>
-          <p class="mt-3 text-sm text-slate-400">错误时响应体一般为 JSON：<code class="text-indigo-200/80">{ "error": "..." }</code>。</p>
+          <h2 class="text-xl font-semibold text-white">Error responses</h2>
+          <p class="mt-3 text-sm text-slate-400">Errors usually return JSON: <code class="text-indigo-200/80">{ "error": "..." }</code>.</p>
 
           <div class="mt-6 space-y-3">
             <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4">
@@ -229,14 +232,14 @@
                 <span class="font-mono text-lg font-semibold text-amber-200">400</span>
                 <span class="text-sm text-slate-300">Bad Request</span>
               </div>
-              <p class="mt-2 text-sm text-slate-400">请求体不符合 JSON Schema（例如缺少 <code class="text-indigo-200/80">url</code>、类型错误、数值超出允许范围）。</p>
+              <p class="mt-2 text-sm text-slate-400">Body failed validation (e.g. missing <code class="text-indigo-200/80">url</code>, wrong types, or numeric out of range).</p>
             </div>
             <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="font-mono text-lg font-semibold text-amber-200">401</span>
                 <span class="text-sm text-slate-300">Unauthorized</span>
               </div>
-              <p class="mt-2 text-sm text-slate-400">未携带 <code class="text-indigo-200/80">x-api-key</code>，或 Key 在数据库中不存在 / 不匹配。</p>
+              <p class="mt-2 text-sm text-slate-400">Missing <code class="text-indigo-200/80">x-api-key</code>, or the key is not in the database.</p>
             </div>
             <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
@@ -244,8 +247,8 @@
                 <span class="text-sm text-slate-300">Too Many Requests</span>
               </div>
               <p class="mt-2 text-sm text-slate-400">
-                触发限流或配额：全局限流（见下文）或当月 API 调用次数超过套餐 <code class="text-indigo-200/80">max_limit</code>（提示信息类似
-                <code class="text-slate-500">Quota exceeded for current period</code>）。
+                Global rate limit (below) or monthly usage over <code class="text-indigo-200/80">max_limit</code> (message similar to
+                <code class="text-slate-500">Quota exceeded for current period</code>).
               </p>
             </div>
             <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4">
@@ -253,38 +256,38 @@
                 <span class="font-mono text-lg font-semibold text-amber-200">500</span>
                 <span class="text-sm text-slate-300">Internal Server Error</span>
               </div>
-              <p class="mt-2 text-sm text-slate-400">服务端未捕获异常、渲染或上传失败等。可结合服务日志与 <code class="text-indigo-200/80">requestId</code>（若反向代理注入）排查。</p>
+              <p class="mt-2 text-sm text-slate-400">Unhandled failure during render or upload. Check server logs and any <code class="text-indigo-200/80">requestId</code> from your reverse proxy.</p>
             </div>
           </div>
           <p class="mt-4 text-xs text-slate-500">
-            另：数据库未配置时，截图/PDF 可能返回 <code class="text-indigo-200/60">503</code>（Service Unavailable）。
+            If the database is not configured, screenshot/PDF may return <code class="text-indigo-200/60">503</code> (Service Unavailable).
           </p>
         </section>
 
         <!-- Limits -->
         <section id="limits" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">限制 · Limits</h2>
+          <h2 class="text-xl font-semibold text-white">Limits</h2>
           <ul class="mt-4 space-y-3 text-sm text-slate-400">
             <li class="flex gap-2">
               <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400"></span>
               <span
-                ><strong class="text-slate-200">全局限流</strong>：单 IP 约 <code class="text-indigo-200/80">5</code> 次请求 /
-                <code class="text-indigo-200/80">1 minute</code>（<code class="text-indigo-200/80">/health</code> 不计入）。超出返回
-                <code class="text-indigo-200/80">429</code>。</span
+                ><strong class="text-slate-200">Global rate limit</strong>: about <code class="text-indigo-200/80">5</code> requests per IP per
+                <code class="text-indigo-200/80">1 minute</code> (<code class="text-indigo-200/80">/health</code> is excluded). Returns
+                <code class="text-indigo-200/80">429</code> when exceeded.</span
               >
             </li>
             <li class="flex gap-2">
               <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-fuchsia-400"></span>
               <span
-                ><strong class="text-slate-200">月度配额</strong>：按用户 <code class="text-indigo-200/80">usage_count</code> 与
-                <code class="text-indigo-200/80">max_limit</code> 统计；超额返回 <code class="text-indigo-200/80">429</code>。</span
+                ><strong class="text-slate-200">Monthly quota</strong>: per-user <code class="text-indigo-200/80">usage_count</code> vs.
+                <code class="text-indigo-200/80">max_limit</code>; overages return <code class="text-indigo-200/80">429</code>.</span
               >
             </li>
             <li class="flex gap-2">
               <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400"></span>
               <span
-                ><strong class="text-slate-200">页面加载超时</strong>：默认 <code class="text-indigo-200/80">60s</code>（环境变量
-                <code class="text-indigo-200/80">SCREENSHOT_GOTO_TIMEOUT_MS</code> 可调整）。超时可能导致 <code class="text-indigo-200/80">500</code>。</span
+                ><strong class="text-slate-200">Page load timeout</strong>: default <code class="text-indigo-200/80">60s</code> (override with
+                <code class="text-indigo-200/80">SCREENSHOT_GOTO_TIMEOUT_MS</code>). Timeouts may surface as <code class="text-indigo-200/80">500</code>.</span
               >
             </li>
           </ul>
@@ -292,10 +295,10 @@
 
         <!-- SDK -->
         <section id="sdk" class="scroll-mt-24 border-t border-white/10 pb-16 pt-12">
-          <h2 class="text-xl font-semibold text-white">SDK 示例</h2>
-          <p class="mt-3 text-sm text-slate-400">以下为最小可运行示例，请将基址与 API Key 换为你的环境值。</p>
+          <h2 class="text-xl font-semibold text-white">SDK examples</h2>
+          <p class="mt-3 text-sm text-slate-400">Minimal runnable examples — substitute your base URL and API key.</p>
 
-          <h3 class="mt-8 text-sm font-medium text-indigo-200">Node.js（axios）</h3>
+          <h3 class="mt-8 text-sm font-medium text-indigo-200">Node.js (axios)</h3>
           <pre
             class="doc-code mt-3 overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-slate-200 shadow-inner ring-1 ring-inset ring-indigo-500/10"
           ><code><span class="text-violet-300">const</span> axios = <span class="text-cyan-300">require</span>(<span class="text-emerald-300">"axios"</span>);
@@ -314,7 +317,7 @@
 
 <span class="text-cyan-300">screenshot</span>().<span class="text-cyan-300">catch</span>(console.error);</code></pre>
 
-          <h3 class="mt-10 text-sm font-medium text-indigo-200">Python（requests）</h3>
+          <h3 class="mt-10 text-sm font-medium text-indigo-200">Python (requests)</h3>
           <pre
             class="doc-code mt-3 overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-slate-200 shadow-inner ring-1 ring-inset ring-fuchsia-500/10"
           ><code><span class="text-slate-500">import</span> os

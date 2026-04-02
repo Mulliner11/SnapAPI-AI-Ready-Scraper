@@ -1,93 +1,105 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SnapAPI · 登录</title>
+    <title>Sign in · SnapAPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased">
     <div class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-      <h1 class="text-2xl font-semibold">SnapAPI Dashboard</h1>
-      <p class="mt-2 text-sm text-slate-400">使用注册邮箱收取验证码登录（MVP：验证码会打印在服务器日志中）。</p>
+      <h1 class="text-2xl font-semibold">SnapAPI</h1>
+      <p class="mt-2 text-sm text-slate-400">
+        Enter your email and we&rsquo;ll send a <strong class="text-slate-300">magic link</strong> to sign in. First-time
+        sign-in creates your account and a free <code class="text-indigo-300">sk-live-</code> API key.
+      </p>
+      <p id="errorBanner" class="mt-4 hidden rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300"></p>
+      <div id="devLinkBox" class="mt-4 hidden rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-100">
+        <p class="font-medium text-amber-200">Development · RESEND_API_KEY not set</p>
+        <a id="devMagicLink" class="mt-2 block break-all text-indigo-300 underline" href="#"></a>
+      </div>
 
       <div class="mt-8 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
         <div>
-          <label class="text-xs text-slate-400">邮箱</label>
+          <label class="text-xs text-slate-400">Email</label>
           <input
             id="email"
             type="email"
             class="mt-1 w-full rounded-xl border border-white/15 bg-slate-900/80 px-3 py-2 text-sm"
             placeholder="you@example.com"
+            autocomplete="email"
           />
         </div>
         <button
           type="button"
-          id="sendCode"
-          class="w-full rounded-xl bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+          id="continueBtn"
+          class="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 py-2.5 text-sm font-medium text-white hover:opacity-95"
         >
-          发送验证码
-        </button>
-
-        <div>
-          <label class="text-xs text-slate-400">验证码</label>
-          <input
-            id="code"
-            type="text"
-            inputmode="numeric"
-            maxlength="6"
-            class="mt-1 w-full rounded-xl border border-white/15 bg-slate-900/80 px-3 py-2 text-sm tracking-widest"
-            placeholder="6 位数字"
-          />
-        </div>
-        <button
-          type="button"
-          id="verify"
-          class="w-full rounded-xl border border-white/20 py-2 text-sm font-medium hover:bg-white/5"
-        >
-          验证并登录
+          Email me a login link
         </button>
         <p id="msg" class="text-center text-sm text-red-400"></p>
       </div>
-      <a href="/" class="mt-6 text-center text-sm text-indigo-400 hover:underline">返回首页</a>
+      <a href="/" class="mt-6 text-center text-sm text-indigo-400 hover:underline">Back to home</a>
     </div>
     <script>
       const emailEl = document.getElementById("email");
-      const codeEl = document.getElementById("code");
       const msg = document.getElementById("msg");
+      const errorBanner = document.getElementById("errorBanner");
+      const devLinkBox = document.getElementById("devLinkBox");
+      const devMagicLink = document.getElementById("devMagicLink");
 
-      document.getElementById("sendCode").onclick = async () => {
-        msg.textContent = "";
-        const email = emailEl.value.trim();
-        if (!email) return (msg.textContent = "请输入邮箱");
-        const r = await fetch("/auth/request-code", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email }),
-        });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) return (msg.textContent = d.error || "发送失败");
-        msg.className = "text-center text-sm text-emerald-400";
-        msg.textContent = d.message || "已发送（请查看服务日志中的验证码）";
+      const errMap = {
+        missing_token: "This link is invalid. Request a new sign-in email.",
+        invalid_or_expired: "This link has expired or was already used. Send a new one.",
+        no_db: "This server is not connected to a database. Sign-in is unavailable.",
+        user: "We couldn&rsquo;t create or load your account. Please try again shortly.",
       };
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("error");
+      if (err && errMap[err]) {
+        errorBanner.textContent = errMap[err];
+        errorBanner.classList.remove("hidden");
+      }
 
-      document.getElementById("verify").onclick = async () => {
+      async function go() {
         msg.textContent = "";
         msg.className = "text-center text-sm text-red-400";
+        devLinkBox.classList.add("hidden");
         const email = emailEl.value.trim();
-        const code = codeEl.value.trim();
-        if (!email || !code) return (msg.textContent = "请填写邮箱和验证码");
-        const r = await fetch("/auth/verify-code", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email, code }),
-        });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) return (msg.textContent = d.error || "验证失败");
-        window.location.href = "/dashboard";
-      };
+        if (!email) return (msg.textContent = "Please enter your email");
+        const btn = document.getElementById("continueBtn");
+        btn.disabled = true;
+        try {
+          const r = await fetch("/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ email }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            msg.textContent = d.error || "Something went wrong";
+            return;
+          }
+          if (d.dev && d.magicLink) {
+            devLinkBox.classList.remove("hidden");
+            devMagicLink.href = d.magicLink;
+            devMagicLink.textContent = d.magicLink;
+            msg.className = "text-center text-sm text-emerald-400";
+            msg.textContent = d.message || "Open the development link below to continue.";
+            return;
+          }
+          msg.className = "text-center text-sm text-emerald-400";
+          msg.textContent = d.message || "Check your inbox and click the link to sign in.";
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      document.getElementById("continueBtn").onclick = go;
+      emailEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") go();
+      });
     </script>
   </body>
 </html>

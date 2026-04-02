@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SnapAPI - Developer-First Screenshot & PDF API</title>
+    <title>SnapAPI - High-performance Screenshot & PDF API for Developers</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -43,6 +43,24 @@
       <div class="absolute bottom-[-140px] left-[-120px] h-[320px] w-[320px] rounded-full bg-cyan-400/20 blur-[110px]"></div>
     </div>
 
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 pt-8">
+      <a href="/" class="text-sm font-semibold tracking-tight text-white transition hover:text-indigo-200">SnapAPI</a>
+      <div class="flex items-center gap-2">
+        <a
+          id="navLogin"
+          href="/login"
+          class="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200 transition hover:border-indigo-400/40 hover:bg-white/10"
+          >Login</a
+        >
+        <a
+          id="navDashboard"
+          href="/dashboard"
+          class="hidden rounded-lg border border-indigo-400/50 bg-indigo-500/20 px-4 py-2 text-xs font-medium text-white transition hover:bg-indigo-500/30"
+          >Dashboard</a
+        >
+      </div>
+    </div>
+
     <div class="mx-auto max-w-6xl px-6 py-10">
       <!-- Hero -->
       <header class="mb-16">
@@ -52,20 +70,72 @@
         <h1 class="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
           SnapAPI
           <span class="block bg-gradient-to-r from-fuchsia-300 via-indigo-300 to-cyan-200 bg-clip-text text-transparent">
-            开发者首选的网页截图与 PDF 生成工具
+            High-performance screenshot &amp; PDF API for developers
           </span>
         </h1>
         <p class="mt-5 max-w-2xl text-base leading-7 text-slate-300">
-          专为 SaaS 和自动化场景打造的 screenshot-as-a-service。稳定、可扩展、可计费，输出直接存储到 Cloudflare R2，
-          让你的产品更快上线。
+          Screenshot-as-a-service built for SaaS and automation. Reliable, scalable, and metered—artifacts land in
+          Cloudflare R2 so you ship faster without running your own browser farm.
         </p>
       </header>
+
+      <!-- Why Us: Build vs. Buy -->
+      <section class="mb-16 rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur md:p-8" aria-labelledby="why-heading">
+        <h2 id="why-heading" class="text-sm font-semibold uppercase tracking-wider text-indigo-300">Why SnapAPI</h2>
+        <p class="mt-3 text-2xl font-semibold text-white">Build vs. Buy</p>
+        <p class="mt-2 max-w-2xl text-sm text-slate-400">
+          Self-hosting headless Chrome looks cheap until you count the hours. Here is how maintaining it yourself compares
+          to using SnapAPI.
+        </p>
+        <div class="mt-8 grid gap-6 md:grid-cols-2">
+          <div class="rounded-2xl border border-rose-500/25 bg-rose-500/[0.06] p-5">
+            <h3 class="text-sm font-medium text-rose-200">Build it yourself</h3>
+            <ul class="mt-4 space-y-3 text-sm text-slate-300">
+              <li class="flex gap-2">
+                <span class="shrink-0 text-rose-400/90">—</span>
+                <span
+                  ><strong class="text-slate-100">10+ hours per month</strong> tuning Chromium, memory leaks, timeouts,
+                  and crash loops</span
+                >
+              </li>
+              <li class="flex gap-2">
+                <span class="shrink-0 text-rose-400/90">—</span>
+                <span>Patching CVEs, scaling workers, and rebuilding container images in CI</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="shrink-0 text-rose-400/90">—</span>
+                <span>Chasing flaky renders, font fallbacks, and print CSS for pixel-perfect PDFs</span>
+              </li>
+            </ul>
+          </div>
+          <div class="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] p-5">
+            <h3 class="text-sm font-medium text-emerald-200">Use SnapAPI</h3>
+            <ul class="mt-4 space-y-3 text-sm text-slate-300">
+              <li class="flex gap-2">
+                <span class="shrink-0 text-emerald-400">✓</span>
+                <span
+                  ><strong class="text-slate-100">Zero browser ops</strong> — one HTTPS call, get a PNG or PDF back</span
+                >
+              </li>
+              <li class="flex gap-2">
+                <span class="shrink-0 text-emerald-400">✓</span>
+                <span>Predictable quotas, API keys, and usage in your dashboard</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="shrink-0 text-emerald-400">✓</span>
+                <span>Storage and delivery handled—you integrate the URL and move on</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
 
       <!-- Live Demo -->
       <section class="mb-16 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur">
         <h2 class="text-xl font-medium text-white">Live Demo</h2>
         <p class="mt-2 text-sm text-slate-400">
-          输入 URL，选择 Screenshot 或 PDF，点击 Generate 调用 API，在下方查看预览或下载 PDF。
+          Enter a URL, choose Screenshot or PDF, hit Generate to call the API, then preview the image or download the PDF
+          below.
         </p>
 
         <div class="mt-4 flex flex-wrap gap-2">
@@ -128,23 +198,21 @@
               class="hidden px-4 py-8 text-center text-sm text-slate-400 animate-pulse"
             ></p>
             <img
-              id="previewImage"
+              id="screenshot-preview"
               class="hidden max-h-[380px] w-full rounded-lg object-contain p-2 transition-opacity duration-500"
               alt="Screenshot preview"
             />
             <a
               id="downloadPdfBtn"
               href="#"
-              class="hidden rounded-xl border border-indigo-300/50 bg-gradient-to-r from-indigo-500/80 to-fuchsia-500/80 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
-              download
+              class="hidden rounded-xl border border-blue-500/50 bg-blue-600 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-500"
               target="_blank"
               rel="noreferrer"
             >
-              下载 PDF
+              Download PDF
             </a>
           </div>
         </div>
-        <p class="mt-4 text-center text-xs text-slate-500">Powered by NOWPayments. We accept 300+ cryptocurrencies.</p>
       </section>
 
       <!-- Pricing -->
@@ -163,9 +231,12 @@
               <li>Response latency &lt; 5s</li>
               <li>Community support</li>
             </ul>
-            <button class="mt-6 w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm transition duration-300 hover:bg-white/10">
+            <a
+              href="/login"
+              class="mt-6 block w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-center text-sm transition duration-300 hover:bg-white/10"
+            >
               Get Started
-            </button>
+            </a>
           </article>
 
           <!-- Pro -->
@@ -182,14 +253,13 @@
               <li>Webhook async callbacks</li>
               <li>Email support</li>
             </ul>
-            <a
-              href="https://nowpayments.io/payment/?iid=4870289730&paymentId=6379232088"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mt-6 block w-full rounded-xl border border-indigo-200/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2 text-center text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/30"
+            <button
+              type="button"
+              data-subscribe-plan="pro"
+              class="subscribe-open mt-6 w-full rounded-xl border border-indigo-200/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2 text-center text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/30"
             >
               Subscribe Pro
-            </a>
+            </button>
           </article>
 
           <!-- Business -->
@@ -205,25 +275,66 @@
               <li>SLA 99.9% uptime</li>
               <li>Priority response support</li>
             </ul>
-            <a
-              href="https://nowpayments.io/payment/?iid=5053126508&paymentId=6068971455"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mt-6 block w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-center text-sm font-medium transition duration-300 hover:bg-white/10"
+            <button
+              type="button"
+              data-subscribe-plan="business"
+              class="subscribe-open mt-6 w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-center text-sm font-medium transition duration-300 hover:bg-white/10"
             >
               Subscribe Business
-            </a>
+            </button>
           </article>
         </div>
         <p class="mt-4 text-center text-xs text-slate-500">Powered by NOWPayments. We accept 300+ cryptocurrencies.</p>
       </section>
 
+      <!-- Subscribe modal (NOWPayments checkout) -->
+      <div
+        id="subscribeModal"
+        class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
+        aria-hidden="true"
+        role="dialog"
+        aria-labelledby="subscribeModalTitle"
+      >
+        <div class="relative w-full max-w-md rounded-2xl border border-white/15 bg-slate-950 p-6 shadow-2xl shadow-indigo-900/40">
+          <button
+            type="button"
+            id="subscribeModalClose"
+            class="absolute right-4 top-4 text-slate-500 transition hover:text-white"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+          <h2 id="subscribeModalTitle" class="text-lg font-semibold text-white">Subscribe</h2>
+          <p class="mt-1 text-sm text-slate-400">Enter your email — we&rsquo;ll redirect you to secure crypto checkout.</p>
+          <label class="mt-4 block text-xs text-slate-400" for="subscribeEmail">Email</label>
+          <input
+            id="subscribeEmail"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            class="mt-1 w-full rounded-xl border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none focus:border-indigo-400"
+          />
+          <p id="subscribeError" class="mt-2 hidden text-sm text-red-400"></p>
+          <div class="mt-6 flex flex-wrap gap-2">
+            <button
+              type="button"
+              id="subscribeSubmit"
+              class="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-95 disabled:opacity-50"
+            >
+              Continue to payment
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Docs / Quickstart -->
       <section class="mb-10 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur">
         <h2 class="text-xl font-medium text-white">API Quickstart</h2>
         <p class="mt-2 text-sm text-slate-400">
-          使用 <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">curl</code> 调用接口；将示例中的域名与
-          <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">YOUR_API_KEY</code> 换成你的环境值。
+          Call the API with <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">curl</code>. Replace the
+          host with yours if self-hosting;
+          <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">YOUR_API_KEY</code> is filled in
+          automatically when you are logged in.
         </p>
 
         <div class="mt-5 inline-flex flex-wrap gap-1 rounded-xl border border-white/10 bg-slate-950/60 p-1">
@@ -250,7 +361,7 @@
             class="doc-code overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-left text-slate-200 shadow-inner shadow-black/40 ring-1 ring-inset ring-indigo-500/10"
           ><code><span class="text-cyan-300">curl</span> <span class="text-slate-500">-X POST</span> https://getsnapapi.uk/screenshot \
   <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"Content-Type: application/json"</span> \
-  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"x-api-key: YOUR_API_KEY"</span> \
+  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"x-api-key: <span class="doc-api-key-slot">YOUR_API_KEY</span>"</span> \
   <span class="text-violet-300">-d</span> <span class="text-emerald-300/90">'{"url":"https://example.com"}'</span></code></pre>
         </div>
 
@@ -259,25 +370,25 @@
             class="doc-code overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-left text-slate-200 shadow-inner shadow-black/40 ring-1 ring-inset ring-fuchsia-500/10"
           ><code><span class="text-cyan-300">curl</span> <span class="text-slate-500">-X POST</span> https://getsnapapi.uk/pdf \
   <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"Content-Type: application/json"</span> \
-  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"x-api-key: YOUR_API_KEY"</span> \
+  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"x-api-key: <span class="doc-api-key-slot">YOUR_API_KEY</span>"</span> \
   <span class="text-violet-300">-d</span> <span class="text-emerald-300/90">'{"url":"https://example.com","width":1280,"height":720}'</span></code></pre>
           <p class="mt-3 text-xs text-slate-500">
-            <span class="text-slate-400">可选</span>
-            <code class="text-indigo-200/80">width</code> 与
-            <code class="text-indigo-200/80">height</code> 需成对传入，用于设置浏览器视口并作为 PDF 页面尺寸；省略时按页面滚动尺寸自动计算。
+            Optional <code class="text-indigo-200/80">width</code> and
+            <code class="text-indigo-200/80">height</code> must be sent together: they set the browser viewport and the PDF
+            page size. Omit both to use the document&rsquo;s scroll dimensions.
           </p>
         </div>
 
         <div class="mt-8">
-          <h3 class="text-sm font-medium tracking-wide text-slate-300">请求体参数</h3>
+          <h3 class="text-sm font-medium tracking-wide text-slate-300">Request body</h3>
           <div class="mt-3 overflow-x-auto rounded-xl border border-white/10 bg-slate-950/40">
             <table class="w-full min-w-[520px] border-collapse text-left text-sm">
               <thead>
                 <tr class="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-slate-500">
-                  <th class="px-4 py-3 font-medium">参数</th>
-                  <th class="px-4 py-3 font-medium">类型</th>
-                  <th class="px-4 py-3 font-medium">必填</th>
-                  <th class="px-4 py-3 font-medium">说明</th>
+                  <th class="px-4 py-3 font-medium">Field</th>
+                  <th class="px-4 py-3 font-medium">Type</th>
+                  <th class="px-4 py-3 font-medium">Required</th>
+                  <th class="px-4 py-3 font-medium">Notes</th>
                 </tr>
               </thead>
               <tbody class="text-slate-300">
@@ -285,25 +396,33 @@
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">url</td>
                   <td class="px-4 py-3 text-slate-400">string</td>
                   <td class="px-4 py-3"><span class="rounded bg-rose-500/15 px-2 py-0.5 text-xs text-rose-200">required</span></td>
-                  <td class="px-4 py-3 text-slate-400">要打开的页面地址。</td>
+                  <td class="px-4 py-3 text-slate-400">Page to load.</td>
                 </tr>
                 <tr class="border-b border-white/[0.06]">
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">fullPage</td>
                   <td class="px-4 py-3 text-slate-400">boolean</td>
                   <td class="px-4 py-3 text-slate-500">—</td>
-                  <td class="px-4 py-3 text-slate-400">仅 <span class="text-slate-300">Screenshot</span>：是否截取整页，默认 <code class="text-indigo-200/80">true</code>；传 <code class="text-indigo-200/80">false</code> 则仅当前视口。</td>
+                  <td class="px-4 py-3 text-slate-400">
+                    Screenshot only: capture full scrollable page (default <code class="text-indigo-200/80">true</code>). Set
+                    <code class="text-indigo-200/80">false</code> for viewport-only.
+                  </td>
                 </tr>
                 <tr class="border-b border-white/[0.06]">
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">width</td>
                   <td class="px-4 py-3 text-slate-400">integer</td>
                   <td class="px-4 py-3 text-slate-500">—</td>
-                  <td class="px-4 py-3 text-slate-400">视口宽度（320–4096）；须与 <code class="text-indigo-200/80">height</code> 同时传入方生效。</td>
+                  <td class="px-4 py-3 text-slate-400">
+                    Viewport width (320–4096). Only applied if <code class="text-indigo-200/80">height</code> is also set.
+                  </td>
                 </tr>
                 <tr>
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">height</td>
                   <td class="px-4 py-3 text-slate-400">integer</td>
                   <td class="px-4 py-3 text-slate-500">—</td>
-                  <td class="px-4 py-3 text-slate-400">视口高度（240–4096）；PDF 模式下与 width 共同决定导出页面尺寸。</td>
+                  <td class="px-4 py-3 text-slate-400">
+                    Viewport height (240–4096). Together with <code class="text-indigo-200/80">width</code>, defines PDF page
+                    dimensions.
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -311,7 +430,9 @@
         </div>
 
         <div class="mt-8">
-          <h3 class="text-sm font-medium tracking-wide text-slate-300">成功响应 <span class="text-slate-500">(HTTP 200)</span></h3>
+          <h3 class="text-sm font-medium tracking-wide text-slate-300">
+            Success response <span class="text-slate-500">(HTTP 200)</span>
+          </h3>
           <pre
             class="doc-code mt-3 overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-left shadow-inner shadow-black/40 ring-1 ring-inset ring-cyan-500/10"
           ><code>{
@@ -320,10 +441,10 @@
   <span class="text-fuchsia-300/90">"path"</span>: <span class="text-emerald-300/90">"https://your-bucket.r2.dev/screenshot-1712345678901.png"</span>
 }</code></pre>
           <p class="mt-2 text-xs text-slate-500">
-            PDF 接口的 <code class="text-indigo-200/80">message</code> 为 <code class="text-indigo-200/80">"PDF saved"</code>；<code class="text-indigo-200/80">path</code> 为可下载的公网 URL。
+            For PDF, <code class="text-indigo-200/80">message</code> is <code class="text-indigo-200/80">"PDF saved"</code>;
+            <code class="text-indigo-200/80">path</code> is a public HTTPS URL to the file.
           </p>
         </div>
-        <p class="mt-4 text-center text-xs text-slate-500">Powered by NOWPayments. We accept 300+ cryptocurrencies.</p>
       </section>
 
       <footer class="mt-4 border-t border-white/10 pt-10 pb-6">
@@ -353,8 +474,9 @@
                 >System Status</a
               >
               <a
+                id="footer-support-link"
                 class="text-slate-400 transition hover:text-indigo-300"
-                href="mailto:ritchiemulliner@outlook.com"
+                href="#"
                 >Support</a
               >
             </div>
@@ -362,9 +484,11 @@
         </div>
         <p class="mt-6 text-center text-xs text-slate-500 lg:text-left">
           Contact us:
-          <a class="text-indigo-300 underline-offset-2 hover:text-indigo-200 hover:underline" href="mailto:hello@getsnapapi.uk"
-            >hello@getsnapapi.uk</a
-          >
+          <a
+            id="footer-contact-link"
+            class="text-indigo-300 underline-offset-2 hover:text-indigo-200 hover:underline"
+            href="#"
+          ></a>
         </p>
         <p class="mt-8 text-center text-[11px] text-slate-600 lg:text-left">© SnapAPI. All rights reserved.</p>
       </footer>
@@ -394,5 +518,43 @@
       })();
     </script>
     <script src="./app.js"></script>
+    <script>
+      (function () {
+        function injectFooterEmail() {
+          var local = ["hello", "@", "getsnapapi", ".", "uk"].join("");
+          var contact = document.getElementById("footer-contact-link");
+          if (contact) {
+            contact.textContent = local;
+            contact.href = "mailto:" + local;
+          }
+          var support = document.getElementById("footer-support-link");
+          if (support) support.href = "mailto:" + local;
+        }
+        injectFooterEmail();
+        (async function () {
+          try {
+            var r = await fetch("/api/user/me", { credentials: "include" });
+            var d = await r.json().catch(function () {
+              return {};
+            });
+            var login = document.getElementById("navLogin");
+            var dash = document.getElementById("navDashboard");
+            if (login && dash && d.loggedIn) {
+              login.classList.add("hidden");
+              dash.classList.remove("hidden");
+            }
+            var key = d.loggedIn && d.api_key ? d.api_key : "YOUR_API_KEY";
+            document.querySelectorAll(".doc-api-key-slot").forEach(function (el) {
+              el.textContent = key;
+            });
+            var inp = document.getElementById("apiKeyInput");
+            if (inp && d.loggedIn && d.api_key) {
+              inp.value = d.api_key;
+              inp.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+          } catch (e) {}
+        })();
+      })();
+    </script>
   </body>
 </html>
