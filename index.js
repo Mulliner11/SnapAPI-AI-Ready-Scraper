@@ -1,9 +1,6 @@
-import { createRequire } from "node:module";
+import "dotenv/config";
 
-const require = createRequire(import.meta.url);
-require("dotenv").config();
-
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
@@ -506,7 +503,7 @@ async function start() {
   await registerRoutes();
 
   try {
-    console.log("Files in cwd:", require("fs").readdirSync(process.cwd()));
+    console.log("Files in cwd:", readdirSync(process.cwd()));
     await fastify.listen({ port: PORT, host: LISTEN_HOST });
     fastify.log.info(`Server listening on http://0.0.0.0:${PORT} (public URL uses your Railway domain)`);
   } catch (err) {
