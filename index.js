@@ -1,3 +1,4 @@
+import "./polyfills.js";
 import "dotenv/config";
 
 import { readFileSync, existsSync, readdirSync } from "node:fs";

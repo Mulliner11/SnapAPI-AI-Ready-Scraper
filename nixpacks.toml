@@ -10,7 +10,7 @@ PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "1"
 # Extend provider defaults (e.g. node).
 nixPkgs = [
   "...",
-  "nodejs",
+  "nodejs_20", # 强制使用 Node 20
   # Nix equivalents of Chromium’s common shared-library needs (runtime + linker visibility).
   "glib",
   "nss",
