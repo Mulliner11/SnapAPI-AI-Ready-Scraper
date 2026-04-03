@@ -495,7 +495,26 @@ async function registerRoutes() {
   fastify.get("/health", async () => ({ ok: true }));
 }
 
+function logDatabaseConfig() {
+  const raw = process.env.DATABASE_URL?.trim();
+  if (!raw) {
+    console.warn(
+      "[SnapAPI] DATABASE_URL is not set. Link the Railway Postgres plugin to this service (Variables → reference DATABASE_URL)."
+    );
+    return;
+  }
+  try {
+    const u = new URL(raw.replace(/^postgresql:\/\//i, "http://"));
+    console.log(
+      `[SnapAPI] DATABASE_URL is set (host=${u.hostname}; Railway internal networking must reach this host).`
+    );
+  } catch {
+    console.log("[SnapAPI] DATABASE_URL is set.");
+  }
+}
+
 async function start() {
+  logDatabaseConfig();
   await initDb();
 
   try {

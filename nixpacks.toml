@@ -1,6 +1,6 @@
+# Apt deps for Playwright Chromium. Build = railway.json `buildCommand` (`npm run build`).
+# Start = `npm run start:deploy` (migrate at runtime when DATABASE_URL exists).
+
 [phases.setup]
 nixPkgs = ["...", "nodejs"]
 aptPkgs = ["...", "wget", "ca-certificates"]
-
-[phases.build]
-cmds = ["npm install", "npx playwright install --with-deps chromium"]
