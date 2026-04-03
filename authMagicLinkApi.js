@@ -1,3 +1,9 @@
+/**
+ * Magic-link auth. Requires:
+ * - DATABASE_URL (Prisma) — Railway: link Postgres and set variable.
+ * - RESEND_API_KEY + RESEND_FROM for production email (optional in dev).
+ * Prisma client is singleton in ./prismaClient.js; Resend uses fetch (no SDK instance).
+ */
 import crypto from "node:crypto";
 import { prisma } from "./prismaClient.js";
 import { ensureUserByEmail } from "./db.js";
@@ -57,66 +63,59 @@ async function sendMagicLinkEmail(to, linkUrl) {
  * POST /api/auth/send-magic-link — store hashed token, email via Resend (link → public /verify?token=…).
  */
 export async function postAuthSendMagicLink(request, reply) {
-  const email = normalizeEmail(request.body?.email);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return reply.code(400).send({ error: "Invalid email" });
-  }
-
-  // Upsert Prisma User (app_users): first-time sign-in creates an account with default apiKey,
-  // existing users are loaded as-is. This covers both new registration and returning login.
+  let tokenHashForCleanup = null;
   try {
+    const email = normalizeEmail(request.body?.email);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return reply.code(400).send({ error: "Invalid email" });
+    }
+
+    // Upsert Prisma User (app_users); requires valid DATABASE_URL and migrated schema.
     await prisma.user.upsert({
       where: { email },
       create: { email },
       update: {},
     });
-  } catch (e) {
-    console.error("[auth] prisma.user.upsert failed:", e);
-    request.log.error(e, "[auth] prisma.user.upsert failed");
-    return reply.code(500).send({ error: "Could not create or load user" });
-  }
 
-  const plain = generatePlainToken();
-  const tokenHash = hashToken(plain);
-  const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
+    const plain = generatePlainToken();
+    const tokenHash = hashToken(plain);
+    tokenHashForCleanup = tokenHash;
+    const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
 
-  // Only Prisma `AuthToken` → table `auth_tokens` (no Prisma User row here; pg `users` is created on verify).
-  try {
     await prisma.authToken.deleteMany({ where: { email } });
     await prisma.authToken.create({
       data: { email, tokenHash, expiresAt },
     });
-  } catch (e) {
-    console.error("[auth] failed to store auth token:", e);
-    request.log.error(e, "[auth] failed to store auth token");
-    return reply.code(500).send({ error: "Could not create sign-in token" });
-  }
 
-  const linkUrl = `${MAGIC_LINK_PUBLIC_VERIFY_URL}?token=${encodeURIComponent(plain)}`;
+    const linkUrl = `${MAGIC_LINK_PUBLIC_VERIFY_URL}?token=${encodeURIComponent(plain)}`;
 
-  if (!RESEND_API_KEY) {
-    if (process.env.NODE_ENV === "production") {
-      await prisma.authToken.deleteMany({ where: { tokenHash } }).catch(() => {});
-      return reply.code(503).send({ error: "Email is not configured" });
+    if (!RESEND_API_KEY) {
+      if (process.env.NODE_ENV === "production") {
+        await prisma.authToken.deleteMany({ where: { tokenHash } }).catch(() => {});
+        return reply.code(503).send({ error: "Email is not configured" });
+      }
+      return reply.send({
+        ok: true,
+        message: "Development only: RESEND_API_KEY not set; use the link in this response.",
+        dev: true,
+        magicLink: linkUrl,
+      });
     }
-    return reply.send({
-      ok: true,
-      message: "Development only: RESEND_API_KEY not set; use the link in this response.",
-      dev: true,
-      magicLink: linkUrl,
+
+    await sendMagicLinkEmail(email, linkUrl);
+    return reply.send({ ok: true, message: "If an account can use this email, a sign-in link has been sent." });
+  } catch (err) {
+    console.error("Login Error:", err);
+    if (err?.stack) console.error(err.stack);
+    request.log.error(err, "[auth] postAuthSendMagicLink");
+    if (tokenHashForCleanup) {
+      await prisma.authToken.deleteMany({ where: { tokenHash: tokenHashForCleanup } }).catch(() => {});
+    }
+    return reply.code(500).send({
+      error: err?.message || String(err),
+      stack: err?.stack,
     });
   }
-
-  try {
-    await sendMagicLinkEmail(email, linkUrl);
-  } catch (e) {
-    console.error("[auth] Resend send failed:", e);
-    request.log.error(e, "[auth] Resend send failed");
-    await prisma.authToken.deleteMany({ where: { tokenHash } }).catch(() => {});
-    return reply.code(502).send({ error: "Failed to send email" });
-  }
-
-  return reply.send({ ok: true, message: "If an account can use this email, a sign-in link has been sent." });
 }
 
 /**

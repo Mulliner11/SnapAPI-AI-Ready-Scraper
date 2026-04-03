@@ -2,11 +2,11 @@
   "name": "screenshot-api",
   "version": "1.0.0",
   "description": "Web screenshot API service (Fastify)",
-  "main": "server.js",
+  "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "start": "node index.js",
+    "dev": "node --watch index.js",
     "build": "prisma generate && npx playwright install --with-deps chromium",
     "postinstall": "prisma generate"
   },
