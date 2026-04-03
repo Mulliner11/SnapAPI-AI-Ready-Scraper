@@ -287,46 +287,6 @@
         <p class="mt-4 text-center text-xs text-slate-500">Powered by NOWPayments. We accept 300+ cryptocurrencies.</p>
       </section>
 
-      <!-- Subscribe modal (NOWPayments checkout) -->
-      <div
-        id="subscribeModal"
-        class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
-        aria-hidden="true"
-        role="dialog"
-        aria-labelledby="subscribeModalTitle"
-      >
-        <div class="relative w-full max-w-md rounded-2xl border border-white/15 bg-slate-950 p-6 shadow-2xl shadow-indigo-900/40">
-          <button
-            type="button"
-            id="subscribeModalClose"
-            class="absolute right-4 top-4 text-slate-500 transition hover:text-white"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-          <h2 id="subscribeModalTitle" class="text-lg font-semibold text-white">Subscribe</h2>
-          <p class="mt-1 text-sm text-slate-400">Enter your email — we&rsquo;ll redirect you to secure crypto checkout.</p>
-          <label class="mt-4 block text-xs text-slate-400" for="subscribeEmail">Email</label>
-          <input
-            id="subscribeEmail"
-            type="email"
-            autocomplete="email"
-            placeholder="you@example.com"
-            class="mt-1 w-full rounded-xl border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none focus:border-indigo-400"
-          />
-          <p id="subscribeError" class="mt-2 hidden text-sm text-red-400"></p>
-          <div class="mt-6 flex flex-wrap gap-2">
-            <button
-              type="button"
-              id="subscribeSubmit"
-              class="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-95 disabled:opacity-50"
-            >
-              Continue to payment
-            </button>
-          </div>
-        </div>
-      </div>
-
       <!-- Docs / Quickstart -->
       <section class="mb-10 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur">
         <h2 class="text-xl font-medium text-white">API Quickstart</h2>
@@ -540,19 +500,20 @@
             var d = await r.json().catch(function () {
               return {};
             });
+            var okUser = r.ok && (d.apiKey || d.api_key);
             var login = document.getElementById("navLogin");
             var dash = document.getElementById("navDashboard");
-            if (login && dash && d.loggedIn) {
+            if (login && dash && okUser) {
               login.classList.add("hidden");
               dash.classList.remove("hidden");
             }
-            var key = d.loggedIn && d.api_key ? d.api_key : "YOUR_API_KEY";
+            var key = okUser ? (d.apiKey || d.api_key) : "YOUR_API_KEY";
             document.querySelectorAll(".doc-api-key-slot").forEach(function (el) {
               el.textContent = key;
             });
             var inp = document.getElementById("apiKeyInput");
-            if (inp && d.loggedIn && d.api_key) {
-              inp.value = d.api_key;
+            if (inp && okUser && (d.apiKey || d.api_key)) {
+              inp.value = d.apiKey || d.api_key;
               inp.dispatchEvent(new Event("input", { bubbles: true }));
             }
           } catch (e) {}

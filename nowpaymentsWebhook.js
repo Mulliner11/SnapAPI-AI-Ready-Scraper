@@ -1,3 +1,8 @@
+/**
+ * POST /webhooks/nowpayments — NOWPayments IPN callback.
+ * Verifies `x-nowpayments-sig` (HMAC-SHA512 over sorted JSON body, see nowpaymentsIpn.js).
+ * On payment_status === finished, marks Order finished and upgrades Prisma User plan.
+ */
 import { prisma } from "./prismaClient.js";
 import { verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
 
@@ -12,9 +17,12 @@ function escapeHtmlText(s) {
     .replace(/"/g, "&quot;");
 }
 
-/** Collect possible ids NOWPayments may send; we store invoice `id` as Order.paymentId. */
+/**
+ * Collect possible ids NOWPayments may send; we store invoice `id` as Order.paymentId.
+ * Includes `order_id` when NP echoes our custom `order_id` from invoice creation.
+ */
 function extractPaymentIdCandidates(payload) {
-  const keys = ["payment_id", "invoice_id", "paymentId", "paymentID"];
+  const keys = ["payment_id", "invoice_id", "paymentId", "paymentID", "order_id", "orderId"];
   const out = [];
   for (const k of keys) {
     const v = payload?.[k];
@@ -92,7 +100,7 @@ export async function postNowpaymentsWebhook(request, reply) {
 
   const ids = extractPaymentIdCandidates(payload);
   if (ids.length === 0) {
-    request.log.warn({ keys: Object.keys(payload) }, "[NP IPN] finished but no id fields to match Order.paymentId");
+    request.log.warn({ keys: Object.keys(payload) }, "[NP IPN] finished but no id fields to match Order");
     return reply.send({ ok: true });
   }
 
@@ -101,8 +109,8 @@ export async function postNowpaymentsWebhook(request, reply) {
     outcome = await prisma.$transaction(async (tx) => {
       const pending = await tx.order.findFirst({
         where: {
-          paymentId: { in: ids },
           status: "pending",
+          OR: [{ paymentId: { in: ids } }, { orderRef: { in: ids } }],
         },
         include: { user: true },
       });
@@ -127,7 +135,7 @@ export async function postNowpaymentsWebhook(request, reply) {
       }
 
       const any = await tx.order.findFirst({
-        where: { paymentId: { in: ids } },
+        where: { OR: [{ paymentId: { in: ids } }, { orderRef: { in: ids } }] },
       });
       if (any?.status === "finished") {
         return { type: "already_done" };

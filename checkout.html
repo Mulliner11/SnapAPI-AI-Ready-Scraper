@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout · SnapAPI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { panel: "#0b1020", accent: "#7c3aed" },
+            boxShadow: { glow: "0 0 80px rgba(124, 58, 237, 0.28)" },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-slate-950 text-slate-100 antialiased">
+    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div class="absolute left-1/2 top-[-220px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/25 blur-[130px]"></div>
+      <div class="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-indigo-500/20 blur-[120px]"></div>
+    </div>
+
+    <header class="border-b border-white/10 bg-slate-950/80 backdrop-blur-md">
+      <div class="mx-auto flex max-w-lg items-center justify-between px-6 py-4">
+        <a href="/" class="text-sm font-semibold tracking-tight text-white transition hover:text-indigo-200">SnapAPI</a>
+        <a href="/dashboard" class="text-xs text-slate-400 transition hover:text-indigo-300">Dashboard</a>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-lg px-6 py-10">
+      <h1 class="text-2xl font-semibold text-white">
+        Pay with crypto · <span id="planLabel" class="text-indigo-300">Pro</span>
+      </h1>
+      <p class="mt-2 text-sm text-slate-400">Creating your NOWPayments invoice…</p>
+
+      <p id="loadErr" class="mt-6 hidden rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300"></p>
+
+      <div
+        id="loadingBlock"
+        class="mt-10 flex flex-col items-center rounded-3xl border border-white/10 bg-white/[0.03] p-10 shadow-glow backdrop-blur"
+      >
+        <div
+          class="h-10 w-10 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-400"
+          aria-hidden="true"
+        ></div>
+        <p class="mt-6 text-sm text-slate-300">Preparing secure checkout…</p>
+        <p class="mt-2 text-center text-xs text-slate-500">You will be redirected to NOWPayments.</p>
+      </div>
+    </main>
+
+    <script>
+      const JWT_KEY = "snapapi_jwt";
+
+      function authHeaders() {
+        const h = { "Content-Type": "application/json" };
+        const t = localStorage.getItem(JWT_KEY);
+        if (t) h.Authorization = "Bearer " + t;
+        return h;
+      }
+
+      function planFromQuery() {
+        const p = new URLSearchParams(window.location.search).get("plan");
+        return p === "business" ? "business" : "pro";
+      }
+
+      function showError(msg) {
+        document.getElementById("loadingBlock").classList.add("hidden");
+        const el = document.getElementById("loadErr");
+        el.textContent = msg;
+        el.classList.remove("hidden");
+      }
+
+      (async function init() {
+        const plan = planFromQuery();
+        document.getElementById("planLabel").textContent = plan === "business" ? "Business" : "Pro";
+
+        const me = await fetch("/api/user/me", { credentials: "include", headers: authHeaders() });
+        if (me.status === 401) {
+          window.location.replace(
+            "/login?redirect=" + encodeURIComponent("/checkout") + "&plan=" + encodeURIComponent(plan)
+          );
+          return;
+        }
+        const meData = await me.json().catch(() => ({}));
+        if (!me.ok) {
+          showError(meData.error || "Could not verify session.");
+          return;
+        }
+
+        const inv = await fetch("/api/payment/create-invoice", {
+          method: "POST",
+          credentials: "include",
+          headers: authHeaders(),
+          body: JSON.stringify({ plan: plan }),
+        });
+        const invData = await inv.json().catch(() => ({}));
+        if (!inv.ok) {
+          showError(invData.error || "Could not create invoice.");
+          return;
+        }
+
+        const url = invData.invoice_url || invData.invoiceUrl;
+        if (!url || typeof url !== "string") {
+          showError("No payment URL returned.");
+          return;
+        }
+
+        window.location.href = url;
+      })();
+    </script>
+  </body>
+</html>

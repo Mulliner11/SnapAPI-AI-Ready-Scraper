@@ -3,19 +3,19 @@ import { prisma } from "./prismaClient.js";
 
 const NP_BASE = (process.env.NP_API_BASE || "https://api.nowpayments.io").replace(/\/$/, "");
 
-function getNpApiKey() {
+export function getNpApiKey() {
   return String(process.env.NP_API_KEY || "").trim();
 }
 
-function priceUsdForPlan(planType) {
+export function priceUsdForPlan(planType) {
   const pro = Number(process.env.PLAN_PRICE_PRO_USD ?? 29);
   const business = Number(process.env.PLAN_PRICE_BUSINESS_USD ?? 99);
   if (planType === "business") return business;
   return pro;
 }
 
-function resolvePlanType(body) {
-  const raw = body?.planType ?? body?.plan_type;
+export function resolvePlanType(body) {
+  const raw = body?.planType ?? body?.plan_type ?? body?.plan;
   if (raw == null) return null;
   const p = String(raw).toLowerCase();
   if (p === "pro" || p === "business") return p;
@@ -54,41 +54,26 @@ function pickInvoiceId(data) {
 }
 
 /**
- * POST /api/subscribe — create NOWPayments invoice, persist pending Order (Prisma).
+ * Call NOWPayments invoice API and persist a pending Order (userId = Prisma app_users.id).
+ * @param {{ id: string }} prismaUser
+ * @param {string} email
+ * @param {'pro'|'business'} planType
+ * @param {import('fastify').FastifyBaseLogger} log
+ * @returns {Promise<{ ok: true, invoice_url: string } | { ok: false, statusCode: number, error: string }>}
  */
-export async function postSubscribeHandler(request, reply) {
+export async function createNowpaymentsInvoiceAndOrder({ prismaUser, email, planType, log }) {
   const npKey = getNpApiKey();
   if (!npKey) {
-    return reply.code(503).send({ error: "NP_API_KEY is not configured" });
-  }
-
-  const email = String(request.body?.email ?? "")
-    .trim()
-    .toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return reply.code(400).send({ error: "Invalid email" });
-  }
-
-  const planType = resolvePlanType(request.body);
-  if (!planType) {
-    return reply.code(400).send({ error: "planType must be pro or business (camelCase or plan_type)" });
+    return { ok: false, statusCode: 503, error: "NP_API_KEY is not configured" };
   }
 
   const amount = priceUsdForPlan(planType);
   if (!Number.isFinite(amount) || amount <= 0) {
-    return reply.code(500).send({ error: "Invalid plan pricing (set PLAN_PRICE_PRO_USD / PLAN_PRICE_BUSINESS_USD)" });
-  }
-
-  let user;
-  try {
-    user = await prisma.user.upsert({
-      where: { email },
-      create: { email },
-      update: {},
-    });
-  } catch (e) {
-    request.log.error(e, "[subscribe] prisma.user.upsert");
-    return reply.code(500).send({ error: "Database error while resolving user" });
+    return {
+      ok: false,
+      statusCode: 500,
+      error: "Invalid plan pricing (set PLAN_PRICE_PRO_USD / PLAN_PRICE_BUSINESS_USD)",
+    };
   }
 
   const baseUrl = (process.env.PUBLIC_APP_URL || "").replace(/\/$/, "");
@@ -96,7 +81,7 @@ export async function postSubscribeHandler(request, reply) {
   const cancelUrl = process.env.NP_CANCEL_URL || (baseUrl ? `${baseUrl}/` : undefined);
   const ipnUrl = process.env.NP_IPN_CALLBACK_URL || process.env.NOWPAYMENTS_IPN_CALLBACK_URL;
 
-  const orderRef = `snapapi-${user.id}-${Date.now()}`;
+  const orderRef = `snapapi-${prismaUser.id}-${Date.now()}`;
   const invoiceBody = {
     price_amount: amount,
     price_currency: "usd",
@@ -126,40 +111,83 @@ export async function postSubscribeHandler(request, reply) {
     if (axios.isAxiosError(e)) {
       const status = e.response?.status ?? 502;
       const msg = extractNpErrorMessage(e.response?.data, status);
-      request.log.error({ err: e.message, status, data: e.response?.data }, "[subscribe] NOWPayments axios error");
-      return reply.code(status >= 400 && status < 600 ? status : 502).send({ error: msg });
+      log.error({ err: e.message, status, data: e.response?.data }, "[NOWPayments] axios error");
+      return { ok: false, statusCode: status >= 400 && status < 600 ? status : 502, error: msg };
     }
-    request.log.error(e, "[subscribe] unexpected error");
-    return reply.code(500).send({ error: "Unexpected server error" });
+    log.error(e, "[NOWPayments] unexpected error");
+    return { ok: false, statusCode: 500, error: "Unexpected server error" };
   }
 
   if (npStatus < 200 || npStatus >= 300) {
     const msg = extractNpErrorMessage(npData, npStatus);
-    request.log.warn({ npStatus, npData }, "[subscribe] NOWPayments invoice rejected");
-    return reply.code(502).send({ error: msg });
+    log.warn({ npStatus, npData }, "[NOWPayments] invoice rejected");
+    return { ok: false, statusCode: 502, error: msg };
   }
 
   const paymentId = pickInvoiceId(npData);
   const invoiceUrl = pickInvoiceUrl(npData);
   if (!paymentId || !invoiceUrl) {
-    request.log.error({ npData }, "[subscribe] NOWPayments response missing id or invoice_url");
-    return reply.code(502).send({ error: "Invalid response from NOWPayments (missing id or invoice_url)" });
+    log.error({ npData }, "[NOWPayments] response missing id or invoice_url");
+    return { ok: false, statusCode: 502, error: "Invalid response from NOWPayments (missing id or invoice_url)" };
   }
 
   try {
     await prisma.order.create({
       data: {
-        userId: user.id,
+        userId: prismaUser.id,
         amount,
         status: "pending",
         paymentId,
+        orderRef,
         planType,
       },
     });
   } catch (e) {
-    request.log.error(e, "[subscribe] prisma.order.create");
-    return reply.code(500).send({ error: "Failed to save order" });
+    log.error(e, "[NOWPayments] prisma.order.create");
+    return { ok: false, statusCode: 500, error: "Failed to save order" };
   }
 
-  return reply.send({ invoice_url: invoiceUrl });
+  return { ok: true, invoice_url: invoiceUrl };
+}
+
+/**
+ * POST /api/subscribe — create NOWPayments invoice, persist pending Order (Prisma).
+ */
+export async function postSubscribeHandler(request, reply) {
+  const email = String(request.body?.email ?? "")
+    .trim()
+    .toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return reply.code(400).send({ error: "Invalid email" });
+  }
+
+  const planType = resolvePlanType(request.body);
+  if (!planType) {
+    return reply.code(400).send({ error: "planType must be pro or business (camelCase or plan_type)" });
+  }
+
+  let user;
+  try {
+    user = await prisma.user.upsert({
+      where: { email },
+      create: { email },
+      update: {},
+    });
+  } catch (e) {
+    request.log.error(e, "[subscribe] prisma.user.upsert");
+    return reply.code(500).send({ error: "Database error while resolving user" });
+  }
+
+  const result = await createNowpaymentsInvoiceAndOrder({
+    prismaUser: user,
+    email,
+    planType,
+    log: request.log,
+  });
+
+  if (!result.ok) {
+    return reply.code(result.statusCode).send({ error: result.error });
+  }
+
+  return reply.send({ invoice_url: result.invoice_url });
 }

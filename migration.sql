@@ -1,16 +1,2 @@
--- CreateTable
-CREATE TABLE "login_sessions" (
-    "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "token_hash" TEXT NOT NULL,
-    "expires_at" TIMESTAMP(3) NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "login_sessions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "login_sessions_token_hash_key" ON "login_sessions"("token_hash");
-
--- CreateIndex
-CREATE INDEX "login_sessions_email_idx" ON "login_sessions"("email");
+ALTER TABLE "app_orders" ADD COLUMN IF NOT EXISTS "order_ref" TEXT;
+CREATE INDEX IF NOT EXISTS "app_orders_order_ref_idx" ON "app_orders"("order_ref");

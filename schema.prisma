@@ -31,17 +31,20 @@ model Order {
   amount    Float
   status    String // pending | finished | failed
   paymentId String? // NOWPayments invoice id
+  /** Same as `order_id` sent to NOWPayments API */
+  orderRef  String?  @map("order_ref")
   planType  String // pro | business
 
   createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([paymentId])
+  @@index([orderRef])
   @@map("app_orders")
 }
 
-/// One-time magic link tokens (store hash only).
-model LoginSession {
+/// One-time magic link tokens (plain token never stored; SHA-256 hash only).
+model AuthToken {
   id        String   @id @default(uuid())
   email     String
   tokenHash String   @unique @map("token_hash")
@@ -49,5 +52,5 @@ model LoginSession {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([email])
-  @@map("login_sessions")
+  @@map("auth_tokens")
 }

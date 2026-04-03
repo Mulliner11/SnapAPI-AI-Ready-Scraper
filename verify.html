@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verifying… · SnapAPI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-950 text-slate-100 antialiased">
+    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div class="absolute left-1/2 top-[-220px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/25 blur-[130px]"></div>
+      <div class="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-indigo-500/20 blur-[120px]"></div>
+    </div>
+
+    <div class="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 py-12 text-center">
+      <div
+        id="loadingBlock"
+        class="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-10 backdrop-blur"
+      >
+        <div
+          class="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-400"
+          aria-hidden="true"
+        ></div>
+        <p class="mt-6 text-sm font-medium text-slate-200">Confirming your sign-in link…</p>
+        <p class="mt-2 text-xs text-slate-500">You will be redirected to the dashboard.</p>
+      </div>
+
+      <div id="errorBlock" class="hidden w-full rounded-2xl border border-red-500/40 bg-red-500/10 p-6 text-left">
+        <p class="text-sm font-medium text-red-200">Could not verify</p>
+        <p id="errorText" class="mt-2 text-sm text-red-300/90"></p>
+        <a href="/login" class="mt-4 inline-block text-sm text-indigo-400 hover:underline">Back to sign in</a>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var token = params.get("token");
+        if (!token || token.length < 32) {
+          document.getElementById("loadingBlock").classList.add("hidden");
+          document.getElementById("errorBlock").classList.remove("hidden");
+          document.getElementById("errorText").textContent =
+            "This link is missing a token or it is too short. Request a new sign-in email.";
+          return;
+        }
+        // Full navigation so Set-Cookie from redirect response is applied (HttpOnly session).
+        window.location.replace("/api/auth/verify?token=" + encodeURIComponent(token));
+      })();
+    </script>
+  </body>
+</html>

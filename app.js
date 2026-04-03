@@ -244,83 +244,38 @@ urlInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") generate();
 });
 
-(function initSubscribeModal() {
-  const modal = document.getElementById("subscribeModal");
-  const emailInput = document.getElementById("subscribeEmail");
-  const errEl = document.getElementById("subscribeError");
-  const submitBtn = document.getElementById("subscribeSubmit");
-  const closeBtn = document.getElementById("subscribeModalClose");
-  const titleEl = document.getElementById("subscribeModalTitle");
-  if (!modal || !emailInput || !submitBtn) return;
+(function initSubscribePricing() {
+  const JWT_KEY = "snapapi_jwt";
 
-  let pendingPlan = "pro";
-
-  function open(plan) {
-    pendingPlan = plan === "business" ? "business" : "pro";
-    if (titleEl) {
-      titleEl.textContent = pendingPlan === "business" ? "Subscribe to Business" : "Subscribe to Pro";
-    }
-    errEl.classList.add("hidden");
-    errEl.textContent = "";
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
-    modal.setAttribute("aria-hidden", "false");
-    emailInput.focus();
+  function authHeaders() {
+    const h = {};
+    const t = localStorage.getItem(JWT_KEY);
+    if (t) h.Authorization = "Bearer " + t;
+    return h;
   }
 
-  function close() {
-    modal.classList.add("hidden");
-    modal.classList.remove("flex");
-    modal.setAttribute("aria-hidden", "true");
+  async function isLoggedIn() {
+    const r = await fetch("/api/user/me", {
+      credentials: "include",
+      headers: authHeaders(),
+    });
+    if (!r.ok) return false;
+    const d = await r.json().catch(() => ({}));
+    return !!(d.apiKey || d.api_key);
+  }
+
+  async function onSubscribeClick(plan) {
+    const p = plan === "business" ? "business" : "pro";
+    if (await isLoggedIn()) {
+      window.location.href = "/checkout?plan=" + encodeURIComponent(p);
+      return;
+    }
+    window.location.href =
+      "/login?redirect=" + encodeURIComponent("/checkout") + "&plan=" + encodeURIComponent(p);
   }
 
   document.querySelectorAll("button.subscribe-open[data-subscribe-plan]").forEach((btn) => {
-    btn.addEventListener("click", () => open(btn.getAttribute("data-subscribe-plan") || "pro"));
-  });
-
-  if (closeBtn) closeBtn.addEventListener("click", close);
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) close();
-  });
-
-  submitBtn.addEventListener("click", async () => {
-    errEl.classList.add("hidden");
-    const email = emailInput.value.trim();
-    if (!email) {
-      errEl.textContent = "Please enter your email";
-      errEl.classList.remove("hidden");
-      return;
-    }
-    submitBtn.disabled = true;
-    try {
-      const r = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, plan_type: pendingPlan }),
-      });
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        errEl.textContent = data.error || "Could not start checkout";
-        errEl.classList.remove("hidden");
-        return;
-      }
-      const checkout = data.invoice_url || data.payment_url;
-      if (checkout) {
-        window.location.href = checkout;
-        return;
-      }
-      errEl.textContent = "No checkout URL returned";
-      errEl.classList.remove("hidden");
-    } catch {
-      errEl.textContent = "Network error";
-      errEl.classList.remove("hidden");
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
-
-  emailInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") submitBtn.click();
+    btn.addEventListener("click", () => onSubscribeClick(btn.getAttribute("data-subscribe-plan") || "pro"));
   });
 })();
 

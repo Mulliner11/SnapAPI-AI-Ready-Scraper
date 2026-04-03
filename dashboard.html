@@ -5,111 +5,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard · SnapAPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              panel: "#0b1020",
+              panelSoft: "#111a31",
+              accent: "#7c3aed",
+            },
+            boxShadow: {
+              glow: "0 0 80px rgba(124, 58, 237, 0.28)",
+            },
+          },
+        },
+      };
+    </script>
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased">
-    <div class="mx-auto max-w-4xl px-6 py-10">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <h1 class="text-2xl font-semibold">Dashboard</h1>
-        <div class="flex gap-2">
-          <button
-            type="button"
-            id="copyKey"
-            class="rounded-xl border border-white/20 px-4 py-2 text-sm hover:bg-white/5"
-          >
-            Copy API key
-          </button>
-          <button type="button" id="logout" class="rounded-xl bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700">
-            Log out
-          </button>
-        </div>
-      </div>
-
-      <p id="loadErr" class="mt-4 hidden text-red-400"></p>
-
-      <section class="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h2 class="text-sm font-medium text-slate-400">API key</h2>
-        <code id="apiKey" class="mt-2 block break-all rounded-lg bg-slate-900/80 p-3 text-sm text-indigo-200"></code>
-      </section>
-
-      <section class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6">
-        <div class="flex justify-between text-sm">
-          <span class="text-slate-400">Usage this month</span>
-          <span id="usageText" class="font-mono"></span>
-        </div>
-        <div class="mt-3 h-3 overflow-hidden rounded-full bg-slate-800">
-          <div id="usageBar" class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 transition-all" style="width: 0%"></div>
-        </div>
-        <p class="mt-2 text-xs text-slate-500">Plan: <span id="planName"></span></p>
-      </section>
-
-      <section class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h2 class="text-sm font-medium text-slate-400">Recent requests (last 20)</h2>
-        <div class="mt-4 overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead>
-              <tr class="border-b border-white/10 text-slate-500">
-                <th class="pb-2 pr-4">Time</th>
-                <th class="pb-2 pr-4">Endpoint</th>
-                <th class="pb-2 pr-4">Target URL</th>
-                <th class="pb-2">Result</th>
-              </tr>
-            </thead>
-            <tbody id="logBody"></tbody>
-          </table>
-        </div>
-      </section>
+    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div class="absolute left-1/2 top-[-220px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/30 blur-[130px]"></div>
+      <div class="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-indigo-500/25 blur-[120px]"></div>
+      <div class="absolute bottom-[-140px] left-[-120px] h-[320px] w-[320px] rounded-full bg-cyan-400/20 blur-[110px]"></div>
     </div>
+
+    <header
+      class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur-md"
+    >
+      <div class="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+        <a
+          href="/"
+          class="text-sm font-semibold tracking-tight text-white transition hover:text-indigo-200"
+          >SnapAPI</a
+        >
+        <button
+          type="button"
+          id="logout"
+          class="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200 transition hover:border-indigo-400/40 hover:bg-white/10"
+        >
+          Log out
+        </button>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-4xl px-6 py-10">
+      <div class="mb-2 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs tracking-wide text-slate-300 backdrop-blur">
+        Account
+      </div>
+      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <span class="bg-gradient-to-r from-fuchsia-300 via-indigo-300 to-cyan-200 bg-clip-text text-transparent"
+          >Dashboard</span
+        >
+      </h1>
+      <p id="userEmail" class="mt-2 text-sm text-slate-400"></p>
+
+      <p id="loadErr" class="mt-6 hidden rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300"></p>
+
+      <div id="mainContent" class="mt-10 space-y-6 opacity-0 transition-opacity duration-300">
+        <!-- API Key -->
+        <section
+          class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-glow backdrop-blur md:p-8"
+          aria-labelledby="apikey-heading"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 id="apikey-heading" class="text-sm font-semibold uppercase tracking-wider text-indigo-300">API key</h2>
+              <p class="mt-1 text-xs text-slate-500">Use in <code class="text-indigo-300/90">x-api-key</code> header for screenshot &amp; PDF requests.</p>
+            </div>
+            <button
+              type="button"
+              id="copyKey"
+              class="shrink-0 rounded-lg border border-indigo-400/50 bg-indigo-500/20 px-4 py-2 text-xs font-medium text-white transition hover:bg-indigo-500/30"
+            >
+              Copy
+            </button>
+          </div>
+          <div class="mt-4 rounded-2xl border border-white/10 bg-panel/80 p-4">
+            <code id="apiKeyDisplay" class="block break-all font-mono text-sm text-indigo-200"></code>
+          </div>
+          <p id="copyToast" class="mt-3 hidden text-xs font-medium text-emerald-400">Copied to clipboard.</p>
+        </section>
+
+        <!-- Monthly usage -->
+        <section
+          class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-glow backdrop-blur md:p-8"
+          aria-labelledby="usage-heading"
+        >
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="usage-heading" class="text-sm font-semibold uppercase tracking-wider text-indigo-300">Monthly usage</h2>
+              <p class="mt-1 text-xs text-slate-500">Requests counted toward your plan this billing period.</p>
+            </div>
+            <div class="text-right">
+              <span id="usageRatio" class="font-mono text-lg font-medium text-white"></span>
+              <p class="mt-0.5 text-xs text-slate-500">Plan: <span id="planName" class="text-slate-300"></span></p>
+            </div>
+          </div>
+          <div class="mt-6 h-3 overflow-hidden rounded-full bg-slate-800/90 ring-1 ring-white/5">
+            <div
+              id="usageBar"
+              class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all duration-500 ease-out"
+              style="width: 0%"
+            ></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
     <script>
       const JWT_KEY = "snapapi_jwt";
 
       function authHeaders() {
         const t = localStorage.getItem(JWT_KEY);
-        const h = { "Content-Type": "application/json" };
+        const h = {};
         if (t) h.Authorization = "Bearer " + t;
         return h;
       }
 
+      function showError(msg) {
+        const el = document.getElementById("loadErr");
+        el.textContent = msg;
+        el.classList.remove("hidden");
+      }
+
       async function load() {
-        const r = await fetch("/api/dashboard/summary", { headers: authHeaders(), credentials: "include" });
+        const r = await fetch("/api/user/me", { headers: authHeaders(), credentials: "include" });
         if (r.status === 401) {
           window.location.href = "/login";
           return;
         }
         const d = await r.json().catch(() => ({}));
         if (!r.ok) {
-          document.getElementById("loadErr").classList.remove("hidden");
-          document.getElementById("loadErr").textContent = d.error || "Failed to load";
+          showError(d.error || "Could not load your account.");
           return;
         }
-        document.getElementById("apiKey").textContent = d.api_key || "";
-        document.getElementById("planName").textContent = d.plan || "";
-        const used = d.usage_count ?? 0;
-        const max = d.max_limit ?? 1;
-        document.getElementById("usageText").textContent = `${used} / ${max}`;
-        const pct = Math.min(100, Math.round((used / max) * 100));
+
+        document.getElementById("userEmail").textContent = d.email || "";
+        document.getElementById("apiKeyDisplay").textContent = d.apiKey || d.api_key || "—";
+
+        const used = d.usage?.used ?? d.usage_count ?? 0;
+        const limit = Math.max(1, d.usage?.limit ?? d.max_limit ?? 1);
+        document.getElementById("usageRatio").textContent = used + " / " + limit;
+        document.getElementById("planName").textContent = (d.plan || "free").toString();
+
+        const pct = Math.min(100, Math.round((used / limit) * 100));
         document.getElementById("usageBar").style.width = pct + "%";
 
-        const tbody = document.getElementById("logBody");
-        tbody.innerHTML = "";
-        (d.logs || []).forEach((row) => {
-          const tr = document.createElement("tr");
-          tr.className = "border-b border-white/5";
-          const t = new Date(row.created_at).toLocaleString();
-          tr.innerHTML = `<td class="py-2 pr-4 text-slate-400">${t}</td>
-            <td class="py-2 pr-4">${row.endpoint}</td>
-            <td class="max-w-[200px] truncate py-2 pr-4" title="${row.target_url || ""}">${row.target_url || "—"}</td>
-            <td class="max-w-[180px] truncate py-2"><a class="text-indigo-400 hover:underline" href="${row.result_path || "#"}" target="_blank" rel="noreferrer">${row.result_path ? "Link" : "—"}</a></td>`;
-          tbody.appendChild(tr);
-        });
+        const main = document.getElementById("mainContent");
+        main.classList.remove("opacity-0");
       }
 
       document.getElementById("copyKey").onclick = async () => {
-        const t = document.getElementById("apiKey").textContent;
+        const t = document.getElementById("apiKeyDisplay").textContent;
+        const toast = document.getElementById("copyToast");
         try {
           await navigator.clipboard.writeText(t);
-          alert("Copied");
+          toast.classList.remove("hidden");
+          setTimeout(() => toast.classList.add("hidden"), 2500);
         } catch {
-          prompt("Copy this:", t);
+          prompt("Copy this key:", t);
         }
       };
 

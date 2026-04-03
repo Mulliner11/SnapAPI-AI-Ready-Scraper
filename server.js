@@ -19,10 +19,11 @@ import {
 } from "./db.js";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
 import { prisma } from "./prismaClient.js";
+import { postPaymentCreateInvoice } from "./paymentCreateInvoice.js";
 import { postSubscribeHandler } from "./subscribeInvoice.js";
 import { postNowpaymentsWebhook } from "./nowpaymentsWebhook.js";
 import { getUserIdFromRequest } from "./authContext.js";
-import { postAuthSendLink, postAuthVerify } from "./authMagicLinkApi.js";
+import { getAuthVerify, postAuthPendingRedirect, postAuthSendMagicLink } from "./authMagicLinkApi.js";
 
 const SESSION_SECRET_RAW = process.env.SESSION_SECRET || "snapapi-development-session-secret-min-32-chars-long!!";
 const SESSION_SECRET =
@@ -213,8 +214,24 @@ async function registerRoutes() {
     return sendCwdFile(reply, "login.html", "text/html; charset=utf-8");
   });
 
+  fastify.get("/verify", async (request, reply) => {
+    return sendCwdFile(reply, "verify.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/verify.html", async (request, reply) => {
+    return sendCwdFile(reply, "verify.html", "text/html; charset=utf-8");
+  });
+
   fastify.get("/dashboard", async (request, reply) => {
     return sendCwdFile(reply, "dashboard.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/checkout", async (request, reply) => {
+    return sendCwdFile(reply, "checkout.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/checkout.html", async (request, reply) => {
+    return sendCwdFile(reply, "checkout.html", "text/html; charset=utf-8");
   });
 
   fastify.get("/docs", async (request, reply) => {
@@ -263,6 +280,23 @@ async function registerRoutes() {
     postSubscribeHandler
   );
 
+  fastify.post(
+    "/api/payment/create-invoice",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["plan"],
+          properties: {
+            plan: { type: "string", enum: ["pro", "business"] },
+            planType: { type: "string", enum: ["pro", "business"] },
+          },
+        },
+      },
+    },
+    postPaymentCreateInvoice
+  );
+
   fastify.register(async (instance) => {
     instance.addContentTypeParser(
       "application/json",
@@ -274,7 +308,7 @@ async function registerRoutes() {
   });
 
   fastify.post(
-    "/api/auth/send-link",
+    "/api/auth/send-magic-link",
     {
       schema: {
         body: {
@@ -284,40 +318,56 @@ async function registerRoutes() {
         },
       },
     },
-    postAuthSendLink
+    postAuthSendMagicLink
   );
 
+  fastify.get("/api/auth/verify", { logLevel: "silent" }, getAuthVerify);
+
   fastify.post(
-    "/api/auth/verify",
+    "/api/auth/pending-redirect",
     {
       schema: {
         body: {
           type: "object",
-          required: ["token"],
-          properties: { token: { type: "string", minLength: 16 } },
+          required: ["redirect", "plan"],
+          properties: {
+            redirect: { type: "string", minLength: 1 },
+            plan: { type: "string", enum: ["pro", "business"] },
+          },
         },
       },
     },
-    postAuthVerify
+    postAuthPendingRedirect
   );
 
+  /**
+   * Current user profile + usage. Requires session cookie or `Authorization: Bearer` JWT.
+   * Unauthenticated: 401. No database pool: 503.
+   */
   fastify.get("/api/user/me", async (request, reply) => {
-    const pool = getPool();
     const uid = await getUserIdFromRequest(request);
-    if (!uid || !pool) {
-      return reply.send({ loggedIn: false });
+    if (!uid) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    const pool = getPool();
+    if (!pool) {
+      return reply.code(503).send({ error: "Database not configured" });
     }
     const row = await getUserDashboardRow(uid);
     if (!row) {
-      return reply.send({ loggedIn: false });
+      return reply.code(401).send({ error: "Unauthorized" });
     }
+    const used = row.usage_count ?? 0;
+    const limit = row.max_limit ?? 0;
     return reply.send({
-      loggedIn: true,
       email: row.email,
-      api_key: row.api_key,
+      apiKey: row.api_key,
       plan: row.plan,
-      usage_count: row.usage_count,
-      max_limit: row.max_limit,
+      usage: { used, limit },
+      loggedIn: true,
+      api_key: row.api_key,
+      usage_count: used,
+      max_limit: limit,
     });
   });
 
@@ -468,7 +518,7 @@ async function start() {
     }
     const jwtSecret = String(process.env.JWT_SECRET || "").trim();
     if (!jwtSecret || jwtSecret.length < 32) {
-      console.warn("[SnapAPI] Set JWT_SECRET (min 32 chars) for POST /api/auth/verify.");
+      console.warn("[SnapAPI] Set JWT_SECRET (min 32 chars) if you use Bearer JWT with /api/user/me.");
     }
   }
 
@@ -492,10 +542,12 @@ async function start() {
     allowList: (request) => {
       const pathname = (request.url || "").split("?")[0];
       if (pathname === "/health") return true;
-      if (pathname === "/api/auth/send-link" && request.method === "POST") return true;
-      if (pathname === "/api/auth/verify" && request.method === "POST") return true;
+      if (pathname === "/api/auth/send-magic-link" && request.method === "POST") return true;
+      if (pathname === "/api/auth/verify" && request.method === "GET") return true;
+      if (pathname === "/api/auth/pending-redirect" && request.method === "POST") return true;
       if (pathname === "/webhooks/nowpayments" && request.method === "POST") return true;
       if (pathname === "/api/subscribe" && request.method === "POST") return true;
+      if (pathname === "/api/payment/create-invoice" && request.method === "POST") return true;
       return false;
     },
   });
