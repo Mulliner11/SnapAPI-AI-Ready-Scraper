@@ -1,88 +1,6 @@
-# Railway (Nixpacks): Node + Playwright Chromium system libraries.
-# Build: `npm run build` runs `playwright install --with-deps chromium`; runtime still needs
-# matching .so on PATH (apt) and/or LD_LIBRARY_PATH (nixLibs) depending on base image.
-
-[variables]
-# Avoid host-dependency validation failures when mixing Nix/apt layouts.
-PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "1"
-
 [phases.setup]
-# Extend provider defaults (e.g. node).
-nixPkgs = [
-  "...",
-  "nodejs_20", # 强制使用 Node 20
-  # Nix equivalents of Chromium’s common shared-library needs (runtime + linker visibility).
-  "glib",
-  "nss",
-  "nspr",
-  "atk",
-  "at-spi2-atk",
-  "at-spi2-core",
-  "cups",
-  "libdrm",
-  "libxkbcommon",
-  "mesa",
-  "alsa-lib",
-  "pango",
-  "cairo",
-  "harfbuzz",
-  "gtk3",
-  "dbus",
-  "expat",
-  "fontconfig",
-  "freetype",
-  "wayland",
-  "zlib",
-  "xorg.libX11",
-  "xorg.libXcomposite",
-  "xorg.libXdamage",
-  "xorg.libXext",
-  "xorg.libXfixes",
-  "xorg.libXrandr",
-  "xorg.libxcb",
-  "xorg.libXi",
-  "xorg.libXcursor",
-  "xorg.libXtst",
-]
-
-# Append each package’s lib/ output to LD_LIBRARY_PATH so Chromium finds libglib-2.0.so.0, etc.
-nixLibs = [
-  "glib",
-  "nss",
-  "nspr",
-  "atk",
-  "at-spi2-atk",
-  "at-spi2-core",
-  "cups",
-  "libdrm",
-  "libxkbcommon",
-  "mesa",
-  "alsa-lib",
-  "pango",
-  "cairo",
-  "harfbuzz",
-  "gtk3",
-  "dbus",
-  "expat",
-  "fontconfig",
-  "freetype",
-  "wayland",
-  "zlib",
-  "xorg.libX11",
-  "xorg.libXcomposite",
-  "xorg.libXdamage",
-  "xorg.libXext",
-  "xorg.libXfixes",
-  "xorg.libXrandr",
-  "xorg.libxcb",
-  "xorg.libXi",
-  "xorg.libXcursor",
-  "xorg.libXtst",
-]
-
-# Debian/Ubuntu names — mirrors Playwright’s `ubuntu22.04-x64` chromium deps (+ common extras).
+# 只使用 aptPkgs，这是在 Debian/Ubuntu 环境下安装 Playwright 依赖的最稳妥方式
 aptPkgs = [
-  "...",
   "wget",
   "ca-certificates",
   "fonts-liberation",
@@ -114,5 +32,10 @@ aptPkgs = [
   "libxcursor1",
   "libxi6",
   "libxtst6",
-  "xdg-utils",
+  "xdg-utils"
 ]
+
+[variables]
+# 告诉 Playwright 不要去检查系统环境，因为我们已经手动装好了依赖
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "1"
