@@ -80,7 +80,9 @@
 
       function planFromQuery() {
         const p = new URLSearchParams(window.location.search).get("plan");
-        return p === "business" ? "business" : "pro";
+        if (p === "agency") return "agency";
+        if (p === "business") return "business";
+        return "pro";
       }
 
       function showError(msg) {
@@ -153,7 +155,8 @@
 
       (async function init() {
         plan = planFromQuery();
-        document.getElementById("planLabel").textContent = plan === "business" ? "Business" : "Pro";
+        document.getElementById("planLabel").textContent =
+          plan === "agency" ? "Agency" : plan === "business" ? "Serious Builder" : "AI Dev";
 
         document.getElementById("authGate").classList.remove("hidden");
         const ok = await ensureSession();

@@ -22,7 +22,7 @@ export async function initDb() {
   const url = process.env.DATABASE_URL?.trim();
   if (!url) {
     console.warn(
-      "[SnapAPI] DATABASE_URL is not set. POST /screenshot and /pdf will return 503; dashboard auth disabled."
+      "[SnapAPI] DATABASE_URL is not set. POST /api/scrape will return 503 for real keys; dashboard auth disabled."
     );
     return;
   }
@@ -189,10 +189,16 @@ export async function upsertPaidUserByEmail(email, plan, apiKey, status = "activ
   return r.rows[0];
 }
 
-const PLAN_MAX_LIMIT = { free: 100, pro: 5000, business: 50_000 };
+const PLAN_MAX_LIMIT = {
+  free: 100,
+  pro: 2_500,
+  business: 15_000,
+  agency: 100_000,
+};
 
 function normalizedPlan(plan) {
   const p = String(plan || "free").toLowerCase();
+  if (p === "agency") return "agency";
   if (p === "business") return "business";
   if (p === "pro") return "pro";
   return "free";
@@ -324,7 +330,7 @@ export function isOverQuota(user) {
 }
 
 /**
- * After successful screenshot/PDF: increment usage + insert log (transaction).
+ * After successful API call (e.g. scrape): increment usage + insert log (transaction).
  */
 export async function recordApiUsage(userId, endpoint, targetUrl, resultPath) {
   if (!pool) throw new Error("Database not configured");

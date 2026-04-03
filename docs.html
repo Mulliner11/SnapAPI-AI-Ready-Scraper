@@ -106,19 +106,17 @@
         <p class="text-xs font-medium uppercase tracking-widest text-indigo-300/80">Reference</p>
         <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">SnapAPI HTTP API</h1>
         <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-          All API routes use <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">POST</code> with
+          The scrape endpoint uses <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">POST</code> with
           <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">Content-Type: application/json</code>.
-          Example production base URL:
-          <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-cyan-200/80">https://snapapi.up.railway.app</code>
+          Pages are loaded in headless Chromium; content is extracted with Mozilla Readability and converted to Markdown (Turndown).
         </p>
 
         <!-- Authentication -->
         <section id="authentication" class="scroll-mt-24 border-t border-white/10 pt-12">
           <h2 class="text-xl font-semibold text-white">Authentication</h2>
           <p class="mt-3 text-sm leading-relaxed text-slate-400">
-            Calls to <code class="text-indigo-200/90">/screenshot</code> and <code class="text-indigo-200/90">/pdf</code> must include
-            <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-fuchsia-200/90">x-api-key</code> with your user&rsquo;s API key
-            (the same value shown in the Dashboard).
+            <code class="text-indigo-200/90">POST /api/scrape</code> requires
+            <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-fuchsia-200/90">x-api-key</code> (same value as in the Dashboard).
           </p>
           <div class="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
             <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Header</p>
@@ -136,38 +134,20 @@
           <article class="mt-8">
             <div class="flex flex-wrap items-center gap-2">
               <span class="rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-xs font-medium text-emerald-300">POST</span>
-              <code class="text-base text-indigo-200">/screenshot</code>
+              <code class="text-base text-indigo-200">/api/scrape</code>
             </div>
             <p class="mt-3 text-sm leading-relaxed text-slate-400">
-              Opens the URL in headless Chromium, captures a PNG, uploads it to object storage, and returns a public image URL.
+              Returns structured text for the main article (or a plain-text fallback): <code class="text-indigo-200/80">title</code>,
+              <code class="text-indigo-200/80">markdown</code>, <code class="text-indigo-200/80">text_content</code>. No object-storage upload.
             </p>
-            <ul class="mt-4 list-inside list-disc space-y-1.5 text-sm text-slate-400">
-              <li>Full-page capture by default (<code class="text-indigo-200/80">fullPage</code> defaults to true); set false for viewport only.</li>
-              <li>Optional paired <code class="text-indigo-200/80">width</code> / <code class="text-indigo-200/80">height</code> set the viewport and affect layout.</li>
-            </ul>
-          </article>
-
-          <article class="mt-10">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-xs font-medium text-emerald-300">POST</span>
-              <code class="text-base text-indigo-200">/pdf</code>
-            </div>
-            <p class="mt-3 text-sm leading-relaxed text-slate-400">
-              Renders the page with Chromium and exports PDF; response includes a download URL.
-              <code class="text-indigo-200/80">fullPage</code> is not used for PDF; page size follows viewport and content.
-            </p>
-            <ul class="mt-4 list-inside list-disc space-y-1.5 text-sm text-slate-400">
-              <li>If both <code class="text-indigo-200/80">width</code> and <code class="text-indigo-200/80">height</code> are set, that viewport is used and defines the PDF page size.</li>
-              <li>If both are omitted, the PDF page size is derived from the document scroll dimensions.</li>
-            </ul>
           </article>
 
           <div class="mt-8 rounded-xl border border-white/10 bg-[#060a12] p-4 ring-1 ring-inset ring-indigo-500/10">
             <p class="text-xs font-medium text-slate-500">Successful JSON response</p>
             <pre class="doc-code mt-2 overflow-x-auto text-slate-200"><code>{
-  <span class="text-fuchsia-300/90">"status"</span>: <span class="text-emerald-300/90">"success"</span>,
-  <span class="text-fuchsia-300/90">"message"</span>: <span class="text-emerald-300/90">"Screenshot saved"</span> | <span class="text-emerald-300/90">"PDF saved"</span>,
-  <span class="text-fuchsia-300/90">"path"</span>: <span class="text-emerald-300/90">"https://..."</span>
+  <span class="text-fuchsia-300/90">"title"</span>: <span class="text-emerald-300/90">"…"</span>,
+  <span class="text-fuchsia-300/90">"markdown"</span>: <span class="text-emerald-300/90">"# …"</span>,
+  <span class="text-fuchsia-300/90">"text_content"</span>: <span class="text-emerald-300/90">"…"</span>
 }</code></pre>
           </div>
         </section>
@@ -175,10 +155,10 @@
         <!-- Parameters -->
         <section id="parameters" class="scroll-mt-24 border-t border-white/10 pt-12">
           <h2 class="text-xl font-semibold text-white">Request body parameters</h2>
-          <p class="mt-3 text-sm text-slate-400">JSON fields supported by both endpoints:</p>
+          <p class="mt-3 text-sm text-slate-400">JSON body for <code class="text-indigo-200/80">/api/scrape</code>:</p>
 
           <div class="mt-6 overflow-x-auto rounded-xl border border-white/10 bg-slate-950/50">
-            <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+            <table class="w-full min-w-[480px] border-collapse text-left text-sm">
               <thead>
                 <tr class="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-slate-500">
                   <th class="px-4 py-3 font-medium">Field</th>
@@ -188,33 +168,11 @@
                 </tr>
               </thead>
               <tbody class="text-slate-300">
-                <tr class="border-b border-white/[0.06]">
+                <tr>
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">url</td>
                   <td class="px-4 py-3 text-slate-400">string</td>
                   <td class="px-4 py-3 text-rose-300/90">— (required)</td>
-                  <td class="px-4 py-3 text-slate-400">HTTP(S) page to load. Required for both endpoints.</td>
-                </tr>
-                <tr class="border-b border-white/[0.06]">
-                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">fullPage</td>
-                  <td class="px-4 py-3 text-slate-400">boolean</td>
-                  <td class="px-4 py-3 font-mono text-xs text-cyan-200/80">true</td>
-                  <td class="px-4 py-3 text-slate-400">
-                    <strong class="text-slate-300">/screenshot</strong> only:
-                    <code class="text-indigo-200/80">true</code> captures the full scrollable page;
-                    <code class="text-indigo-200/80">false</code> captures the viewport. Ignored for PDF.
-                  </td>
-                </tr>
-                <tr class="border-b border-white/[0.06]">
-                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">width</td>
-                  <td class="px-4 py-3 text-slate-400">integer</td>
-                  <td class="px-4 py-3 text-slate-500">Playwright default</td>
-                  <td class="px-4 py-3 text-slate-400">Viewport width, 320–4096. Applied only if <code class="text-indigo-200/80">height</code> is also sent; a lone dimension is ignored.</td>
-                </tr>
-                <tr>
-                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">height</td>
-                  <td class="px-4 py-3 text-slate-400">integer</td>
-                  <td class="px-4 py-3 text-slate-500">Playwright default</td>
-                  <td class="px-4 py-3 text-slate-400">Viewport height, 240–4096. With width, defines PDF page dimensions.</td>
+                  <td class="px-4 py-3 text-slate-400">HTTP(S) page to load.</td>
                 </tr>
               </tbody>
             </table>
@@ -256,11 +214,11 @@
                 <span class="font-mono text-lg font-semibold text-amber-200">500</span>
                 <span class="text-sm text-slate-300">Internal Server Error</span>
               </div>
-              <p class="mt-2 text-sm text-slate-400">Unhandled failure during render or upload. Check server logs and any <code class="text-indigo-200/80">requestId</code> from your reverse proxy.</p>
+              <p class="mt-2 text-sm text-slate-400">Unhandled failure during fetch or extraction. Check server logs.</p>
             </div>
           </div>
           <p class="mt-4 text-xs text-slate-500">
-            If the database is not configured, screenshot/PDF may return <code class="text-indigo-200/60">503</code> (Service Unavailable).
+            If the database is not configured, only the demo key may work; real keys need <code class="text-indigo-200/60">DATABASE_URL</code>.
           </p>
         </section>
 
@@ -287,6 +245,7 @@
               <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400"></span>
               <span
                 ><strong class="text-slate-200">Page load timeout</strong>: default <code class="text-indigo-200/80">60s</code> (override with
+                <code class="text-indigo-200/80">SCRAPE_GOTO_TIMEOUT_MS</code> or
                 <code class="text-indigo-200/80">SCREENSHOT_GOTO_TIMEOUT_MS</code>). Timeouts may surface as <code class="text-indigo-200/80">500</code>.</span
               >
             </li>
@@ -306,16 +265,16 @@
 <span class="text-slate-500">const</span> base = <span class="text-emerald-300">"https://snapapi.up.railway.app"</span>;
 <span class="text-slate-500">const</span> apiKey = process.env.<span class="text-amber-200">SNAPAPI_KEY</span>;
 
-<span class="text-slate-500">async function</span> <span class="text-cyan-300">screenshot</span>() {
+<span class="text-slate-500">async function</span> <span class="text-cyan-300">scrape</span>() {
   <span class="text-slate-500">const</span> { data } = <span class="text-slate-500">await</span> axios.<span class="text-cyan-300">post</span>(
-    <span class="text-emerald-300">`${base}/screenshot`</span>,
-    { url: <span class="text-emerald-300">"https://example.com"</span>, fullPage: <span class="text-amber-200">true</span> },
+    <span class="text-emerald-300">`${base}/api/scrape`</span>,
+    { url: <span class="text-emerald-300">"https://example.com"</span> },
     { headers: { <span class="text-emerald-300">"Content-Type"</span>: <span class="text-emerald-300">"application/json"</span>, <span class="text-emerald-300">"x-api-key"</span>: apiKey } }
   );
-  console.<span class="text-cyan-300">log</span>(data.path);
+  console.<span class="text-cyan-300">log</span>(data.title, data.markdown?.slice(<span class="text-amber-200">0</span>, <span class="text-amber-200">200</span>));
 }
 
-<span class="text-cyan-300">screenshot</span>().<span class="text-cyan-300">catch</span>(console.error);</code></pre>
+<span class="text-cyan-300">scrape</span>().<span class="text-cyan-300">catch</span>(console.error);</code></pre>
 
           <h3 class="mt-10 text-sm font-medium text-indigo-200">Python (requests)</h3>
           <pre
@@ -326,18 +285,19 @@
 BASE = <span class="text-emerald-300">"https://snapapi.up.railway.app"</span>
 API_KEY = os.environ[<span class="text-emerald-300">"SNAPAPI_KEY"</span>]
 
-<span class="text-slate-500">def</span> <span class="text-cyan-300">export_pdf</span>():
+<span class="text-slate-500">def</span> <span class="text-cyan-300">scrape</span>():
     r = requests.post(
-        <span class="text-emerald-300">f"{BASE}/pdf"</span>,
-        json={<span class="text-emerald-300">"url"</span>: <span class="text-emerald-300">"https://example.com"</span>, <span class="text-emerald-300">"width"</span>: <span class="text-amber-200">1280</span>, <span class="text-emerald-300">"height"</span>: <span class="text-amber-200">720</span>},
+        <span class="text-emerald-300">f"{BASE}/api/scrape"</span>,
+        json={<span class="text-emerald-300">"url"</span>: <span class="text-emerald-300">"https://example.com"</span>},
         headers={<span class="text-emerald-300">"x-api-key"</span>: API_KEY},
         timeout=<span class="text-amber-200">120</span>,
     )
     r.raise_for_status()
-    <span class="text-slate-500">print</span>(r.json()[<span class="text-emerald-300">"path"</span>])
+    data = r.json()
+    <span class="text-slate-500">print</span>(data[<span class="text-emerald-300">"title"</span>], data[<span class="text-emerald-300">"markdown"</span>][:<span class="text-amber-200">200</span>])
 
 <span class="text-slate-500">if</span> __name__ == <span class="text-emerald-300">"__main__"</span>:
-    export_pdf()</code></pre>
+    scrape()</code></pre>
         </section>
       </main>
     </div>

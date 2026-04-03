@@ -42,7 +42,7 @@
         <section>
           <h2 class="text-lg font-medium text-white">1. Introduction</h2>
           <p class="mt-3">
-            SnapAPI (“we”, “us”, or “our”) provides screenshot and PDF generation APIs. This Privacy Policy explains how we handle
+            SnapAPI (“we”, “us”, or “our”) provides an AI-ready web scraping API (URL to structured text). This Privacy Policy explains how we handle
             information when you use our website and services. By using SnapAPI, you agree to this policy.
           </p>
         </section>
@@ -51,21 +51,16 @@
           <h2 class="text-lg font-medium text-white">2. What we do not do with your content</h2>
           <p class="mt-3">
             <strong class="text-slate-200">We do not store customer page content for our own purposes.</strong> URLs you submit are
-            loaded only to perform the requested render in real time. We do <strong class="text-slate-200">not</strong> use your
-            screenshots or PDFs for advertising, profiling, model training, or persistent analytics. We do
-            <strong class="text-slate-200">not</strong> operate a data warehouse of the visual or textual content of pages you capture.
+            loaded only to extract readable content in real time. We do <strong class="text-slate-200">not</strong> use your
+            scraped text for advertising, profiling, model training, or persistent analytics beyond short operational logs.
           </p>
         </section>
 
         <section>
-          <h2 class="text-lg font-medium text-white">3. Cloudflare R2 and generated files</h2>
+          <h2 class="text-lg font-medium text-white">3. API responses</h2>
           <p class="mt-3">
-            Output files (images and PDFs) are written to <strong class="text-slate-200">Cloudflare R2</strong> object storage solely
-            so we can return a download or public URL in the API response. This storage is a
-            <strong class="text-slate-200">technical delivery mechanism</strong>, not a product feature for browsing or analyzing your
-            assets. Retention, access controls, and lifecycle for those objects follow your configuration of the underlying bucket and
-            applicable Cloudflare terms. We encourage you to treat returned URLs as you would any temporary delivery link unless you
-            configure longer retention.
+            Scrape results are returned directly in the HTTP response (JSON). We do not require object storage for core delivery; any
+            optional archival you perform on your side is your responsibility.
           </p>
         </section>
 
@@ -76,7 +71,7 @@
             account and technical data such as email addresses, API identifiers, usage counts, request metadata (e.g. timestamps,
             endpoints, target URLs as needed for logs), and server logs. This processing is for
             <strong class="text-slate-200">service delivery, security, and compliance</strong>, not for building advertising profiles
-            from the content of pages you render.
+            from the content of pages you scrape.
           </p>
         </section>
 
@@ -91,7 +86,7 @@
         <section>
           <h2 class="text-lg font-medium text-white">6. Processors and subprocessors</h2>
           <p class="mt-3">
-            We rely on infrastructure providers (including hosting, databases, and object storage such as Cloudflare R2) to run the
+            We rely on infrastructure providers (including hosting and databases) to run the
             service. Their processing is governed by their respective terms and, where applicable, data processing agreements.
           </p>
         </section>

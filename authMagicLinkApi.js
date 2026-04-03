@@ -187,7 +187,10 @@ export async function getAuthVerify(request, reply) {
     delete request.session.postLoginRedirect;
     delete request.session.postLoginPlan;
 
-    if (pendingPath === "/checkout" && (pendingPlan === "pro" || pendingPlan === "business")) {
+    if (
+      pendingPath === "/checkout" &&
+      (pendingPlan === "pro" || pendingPlan === "business" || pendingPlan === "agency")
+    ) {
       return reply.redirect(`/checkout?plan=${pendingPlan}`);
     }
 
@@ -213,7 +216,14 @@ const ALLOWED_POST_LOGIN_PATH = "/checkout";
 export async function postAuthPendingRedirect(request, reply) {
   const redirect = String(request.body?.redirect ?? "").trim();
   const planRaw = String(request.body?.plan ?? "").trim().toLowerCase();
-  const plan = planRaw === "business" ? "business" : planRaw === "pro" ? "pro" : null;
+  const plan =
+    planRaw === "agency"
+      ? "agency"
+      : planRaw === "business"
+        ? "business"
+        : planRaw === "pro"
+          ? "pro"
+          : null;
 
   if (redirect !== ALLOWED_POST_LOGIN_PATH || !plan) {
     return reply.code(400).send({ error: "Invalid redirect or plan" });

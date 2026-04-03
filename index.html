@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SnapAPI - High-performance Screenshot & PDF API for Developers</title>
+    <title>SnapAPI — AI-ready web scraper (URL → Markdown)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -65,17 +65,18 @@
       <!-- Hero -->
       <header class="mb-16">
         <div class="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs tracking-wide text-slate-300 backdrop-blur">
-          Production Grade API Infrastructure
+          AI-ready content extraction
         </div>
         <h1 class="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
           SnapAPI
           <span class="block bg-gradient-to-r from-fuchsia-300 via-indigo-300 to-cyan-200 bg-clip-text text-transparent">
-            High-performance screenshot &amp; PDF API for developers
+            Turn any URL into clean Markdown for LLMs &amp; agents
           </span>
         </h1>
         <p class="mt-5 max-w-2xl text-base leading-7 text-slate-300">
-          Screenshot-as-a-service built for SaaS and automation. Reliable, scalable, and metered—artifacts land in
-          Cloudflare R2 so you ship faster without running your own browser farm.
+          We load the real page in headless Chromium, strip chrome with Readability, and convert to Markdown with Turndown—so
+          you get <strong class="text-slate-100">title</strong>, <strong class="text-slate-100">markdown</strong>, and
+          <strong class="text-slate-100">plain text</strong> in one API call. No pixel pipelines. No PDFs.
         </p>
       </header>
 
@@ -84,8 +85,8 @@
         <h2 id="why-heading" class="text-sm font-semibold uppercase tracking-wider text-indigo-300">Why SnapAPI</h2>
         <p class="mt-3 text-2xl font-semibold text-white">Build vs. Buy</p>
         <p class="mt-2 max-w-2xl text-sm text-slate-400">
-          Self-hosting headless Chrome looks cheap until you count the hours. Here is how maintaining it yourself compares
-          to using SnapAPI.
+          Feeding raw HTML into models wastes tokens and confuses retrieval. SnapAPI gives you article-shaped content
+          instead of nav bars, cookie banners, and script tags.
         </p>
         <div class="mt-8 grid gap-6 md:grid-cols-2">
           <div class="rounded-2xl border border-rose-500/25 bg-rose-500/[0.06] p-5">
@@ -94,17 +95,17 @@
               <li class="flex gap-2">
                 <span class="shrink-0 text-rose-400/90">—</span>
                 <span
-                  ><strong class="text-slate-100">10+ hours per month</strong> tuning Chromium, memory leaks, timeouts,
-                  and crash loops</span
+                  ><strong class="text-slate-100">Playwright + Readability + Turndown</strong> wiring, upgrades, and edge
+                  cases</span
                 >
               </li>
               <li class="flex gap-2">
                 <span class="shrink-0 text-rose-400/90">—</span>
-                <span>Patching CVEs, scaling workers, and rebuilding container images in CI</span>
+                <span>Bot detection, timeouts, and memory on long pages</span>
               </li>
               <li class="flex gap-2">
                 <span class="shrink-0 text-rose-400/90">—</span>
-                <span>Chasing flaky renders, font fallbacks, and print CSS for pixel-perfect PDFs</span>
+                <span>Maintaining quotas, keys, and observability for a scraper fleet</span>
               </li>
             </ul>
           </div>
@@ -114,48 +115,58 @@
               <li class="flex gap-2">
                 <span class="shrink-0 text-emerald-400">✓</span>
                 <span
-                  ><strong class="text-slate-100">Zero browser ops</strong> — one HTTPS call, get a PNG or PDF back</span
+                  ><strong class="text-slate-100">One POST</strong> — JSON with <code class="text-indigo-200/90">title</code>,
+                  <code class="text-indigo-200/90">markdown</code>, <code class="text-indigo-200/90">text_content</code></span
                 >
               </li>
               <li class="flex gap-2">
                 <span class="shrink-0 text-emerald-400">✓</span>
-                <span>Predictable quotas, API keys, and usage in your dashboard</span>
+                <span>Metered API keys and usage in your dashboard</span>
               </li>
               <li class="flex gap-2">
                 <span class="shrink-0 text-emerald-400">✓</span>
-                <span>Storage and delivery handled—you integrate the URL and move on</span>
+                <span>Optimized for RAG, summarization, and agent toolchains</span>
               </li>
             </ul>
           </div>
         </div>
       </section>
 
-      <!-- Live Demo -->
+      <!-- Before vs After -->
       <section class="mb-16 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur">
-        <h2 class="text-xl font-medium text-white">Live Demo</h2>
+        <h2 class="text-xl font-medium text-white">Before vs After</h2>
         <p class="mt-2 text-sm text-slate-400">
-          Enter a URL, choose Screenshot or PDF, hit Generate to call the API, then preview the image or download the PDF
-          below.
+          Raw pages are noisy. SnapAPI returns the <em class="text-slate-300">main article</em> as Markdown—ideal for prompts,
+          chunking, and embeddings.
         </p>
 
-        <div class="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            id="modeScreenshot"
-            class="rounded-full border border-indigo-400/60 bg-indigo-500/30 px-4 py-1.5 text-xs font-medium text-white transition"
-          >
-            Screenshot
-          </button>
-          <button
-            type="button"
-            id="modePdf"
-            class="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10"
-          >
-            PDF
-          </button>
+        <div class="mt-6 grid gap-4 lg:grid-cols-2">
+          <div class="rounded-2xl border border-rose-500/20 bg-slate-950/60 p-4">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-rose-300/90">Before</h3>
+            <p class="mt-2 text-xs text-slate-500">Typical HTML payload (abbreviated)</p>
+            <pre
+              class="doc-code mt-3 max-h-[280px] overflow-auto rounded-lg border border-white/10 bg-[#060a12] p-3 text-[11px] leading-relaxed text-slate-400"
+            >&lt;html&gt;…&lt;nav&gt;…&lt;script src="analytics.js"&gt;…&lt;/script&gt;
+&lt;div class="cookie-banner"&gt;…&lt;/div&gt;
+&lt;aside class="ads"&gt;…&lt;/aside&gt;
+&lt;article&gt;…&lt;p&gt;The actual insight you wanted…&lt;/p&gt;…&lt;/article&gt;</pre>
+          </div>
+          <div class="rounded-2xl border border-emerald-500/25 bg-slate-950/60 p-4">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-emerald-300/90">After</h3>
+            <p class="mt-2 text-xs text-slate-500">
+              From <code class="text-indigo-200/80">POST /api/scrape</code> —
+              <span id="compareAfterTitle" class="text-slate-400">Run Try it to see a live title here</span>
+            </p>
+            <pre
+              id="compareAfter"
+              class="doc-code mt-3 max-h-[280px] overflow-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-[#060a12] p-3 text-[11px] leading-relaxed text-slate-500"
+            ># Your title here
+
+The readable paragraphs and headings appear as clean Markdown, ready to pipe into OpenAI, Claude, or your vector DB.</pre>
+          </div>
         </div>
 
-        <div class="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+        <div class="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
           <input
             id="urlInput"
             class="w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none ring-0 transition duration-300 focus:border-indigo-300"
@@ -163,11 +174,11 @@
             placeholder="https://example.com"
           />
           <button
-            id="generateBtn"
-            class="group relative overflow-hidden rounded-xl border border-indigo-300/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-6 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+            id="tryScrapeBtn"
             type="button"
+            class="group relative overflow-hidden rounded-xl border border-indigo-300/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-6 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <span class="relative z-10">Generate</span>
+            <span class="relative z-10">Try it</span>
             <span class="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 group-hover:translate-x-0"></span>
           </button>
         </div>
@@ -177,58 +188,27 @@
             id="apiKeyInput"
             class="w-full rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2 text-xs text-slate-300 outline-none transition duration-300 focus:border-indigo-300"
             type="password"
-            placeholder="Optional: x-api-key (for protected environments)"
+            placeholder="x-api-key (default sk-test-666 when DB is not configured)"
           />
         </div>
 
         <div id="result" class="mt-6 hidden rounded-xl border border-white/10 bg-slate-900/70 p-4">
           <p id="statusText" class="text-sm text-slate-300"></p>
-          <a
-            id="resultLink"
-            class="mt-2 hidden break-all text-sm text-indigo-300 underline-offset-2 transition hover:text-indigo-200 hover:underline"
-            target="_blank"
-            rel="noreferrer"
-          ></a>
-          <div
-            id="previewPanel"
-            class="mt-4 flex min-h-[220px] items-center justify-center rounded-lg border border-white/10 bg-slate-950/50"
-          >
-            <p
-              id="previewState"
-              class="hidden px-4 py-8 text-center text-sm text-slate-400 animate-pulse"
-            ></p>
-            <img
-              id="screenshot-preview"
-              class="hidden max-h-[380px] w-full rounded-lg object-contain p-2 transition-opacity duration-500"
-              alt="Screenshot preview"
-            />
-            <a
-              id="downloadPdfBtn"
-              href="#"
-              class="hidden rounded-xl border border-blue-500/50 bg-blue-600 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-500"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Download PDF
-            </a>
-          </div>
         </div>
       </section>
 
       <!-- Pricing -->
       <section class="mb-16">
         <h2 class="mb-5 text-2xl font-medium text-white">Pricing</h2>
-        <div class="grid gap-5 md:grid-cols-3">
-          <!-- Free -->
+        <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <article class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <h3 class="text-lg font-medium text-white">Free</h3>
             <p class="mt-1 text-3xl font-semibold">
-              $0<span class="text-sm font-normal text-slate-400"> / month</span>
+              $0<span class="text-sm font-normal text-slate-400"> / mo</span>
             </p>
             <ul class="mt-5 space-y-2 text-sm text-slate-300">
-              <li>100 screenshots / month</li>
-              <li>1280x800 resolution</li>
-              <li>Response latency &lt; 5s</li>
+              <li><strong class="text-white">100</strong> scrape calls / month</li>
+              <li>Readability + Markdown output</li>
               <li>Community support</li>
             </ul>
             <a
@@ -239,18 +219,15 @@
             </a>
           </article>
 
-          <!-- Pro -->
           <article class="relative rounded-2xl border border-indigo-300/50 bg-gradient-to-b from-indigo-500/20 to-white/5 p-6 shadow-xl shadow-indigo-900/30 backdrop-blur">
-            <span class="absolute right-4 top-4 rounded-full bg-indigo-500 px-2 py-1 text-xs font-medium text-white">Most Popular</span>
-            <h3 class="text-lg font-medium text-white">Pro</h3>
+            <span class="absolute right-4 top-4 rounded-full bg-indigo-500 px-2 py-1 text-xs font-medium text-white">AI Dev</span>
+            <h3 class="text-lg font-medium text-white">AI Dev</h3>
             <p class="mt-1 text-3xl font-semibold">
-              $29<span class="text-sm font-normal text-slate-300"> / month</span>
+              $9<span class="text-sm font-normal text-slate-300"> / mo</span>
             </p>
             <ul class="mt-5 space-y-2 text-sm text-slate-200">
-              <li>5,000 screenshots / month</li>
-              <li>Full resolution + full-page capture</li>
-              <li>Built-in PDF generation</li>
-              <li>Webhook async callbacks</li>
+              <li><strong class="text-white">2,500</strong> calls / month</li>
+              <li>Ideal for side projects &amp; prototypes</li>
               <li>Email support</li>
             </ul>
             <button
@@ -258,29 +235,45 @@
               data-subscribe-plan="pro"
               class="subscribe-open mt-6 w-full rounded-xl border border-indigo-200/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2 text-center text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/30"
             >
-              Subscribe Pro
+              Subscribe
             </button>
           </article>
 
-          <!-- Business -->
           <article class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-            <h3 class="text-lg font-medium text-white">Business</h3>
+            <h3 class="text-lg font-medium text-white">Serious Builder</h3>
             <p class="mt-1 text-3xl font-semibold">
-              $99<span class="text-sm font-normal text-slate-400"> / month</span>
+              $29<span class="text-sm font-normal text-slate-400"> / mo</span>
             </p>
             <ul class="mt-5 space-y-2 text-sm text-slate-300">
-              <li>50,000 screenshots / month</li>
-              <li>10 concurrent pipelines</li>
-              <li>Dedicated IP pool</li>
-              <li>SLA 99.9% uptime</li>
-              <li>Priority response support</li>
+              <li><strong class="text-white">15,000</strong> calls / month</li>
+              <li>Production apps &amp; agents</li>
+              <li>Priority email</li>
             </ul>
             <button
               type="button"
               data-subscribe-plan="business"
               class="subscribe-open mt-6 w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-center text-sm font-medium transition duration-300 hover:bg-white/10"
             >
-              Subscribe Business
+              Subscribe
+            </button>
+          </article>
+
+          <article class="rounded-2xl border border-fuchsia-500/30 bg-fuchsia-500/[0.06] p-6 backdrop-blur">
+            <h3 class="text-lg font-medium text-white">Agency</h3>
+            <p class="mt-1 text-3xl font-semibold">
+              $99<span class="text-sm font-normal text-slate-400"> / mo</span>
+            </p>
+            <ul class="mt-5 space-y-2 text-sm text-slate-300">
+              <li><strong class="text-white">100,000</strong> calls / month</li>
+              <li>Teams &amp; client workloads</li>
+              <li>Best-effort priority</li>
+            </ul>
+            <button
+              type="button"
+              data-subscribe-plan="agency"
+              class="subscribe-open mt-6 w-full rounded-xl border border-fuchsia-400/40 bg-fuchsia-600/30 px-4 py-2 text-center text-sm font-medium text-white transition duration-300 hover:bg-fuchsia-600/45"
+            >
+              Subscribe
             </button>
           </article>
         </div>
@@ -291,58 +284,24 @@
       <section class="mb-10 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur">
         <h2 class="text-xl font-medium text-white">API Quickstart</h2>
         <p class="mt-2 text-sm text-slate-400">
-          Call the API with <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">curl</code>. Replace the
-          host with yours if self-hosting;
-          <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">YOUR_API_KEY</code> is filled in
-          automatically when you are logged in.
+          <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">POST /api/scrape</code> with
+          <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-indigo-200/90">x-api-key</code>. Replace the host when
+          self-hosting; <span class="doc-api-key-slot">YOUR_API_KEY</span> is injected when you are logged in.
         </p>
 
-        <div class="mt-5 inline-flex flex-wrap gap-1 rounded-xl border border-white/10 bg-slate-950/60 p-1">
-          <button
-            type="button"
-            id="docTabScreenshot"
-            data-doc-tab="screenshot"
-            class="rounded-lg border border-indigo-400/50 bg-indigo-500/25 px-4 py-2 text-xs font-medium text-white shadow-[0_0_20px_rgba(99,102,241,0.15)] transition"
-          >
-            Screenshot
-          </button>
-          <button
-            type="button"
-            id="docTabPdf"
-            data-doc-tab="pdf"
-            class="rounded-lg border border-transparent bg-transparent px-4 py-2 text-xs font-medium text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
-          >
-            PDF
-          </button>
-        </div>
-
-        <div id="docPanelScreenshot" class="doc-panel mt-4">
+        <div class="mt-4">
           <pre
             class="doc-code overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-left text-slate-200 shadow-inner shadow-black/40 ring-1 ring-inset ring-indigo-500/10"
-          ><code><span class="text-cyan-300">curl</span> <span class="text-slate-500">-X POST</span> https://getsnapapi.uk/screenshot \
+          ><code><span class="text-cyan-300">curl</span> <span class="text-slate-500">-X POST</span> https://getsnapapi.uk/api/scrape \
   <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"Content-Type: application/json"</span> \
   <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"x-api-key: <span class="doc-api-key-slot">YOUR_API_KEY</span>"</span> \
   <span class="text-violet-300">-d</span> <span class="text-emerald-300/90">'{"url":"https://example.com"}'</span></code></pre>
         </div>
 
-        <div id="docPanelPdf" class="doc-panel mt-4 hidden">
-          <pre
-            class="doc-code overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-left text-slate-200 shadow-inner shadow-black/40 ring-1 ring-inset ring-fuchsia-500/10"
-          ><code><span class="text-cyan-300">curl</span> <span class="text-slate-500">-X POST</span> https://getsnapapi.uk/pdf \
-  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"Content-Type: application/json"</span> \
-  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"x-api-key: <span class="doc-api-key-slot">YOUR_API_KEY</span>"</span> \
-  <span class="text-violet-300">-d</span> <span class="text-emerald-300/90">'{"url":"https://example.com","width":1280,"height":720}'</span></code></pre>
-          <p class="mt-3 text-xs text-slate-500">
-            Optional <code class="text-indigo-200/80">width</code> and
-            <code class="text-indigo-200/80">height</code> must be sent together: they set the browser viewport and the PDF
-            page size. Omit both to use the document&rsquo;s scroll dimensions.
-          </p>
-        </div>
-
         <div class="mt-8">
           <h3 class="text-sm font-medium tracking-wide text-slate-300">Request body</h3>
           <div class="mt-3 overflow-x-auto rounded-xl border border-white/10 bg-slate-950/40">
-            <table class="w-full min-w-[520px] border-collapse text-left text-sm">
+            <table class="w-full min-w-[420px] border-collapse text-left text-sm">
               <thead>
                 <tr class="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-slate-500">
                   <th class="px-4 py-3 font-medium">Field</th>
@@ -352,37 +311,11 @@
                 </tr>
               </thead>
               <tbody class="text-slate-300">
-                <tr class="border-b border-white/[0.06]">
+                <tr>
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">url</td>
                   <td class="px-4 py-3 text-slate-400">string</td>
                   <td class="px-4 py-3"><span class="rounded bg-rose-500/15 px-2 py-0.5 text-xs text-rose-200">required</span></td>
-                  <td class="px-4 py-3 text-slate-400">Page to load.</td>
-                </tr>
-                <tr class="border-b border-white/[0.06]">
-                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">fullPage</td>
-                  <td class="px-4 py-3 text-slate-400">boolean</td>
-                  <td class="px-4 py-3 text-slate-500">—</td>
-                  <td class="px-4 py-3 text-slate-400">
-                    Screenshot only: capture full scrollable page (default <code class="text-indigo-200/80">true</code>). Set
-                    <code class="text-indigo-200/80">false</code> for viewport-only.
-                  </td>
-                </tr>
-                <tr class="border-b border-white/[0.06]">
-                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">width</td>
-                  <td class="px-4 py-3 text-slate-400">integer</td>
-                  <td class="px-4 py-3 text-slate-500">—</td>
-                  <td class="px-4 py-3 text-slate-400">
-                    Viewport width (320–4096). Only applied if <code class="text-indigo-200/80">height</code> is also set.
-                  </td>
-                </tr>
-                <tr>
-                  <td class="px-4 py-3 font-mono text-xs text-indigo-200">height</td>
-                  <td class="px-4 py-3 text-slate-400">integer</td>
-                  <td class="px-4 py-3 text-slate-500">—</td>
-                  <td class="px-4 py-3 text-slate-400">
-                    Viewport height (240–4096). Together with <code class="text-indigo-200/80">width</code>, defines PDF page
-                    dimensions.
-                  </td>
+                  <td class="px-4 py-3 text-slate-400">HTTP(S) page to fetch and extract.</td>
                 </tr>
               </tbody>
             </table>
@@ -396,14 +329,10 @@
           <pre
             class="doc-code mt-3 overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-left shadow-inner shadow-black/40 ring-1 ring-inset ring-cyan-500/10"
           ><code>{
-  <span class="text-fuchsia-300/90">"status"</span>: <span class="text-emerald-300/90">"success"</span>,
-  <span class="text-fuchsia-300/90">"message"</span>: <span class="text-emerald-300/90">"Screenshot saved"</span>,
-  <span class="text-fuchsia-300/90">"path"</span>: <span class="text-emerald-300/90">"https://your-bucket.r2.dev/screenshot-1712345678901.png"</span>
+  <span class="text-fuchsia-300/90">"title"</span>: <span class="text-emerald-300/90">"Example Domain"</span>,
+  <span class="text-fuchsia-300/90">"markdown"</span>: <span class="text-emerald-300/90">"# Example Domain\\n\\n…"</span>,
+  <span class="text-fuchsia-300/90">"text_content"</span>: <span class="text-emerald-300/90">"Example Domain This domain is …"</span>
 }</code></pre>
-          <p class="mt-2 text-xs text-slate-500">
-            For PDF, <code class="text-indigo-200/80">message</code> is <code class="text-indigo-200/80">"PDF saved"</code>;
-            <code class="text-indigo-200/80">path</code> is a public HTTPS URL to the file.
-          </p>
         </div>
       </section>
 
@@ -412,10 +341,7 @@
           <div class="max-w-md">
             <p class="text-sm font-medium text-white">SnapAPI</p>
             <p class="mt-2 text-xs leading-relaxed text-slate-500">
-              Engineered for modern SaaS teams: secure endpoints, predictable pricing, and production-ready performance.
-            </p>
-            <p class="mt-4 text-xs text-slate-500">
-              <span class="text-slate-400">99.9% Uptime Guaranteed for Business Plan</span>
+              AI-ready scraping: one endpoint from URL to structured text you can trust in pipelines.
             </p>
           </div>
           <div class="flex flex-wrap gap-x-8 gap-y-3 text-xs">
@@ -454,29 +380,6 @@
       </footer>
     </div>
 
-    <script>
-      (function () {
-        const tabShot = document.getElementById("docTabScreenshot");
-        const tabPdf = document.getElementById("docTabPdf");
-        const panelShot = document.getElementById("docPanelScreenshot");
-        const panelPdf = document.getElementById("docPanelPdf");
-        const activeTab =
-          "rounded-lg border border-indigo-400/50 bg-indigo-500/25 px-4 py-2 text-xs font-medium text-white shadow-[0_0_20px_rgba(99,102,241,0.15)] transition";
-        const inactiveTab =
-          "rounded-lg border border-transparent bg-transparent px-4 py-2 text-xs font-medium text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200";
-
-        function show(which) {
-          const isShot = which === "screenshot";
-          tabShot.className = isShot ? activeTab : inactiveTab;
-          tabPdf.className = isShot ? inactiveTab : activeTab;
-          panelShot.classList.toggle("hidden", !isShot);
-          panelPdf.classList.toggle("hidden", isShot);
-        }
-
-        tabShot.addEventListener("click", () => show("screenshot"));
-        tabPdf.addEventListener("click", () => show("pdf"));
-      })();
-    </script>
     <script src="./app.js"></script>
     <script>
       (function () {

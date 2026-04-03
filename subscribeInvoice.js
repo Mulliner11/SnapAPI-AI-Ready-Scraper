@@ -8,8 +8,10 @@ export function getNpApiKey() {
 }
 
 export function priceUsdForPlan(planType) {
-  const pro = Number(process.env.PLAN_PRICE_PRO_USD ?? 29);
-  const business = Number(process.env.PLAN_PRICE_BUSINESS_USD ?? 99);
+  const pro = Number(process.env.PLAN_PRICE_PRO_USD ?? 9);
+  const business = Number(process.env.PLAN_PRICE_BUSINESS_USD ?? 29);
+  const agency = Number(process.env.PLAN_PRICE_AGENCY_USD ?? 99);
+  if (planType === "agency") return agency;
   if (planType === "business") return business;
   return pro;
 }
@@ -18,7 +20,7 @@ export function resolvePlanType(body) {
   const raw = body?.planType ?? body?.plan_type ?? body?.plan;
   if (raw == null) return null;
   const p = String(raw).toLowerCase();
-  if (p === "pro" || p === "business") return p;
+  if (p === "pro" || p === "business" || p === "agency") return p;
   return null;
 }
 
@@ -57,7 +59,7 @@ function pickInvoiceId(data) {
  * Call NOWPayments invoice API and persist a pending Order (userId = Prisma app_users.id).
  * @param {{ id: string }} prismaUser
  * @param {string} email
- * @param {'pro'|'business'} planType
+ * @param {'pro'|'business'|'agency'} planType
  * @param {import('fastify').FastifyBaseLogger} log
  * @returns {Promise<{ ok: true, invoice_url: string } | { ok: false, statusCode: number, error: string }>}
  */
@@ -72,7 +74,7 @@ export async function createNowpaymentsInvoiceAndOrder({ prismaUser, email, plan
     return {
       ok: false,
       statusCode: 500,
-      error: "Invalid plan pricing (set PLAN_PRICE_PRO_USD / PLAN_PRICE_BUSINESS_USD)",
+      error: "Invalid plan pricing (set PLAN_PRICE_PRO_USD / PLAN_PRICE_BUSINESS_USD / PLAN_PRICE_AGENCY_USD)",
     };
   }
 
@@ -163,7 +165,7 @@ export async function postSubscribeHandler(request, reply) {
 
   const planType = resolvePlanType(request.body);
   if (!planType) {
-    return reply.code(400).send({ error: "planType must be pro or business (camelCase or plan_type)" });
+    return reply.code(400).send({ error: "planType must be pro, business, or agency (camelCase or plan_type)" });
   }
 
   let user;

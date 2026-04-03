@@ -70,7 +70,7 @@
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 id="apikey-heading" class="text-sm font-semibold uppercase tracking-wider text-indigo-300">API key</h2>
-              <p class="mt-1 text-xs text-slate-500">Use in <code class="text-indigo-300/90">x-api-key</code> header for screenshot &amp; PDF requests.</p>
+              <p class="mt-1 text-xs text-slate-500">Use in <code class="text-indigo-300/90">x-api-key</code> header for <code class="text-indigo-300/90">POST /api/scrape</code>.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
               <button
@@ -98,7 +98,7 @@
           <div class="mt-5 border-t border-white/10 pt-5">
             <p class="text-xs font-medium uppercase tracking-wider text-cyan-300/90">Try it</p>
             <p class="mt-1 text-xs text-slate-500">
-              POST <code class="text-slate-400">/screenshot</code> with your key and a sample URL (<span id="testUrlLabel" class="text-slate-400"></span>).
+              POST <code class="text-slate-400">/api/scrape</code> with your key and a sample URL (<span id="testUrlLabel" class="text-slate-400"></span>).
             </p>
             <button
               type="button"
@@ -110,13 +110,13 @@
             <p id="testApiErr" class="mt-4 hidden rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200"></p>
             <div
               id="testApiPreview"
-              class="mt-4 hidden overflow-hidden rounded-2xl border border-white/10 bg-black/30 ring-1 ring-cyan-500/10"
+              class="mt-4 hidden max-h-[min(480px,70vh)] overflow-auto rounded-2xl border border-white/10 bg-black/40 p-4 ring-1 ring-cyan-500/10"
             >
-              <img
-                id="testApiImage"
-                alt="Screenshot preview from Test API"
-                class="max-h-[min(480px,70vh)] w-full object-contain object-top"
-              />
+              <p id="testApiTitle" class="text-xs font-medium text-cyan-200"></p>
+              <pre
+                id="testApiMarkdown"
+                class="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-slate-300"
+              ></pre>
             </div>
           </div>
         </section>
@@ -149,9 +149,9 @@
               href="/checkout?plan=pro"
               class="inline-flex items-center justify-center rounded-xl border border-fuchsia-500/50 bg-gradient-to-r from-fuchsia-600/30 via-violet-600/25 to-indigo-600/30 px-6 py-3 text-sm font-semibold text-white shadow-glow transition hover:border-fuchsia-400/70 hover:from-fuchsia-500/40 hover:via-violet-500/35 hover:to-indigo-500/40 hover:shadow-[0_0_32px_rgba(217,70,239,0.25)] active:scale-[0.99]"
             >
-              Upgrade to Pro
+              Upgrade (AI Dev)
             </a>
-            <p class="mt-2 text-xs text-slate-500">Higher limits and priority for production workloads.</p>
+            <p class="mt-2 text-xs text-slate-500">Higher scrape quotas — see pricing on the home page.</p>
           </div>
         </section>
       </div>
@@ -159,8 +159,8 @@
 
     <script>
       const JWT_KEY = "snapapi_jwt";
-      /** Default target for “Test API” (POST /screenshot). */
-      const TEST_SCREENSHOT_URL = "https://example.com";
+      /** Default target for Test API (POST /api/scrape). */
+      const TEST_SCRAPE_URL = "https://example.com";
 
       function authHeaders() {
         const t = localStorage.getItem(JWT_KEY);
@@ -189,7 +189,7 @@
 
         document.getElementById("userEmail").textContent = d.email || "";
         document.getElementById("apiKeyDisplay").textContent = d.apiKey || d.api_key || "—";
-        document.getElementById("testUrlLabel").textContent = TEST_SCREENSHOT_URL;
+        document.getElementById("testUrlLabel").textContent = TEST_SCRAPE_URL;
 
         const used = d.usage?.used ?? d.usage_count ?? 0;
         const limit = Math.max(1, d.usage?.limit ?? d.max_limit ?? 1);
@@ -256,21 +256,21 @@
         const btn = document.getElementById("testApi");
         const errEl = document.getElementById("testApiErr");
         const preview = document.getElementById("testApiPreview");
-        const img = document.getElementById("testApiImage");
+        const titleEl = document.getElementById("testApiTitle");
+        const mdEl = document.getElementById("testApiMarkdown");
         if (!key || key === "—") return;
         errEl.classList.add("hidden");
         preview.classList.add("hidden");
-        img.removeAttribute("src");
         btn.disabled = true;
         try {
-          const r = await fetch("/screenshot", {
+          const r = await fetch("/api/scrape", {
             method: "POST",
             credentials: "same-origin",
             headers: {
               "Content-Type": "application/json",
               "x-api-key": key,
             },
-            body: JSON.stringify({ url: TEST_SCREENSHOT_URL }),
+            body: JSON.stringify({ url: TEST_SCRAPE_URL }),
           });
           const data = await r.json().catch(() => ({}));
           if (!r.ok) {
@@ -278,24 +278,8 @@
             errEl.classList.remove("hidden");
             return;
           }
-          let src = data.path || data.url || "";
-          if (src && !/^https?:\/\//i.test(src)) {
-            src = new URL(src, window.location.origin).href;
-          }
-          if (!src) {
-            errEl.textContent = "No image URL in response.";
-            errEl.classList.remove("hidden");
-            return;
-          }
-          img.onerror = () => {
-            errEl.textContent = "Image URL returned but could not be loaded (check CORS or URL).";
-            errEl.classList.remove("hidden");
-            preview.classList.add("hidden");
-          };
-          img.onload = () => {
-            img.onerror = null;
-          };
-          img.src = src;
+          titleEl.textContent = data.title || "(no title)";
+          mdEl.textContent = data.markdown || data.text_content || "";
           preview.classList.remove("hidden");
         } catch (e) {
           errEl.textContent = e?.message || String(e);

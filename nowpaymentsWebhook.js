@@ -34,7 +34,9 @@ function extractPaymentIdCandidates(payload) {
 
 function normalizePlan(planType) {
   const p = String(planType || "").toLowerCase();
-  return p === "business" ? "business" : "pro";
+  if (p === "agency") return "agency";
+  if (p === "business") return "business";
+  return "pro";
 }
 
 async function sendApiKeyActivatedEmail(to, apiKey) {

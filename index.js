@@ -4,7 +4,6 @@ const require = createRequire(import.meta.url);
 require("dotenv").config();
 
 import { readFileSync, existsSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
@@ -21,8 +20,8 @@ import {
   recordApiUsage,
   rotateApiKeyForUserId,
 } from "./db.js";
-import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
 import { prisma } from "./prismaClient.js";
+import { extractReadableMarkdown } from "./scrapeCore.js";
 import { postSubscribeHandler } from "./subscribeInvoice.js";
 import { postPaymentCreateInvoice } from "./paymentCreateInvoice.js";
 import { postNowpaymentsWebhook } from "./nowpaymentsWebhook.js";
@@ -72,43 +71,26 @@ const CHROMIUM_LAUNCH_OPTIONS = {
 
 const PORT = Number(process.env.PORT) || 3000;
 const LISTEN_HOST = "0.0.0.0";
-const gotoTimeoutMs = Number(process.env.SCREENSHOT_GOTO_TIMEOUT_MS) || 60_000;
+const gotoTimeoutMs =
+  Number(process.env.SCRAPE_GOTO_TIMEOUT_MS || process.env.SCREENSHOT_GOTO_TIMEOUT_MS) || 60_000;
 const DEMO_API_KEY = process.env.DEMO_API_KEY || "sk-test-666";
 
-let r2Config;
-let s3Client;
-
-try {
-  r2Config = loadR2Config();
-  s3Client = createR2Client(r2Config);
-} catch (err) {
-  console.error(err.message);
-  process.exit(1);
-}
-
-const successBodySchema = {
-  type: "object",
-  properties: {
-    status: { type: "string" },
-    message: { type: "string" },
-    path: { type: "string" },
-  },
-};
-
-const requestBodySchema = {
+const scrapeBodySchema = {
   type: "object",
   required: ["url"],
   properties: {
     url: { type: "string", minLength: 1 },
-    fullPage: { type: "boolean" },
-    width: { type: "integer", minimum: 320, maximum: 4096 },
-    height: { type: "integer", minimum: 240, maximum: 4096 },
   },
 };
 
-function tempFilePath(ext) {
-  return join(tmpdir(), `screenshot-api-${Date.now()}-${Math.random().toString(16).slice(2)}.${ext}`);
-}
+const scrapeResponseSchema = {
+  type: "object",
+  properties: {
+    title: { type: "string" },
+    markdown: { type: "string" },
+    text_content: { type: "string" },
+  },
+};
 
 function headerApiKey(request) {
   const raw = request.headers["x-api-key"];
@@ -152,29 +134,15 @@ function normalizeSourceUrl(input) {
   return parsed.toString();
 }
 
-/** @param {{ width: number; height: number } | null} viewport */
-async function withPage(sourceUrl, viewport, fn) {
+async function loadPageHtml(sourceUrl) {
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
   try {
     const page = await browser.newPage();
-    if (viewport && viewport.width != null && viewport.height != null) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    }
     await page.goto(sourceUrl, { waitUntil: "load", timeout: gotoTimeoutMs });
-    await fn(page);
+    return await page.content();
   } finally {
     await browser.close();
   }
-}
-
-function viewportFromBody(body) {
-  const w = body.width;
-  const h = body.height;
-  if (w == null && h == null) return null;
-  if (w == null || h == null) {
-    return null;
-  }
-  return { width: w, height: h };
 }
 
 /** Prefer `public/<filename>` when present, else project root (no @fastify/static). */
@@ -269,8 +237,8 @@ async function registerRoutes() {
           required: ["email"],
           properties: {
             email: { type: "string", minLength: 3 },
-            planType: { type: "string", enum: ["pro", "business"] },
-            plan_type: { type: "string", enum: ["pro", "business"] },
+            planType: { type: "string", enum: ["pro", "business", "agency"] },
+            plan_type: { type: "string", enum: ["pro", "business", "agency"] },
           },
         },
       },
@@ -286,8 +254,8 @@ async function registerRoutes() {
           type: "object",
           required: ["plan"],
           properties: {
-            plan: { type: "string", enum: ["pro", "business"] },
-            planType: { type: "string", enum: ["pro", "business"] },
+            plan: { type: "string", enum: ["pro", "business", "agency"] },
+            planType: { type: "string", enum: ["pro", "business", "agency"] },
           },
         },
       },
@@ -331,7 +299,7 @@ async function registerRoutes() {
           required: ["redirect", "plan"],
           properties: {
             redirect: { type: "string", minLength: 1 },
-            plan: { type: "string", enum: ["pro", "business"] },
+            plan: { type: "string", enum: ["pro", "business", "agency"] },
           },
         },
       },
@@ -415,95 +383,24 @@ async function registerRoutes() {
   });
 
   fastify.post(
-    "/screenshot",
+    "/api/scrape",
     {
       schema: {
-        body: requestBodySchema,
-        response: { 200: successBodySchema },
-      },
-    },
-    async (request, reply) => {
-      const user = request.snapUser;
-      const { fullPage } = request.body;
-      const sourceUrl = normalizeSourceUrl(request.body.url);
-      const viewport = viewportFromBody(request.body);
-      const useFullPage = fullPage !== false;
-      const localPath = tempFilePath("png");
-      const objectName = `screenshot-${Date.now()}.png`;
-
-      await withPage(sourceUrl, viewport, async (page) => {
-        await page.screenshot({ path: localPath, fullPage: useFullPage });
-      });
-
-      const url = await uploadLocalFileAndRemove(s3Client, r2Config, {
-        localPath,
-        objectName,
-        contentType: "image/png",
-      });
-
-      if (user?.id && getPool()) {
-        await recordApiUsage(user.id, "screenshot", sourceUrl, url);
-      }
-
-      return reply.send({
-        status: "success",
-        message: "Screenshot saved",
-        path: url,
-      });
-    }
-  );
-
-  fastify.post(
-    "/pdf",
-    {
-      schema: {
-        body: requestBodySchema,
-        response: { 200: successBodySchema },
+        body: scrapeBodySchema,
+        response: { 200: scrapeResponseSchema },
       },
     },
     async (request, reply) => {
       const user = request.snapUser;
       const sourceUrl = normalizeSourceUrl(request.body.url);
-      const viewport = viewportFromBody(request.body);
-      const localPath = tempFilePath("pdf");
-      const objectName = `export-${Date.now()}.pdf`;
-
-      await withPage(sourceUrl, viewport, async (page) => {
-        let pdfW;
-        let pdfH;
-        if (viewport) {
-          pdfW = `${viewport.width}px`;
-          pdfH = `${viewport.height}px`;
-        } else {
-          const width = await page.evaluate(() => document.documentElement.scrollWidth);
-          const height = await page.evaluate(() => document.documentElement.scrollHeight);
-          pdfW = `${width}px`;
-          pdfH = `${height}px`;
-        }
-        await page.pdf({
-          path: localPath,
-          width: pdfW,
-          height: pdfH,
-          printBackground: true,
-          margin: { top: "0px", right: "0px", bottom: "0px", left: "0px" },
-        });
-      });
-
-      const url = await uploadLocalFileAndRemove(s3Client, r2Config, {
-        localPath,
-        objectName,
-        contentType: "application/pdf",
-      });
+      const html = await loadPageHtml(sourceUrl);
+      const { title, markdown, text_content } = extractReadableMarkdown(html, sourceUrl);
 
       if (user?.id && getPool()) {
-        await recordApiUsage(user.id, "pdf", sourceUrl, url);
+        await recordApiUsage(user.id, "scrape", sourceUrl, null);
       }
 
-      return reply.send({
-        status: "success",
-        message: "PDF saved",
-        path: url,
-      });
+      return reply.send({ title, markdown, text_content });
     }
   );
 
@@ -564,6 +461,7 @@ async function start() {
       if (pathname === "/api/subscribe" && request.method === "POST") return true;
       if (pathname === "/api/payment/create-invoice" && request.method === "POST") return true;
       if (pathname === "/checkout") return true;
+      if (pathname === "/api/scrape" && request.method === "POST") return true;
       return false;
     },
   });
@@ -575,8 +473,7 @@ async function start() {
 
     const pathname = (request.url || "").split("?")[0];
 
-    const needsApiKey =
-      request.method === "POST" && (pathname === "/screenshot" || pathname === "/pdf");
+    const needsApiKey = request.method === "POST" && pathname === "/api/scrape";
 
     if (needsApiKey) {
       const key = headerApiKey(request);
