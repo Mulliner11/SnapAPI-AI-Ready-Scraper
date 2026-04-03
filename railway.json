@@ -5,6 +5,6 @@
     "buildCommand": "npm run build"
   },
   "deploy": {
-    "startCommand": "npx prisma db push && node index.js"
+    "startCommand": "npm run start:deploy"
   }
 }
