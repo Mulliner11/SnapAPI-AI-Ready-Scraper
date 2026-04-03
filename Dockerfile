@@ -1,17 +1,17 @@
-# Pre-installed Chromium + full system libs (glib, nss, etc.) — avoids Nixpacks/apt drift.
-# Pin `playwright` in package.json to the same line as this tag (currently 1.42.0).
+# Official Playwright image: Chromium + libglib / NSS / etc. — no Nixpacks or manual apt.
+# Keep `playwright` in package.json aligned with this tag (1.42.0).
 FROM mcr.microsoft.com/playwright:v1.42.0-jammy
 
 WORKDIR /app
 
-# Install deps first for better layer cache
-COPY package.json package-lock.json* ./
-RUN npm ci
+# Image already ships browsers; skip download during npm install / lifecycle hooks.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
-# App source + Prisma schema
+COPY package.json package-lock.json ./
+RUN npm install
+
 COPY . .
 
-# Client already generated in postinstall; explicit step for clarity in CI logs
 RUN npx prisma generate
 
 ENV NODE_ENV=production
