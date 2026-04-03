@@ -8,7 +8,8 @@ import { verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
 
 const NOWPAYMENTS_IPN_SECRET = String(process.env.NOWPAYMENTS_IPN_SECRET || "").trim();
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
-const RESEND_FROM = String(process.env.RESEND_FROM || "").trim() || "SnapAPI <support@getsnapapi.uk";
+/** Verified in Resend; fixed address avoids 422 Invalid `from`. */
+const RESEND_FROM = "SnapAPI <support@getsnapapi.uk>";
 
 function escapeHtmlText(s) {
   return String(s)

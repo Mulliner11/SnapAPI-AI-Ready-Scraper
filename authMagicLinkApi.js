@@ -1,7 +1,7 @@
 /**
  * Magic-link auth. Requires:
  * - DATABASE_URL (Prisma) — Railway: link Postgres and set variable.
- * - RESEND_API_KEY + RESEND_FROM for production email (optional in dev).
+ * - RESEND_API_KEY for production email (optional in dev). `from` is fixed to verified domain.
  * Prisma client is singleton in ./prismaClient.js; Resend uses fetch (no SDK instance).
  */
 import crypto from "node:crypto";
@@ -9,7 +9,8 @@ import { prisma } from "./prismaClient.js";
 import { ensureUserByEmail } from "./db.js";
 
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
-const RESEND_FROM = String(process.env.RESEND_FROM || "").trim() || "SnapAPI <support@getsnapapi.uk";
+/** Must match a sender verified in Resend (domain getsnapapi.uk). Do not use env override here — avoids 422 Invalid `from`. */
+const RESEND_FROM = "SnapAPI <support@getsnapapi.uk>";
 /** Browser URL for /verify page (email link); query `token` is appended server-side. */
 const MAGIC_LINK_PUBLIC_VERIFY_URL =
   String(process.env.MAGIC_LINK_PUBLIC_VERIFY_URL || "").replace(/\/$/, "") || "https://getsnapapi.uk/verify";
