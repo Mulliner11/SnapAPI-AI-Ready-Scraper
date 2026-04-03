@@ -24,6 +24,7 @@ import {
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
 import { prisma } from "./prismaClient.js";
 import { postSubscribeHandler } from "./subscribeInvoice.js";
+import { postPaymentCreateInvoice } from "./paymentCreateInvoice.js";
 import { postNowpaymentsWebhook } from "./nowpaymentsWebhook.js";
 import { getUserIdFromRequest } from "./authContext.js";
 import { getAuthVerify, postAuthPendingRedirect, postAuthSendMagicLink } from "./authMagicLinkApi.js";
@@ -251,6 +252,14 @@ async function registerRoutes() {
     return sendCwdFile(reply, "success.html", "text/html; charset=utf-8");
   });
 
+  fastify.get("/checkout", async (request, reply) => {
+    return sendCwdFile(reply, "checkout.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/checkout.html", async (request, reply) => {
+    return sendCwdFile(reply, "checkout.html", "text/html; charset=utf-8");
+  });
+
   fastify.post(
     "/api/subscribe",
     {
@@ -267,6 +276,23 @@ async function registerRoutes() {
       },
     },
     postSubscribeHandler
+  );
+
+  fastify.post(
+    "/api/payment/create-invoice",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["plan"],
+          properties: {
+            plan: { type: "string", enum: ["pro", "business"] },
+            planType: { type: "string", enum: ["pro", "business"] },
+          },
+        },
+      },
+    },
+    postPaymentCreateInvoice
   );
 
   // NOWPayments webhook (encapsulated raw-body JSON parser)
@@ -536,6 +562,8 @@ async function start() {
       if (pathname === "/api/user/rotate-key" && request.method === "POST") return true;
       if (pathname === "/webhooks/nowpayments" && request.method === "POST") return true;
       if (pathname === "/api/subscribe" && request.method === "POST") return true;
+      if (pathname === "/api/payment/create-invoice" && request.method === "POST") return true;
+      if (pathname === "/checkout") return true;
       return false;
     },
   });

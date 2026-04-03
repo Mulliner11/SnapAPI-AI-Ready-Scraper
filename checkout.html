@@ -31,22 +31,40 @@
 
     <main class="mx-auto max-w-lg px-6 py-10">
       <h1 class="text-2xl font-semibold text-white">
-        Pay with crypto · <span id="planLabel" class="text-indigo-300">Pro</span>
+        Upgrade · <span id="planLabel" class="text-indigo-300">Pro</span>
       </h1>
-      <p class="mt-2 text-sm text-slate-400">Creating your NOWPayments invoice…</p>
+      <p class="mt-2 text-sm text-slate-400">
+        Pay securely with crypto via NOWPayments. Click the button below to create your invoice and open the payment page.
+      </p>
 
       <p id="loadErr" class="mt-6 hidden rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300"></p>
 
       <div
-        id="loadingBlock"
-        class="mt-10 flex flex-col items-center rounded-3xl border border-white/10 bg-white/[0.03] p-10 shadow-glow backdrop-blur"
+        id="card"
+        class="mt-10 space-y-6 rounded-3xl border border-white/10 bg-white/[0.03] p-8 shadow-glow backdrop-blur md:p-10"
       >
-        <div
-          class="h-10 w-10 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-400"
-          aria-hidden="true"
-        ></div>
-        <p class="mt-6 text-sm text-slate-300">Preparing secure checkout…</p>
-        <p class="mt-2 text-center text-xs text-slate-500">You will be redirected to NOWPayments.</p>
+        <div id="authGate" class="hidden text-sm text-slate-400">
+          Checking your session…
+        </div>
+
+        <div id="checkoutReady" class="hidden space-y-6">
+          <p class="text-sm text-slate-300">
+            You are signed in as <span id="userEmail" class="font-mono text-indigo-200"></span>
+          </p>
+          <button
+            type="button"
+            id="payBtn"
+            class="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-500/50 bg-gradient-to-r from-indigo-600/40 to-fuchsia-600/35 px-6 py-3.5 text-sm font-semibold text-white shadow-glow transition hover:border-indigo-400/70 hover:from-indigo-500/50 hover:to-fuchsia-500/45 hover:shadow-[0_0_28px_rgba(99,102,241,0.25)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <span id="payBtnLabel">Create invoice &amp; pay</span>
+            <span
+              id="payBtnSpinner"
+              class="hidden h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white"
+              aria-hidden="true"
+            ></span>
+          </button>
+          <p class="text-center text-xs text-slate-500">You will be redirected to NOWPayments to complete checkout.</p>
+        </div>
       </div>
     </main>
 
@@ -66,48 +84,82 @@
       }
 
       function showError(msg) {
-        document.getElementById("loadingBlock").classList.add("hidden");
-        const el = document.getElementById("loadErr");
-        el.textContent = msg;
-        el.classList.remove("hidden");
+        document.getElementById("loadErr").textContent = msg;
+        document.getElementById("loadErr").classList.remove("hidden");
+      }
+
+      function setPayLoading(on) {
+        const btn = document.getElementById("payBtn");
+        const spin = document.getElementById("payBtnSpinner");
+        btn.disabled = on;
+        spin.classList.toggle("hidden", !on);
+      }
+
+      let plan = "pro";
+
+      async function ensureSession() {
+        const me = await fetch("/api/user/me", { credentials: "include", headers: authHeaders() });
+        const meData = await me.json().catch(() => ({}));
+
+        const hasIdentity = !!(meData.email && (meData.api_key || meData.apiKey));
+        const isAuthed =
+          me.status !== 401 && (meData.loggedIn === true || (meData.loggedIn !== false && hasIdentity));
+
+        if (me.status === 401 || !isAuthed) {
+          window.location.replace(
+            "/login?redirect=" + encodeURIComponent("/checkout?plan=" + plan) + "&plan=" + encodeURIComponent(plan)
+          );
+          return false;
+        }
+
+        if (!me.ok) {
+          showError(meData.error || "Could not verify session.");
+          return false;
+        }
+
+        document.getElementById("userEmail").textContent = meData.email || "—";
+        document.getElementById("authGate").classList.add("hidden");
+        document.getElementById("checkoutReady").classList.remove("hidden");
+        return true;
+      }
+
+      async function createInvoiceAndRedirect() {
+        setPayLoading(true);
+        document.getElementById("loadErr").classList.add("hidden");
+        try {
+          const inv = await fetch("/api/payment/create-invoice", {
+            method: "POST",
+            credentials: "include",
+            headers: authHeaders(),
+            body: JSON.stringify({ plan: plan }),
+          });
+          const invData = await inv.json().catch(() => ({}));
+          if (!inv.ok) {
+            showError(invData.error || "Could not create invoice.");
+            return;
+          }
+
+          const url = invData.invoice_url || invData.invoiceUrl;
+          if (!url || typeof url !== "string") {
+            showError("No payment URL returned.");
+            return;
+          }
+
+          window.location.href = url;
+        } finally {
+          setPayLoading(false);
+        }
       }
 
       (async function init() {
-        const plan = planFromQuery();
+        plan = planFromQuery();
         document.getElementById("planLabel").textContent = plan === "business" ? "Business" : "Pro";
 
-        const me = await fetch("/api/user/me", { credentials: "include", headers: authHeaders() });
-        if (me.status === 401) {
-          window.location.replace(
-            "/login?redirect=" + encodeURIComponent("/checkout") + "&plan=" + encodeURIComponent(plan)
-          );
-          return;
-        }
-        const meData = await me.json().catch(() => ({}));
-        if (!me.ok) {
-          showError(meData.error || "Could not verify session.");
-          return;
-        }
+        document.getElementById("authGate").classList.remove("hidden");
+        const ok = await ensureSession();
+        if (!ok) return;
 
-        const inv = await fetch("/api/payment/create-invoice", {
-          method: "POST",
-          credentials: "include",
-          headers: authHeaders(),
-          body: JSON.stringify({ plan: plan }),
-        });
-        const invData = await inv.json().catch(() => ({}));
-        if (!inv.ok) {
-          showError(invData.error || "Could not create invoice.");
-          return;
-        }
-
-        const url = invData.invoice_url || invData.invoiceUrl;
-        if (!url || typeof url !== "string") {
-          showError("No payment URL returned.");
-          return;
-        }
-
-        window.location.href = url;
+        document.getElementById("payBtn").onclick = () => createInvoiceAndRedirect();
       })();
     </script>
   </body>
