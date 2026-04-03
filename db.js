@@ -371,6 +371,32 @@ export async function consumeLoginCode(email, code) {
   return r.rowCount > 0;
 }
 
+/**
+ * Replace the user's API key with a new sk-live-* value. Old key stops working immediately.
+ * @returns {Promise<{ id: number, email: string, api_key: string, plan: string, usage_count: number, max_limit: number, usage_month: string } | null>}
+ */
+export async function rotateApiKeyForUserId(userId) {
+  if (!pool) return null;
+  const id = Number(userId);
+  if (!Number.isFinite(id) || id < 1) return null;
+
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const apiKey = generateLiveApiKey();
+    try {
+      const r = await pool.query(
+        `UPDATE users SET api_key = $2 WHERE id = $1 AND status = 'active'
+         RETURNING id, email, api_key, plan, usage_count, max_limit, usage_month`,
+        [id, apiKey]
+      );
+      return r.rows[0] || null;
+    } catch (e) {
+      if (e.code === "23505") continue;
+      throw e;
+    }
+  }
+  throw new Error("Could not allocate unique api_key");
+}
+
 export async function getUserDashboardRow(userId) {
   if (!pool) return null;
   const month = currentUsageMonth();

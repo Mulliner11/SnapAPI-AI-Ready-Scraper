@@ -16,6 +16,7 @@ import {
   initDb,
   isOverQuota,
   recordApiUsage,
+  rotateApiKeyForUserId,
 } from "./db.js";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
 import { prisma } from "./prismaClient.js";
@@ -371,6 +372,31 @@ async function registerRoutes() {
     });
   });
 
+  fastify.post("/api/user/rotate-key", async (request, reply) => {
+    const pool = getPool();
+    if (!pool) {
+      return reply.code(503).send({ error: "Database not configured" });
+    }
+    const uid = await getUserIdFromRequest(request);
+    if (!uid) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    try {
+      const row = await rotateApiKeyForUserId(uid);
+      if (!row) {
+        return reply.code(404).send({ error: "User not found" });
+      }
+      return reply.send({
+        ok: true,
+        api_key: row.api_key,
+        apiKey: row.api_key,
+      });
+    } catch (err) {
+      request.log.error(err, "[user] rotate-key");
+      return reply.code(500).send({ error: err?.message || "Could not rotate key" });
+    }
+  });
+
   fastify.post("/auth/logout", async (request, reply) => {
     await request.session.destroy();
     return reply.send({ ok: true });
@@ -564,6 +590,7 @@ async function start() {
       if (pathname === "/api/auth/send-magic-link" && request.method === "POST") return true;
       if (pathname === "/api/auth/verify" && request.method === "GET") return true;
       if (pathname === "/api/auth/pending-redirect" && request.method === "POST") return true;
+      if (pathname === "/api/user/rotate-key" && request.method === "POST") return true;
       if (pathname === "/webhooks/nowpayments" && request.method === "POST") return true;
       if (pathname === "/api/subscribe" && request.method === "POST") return true;
       if (pathname === "/api/payment/create-invoice" && request.method === "POST") return true;
