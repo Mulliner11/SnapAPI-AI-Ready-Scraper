@@ -132,7 +132,7 @@ export async function postAuthSendMagicLink(request, reply) {
 export async function getAuthVerify(request, reply) {
   const raw = parseQueryToken(request.query?.token);
   if (raw.length < MIN_PLAIN_TOKEN_LEN) {
-    return reply.redirect(302, "/login?error=invalid_token");
+    return reply.redirect("/login?error=invalid_token");
   }
 
   const tokenHash = hashToken(raw);
@@ -143,11 +143,11 @@ export async function getAuthVerify(request, reply) {
   } catch (e) {
     console.error("[auth] auth token lookup failed:", e);
     request.log.error(e, "[auth] auth token lookup failed");
-    return reply.redirect(302, "/login?error=server");
+    return reply.redirect("/login?error=server");
   }
 
   if (!row || row.expiresAt.getTime() < Date.now()) {
-    return reply.redirect(302, "/login?error=invalid_or_expired");
+    return reply.redirect("/login?error=invalid_or_expired");
   }
 
   try {
@@ -155,12 +155,12 @@ export async function getAuthVerify(request, reply) {
   } catch (e) {
     console.error("[auth] failed to delete auth token:", e);
     request.log.error(e, "[auth] failed to delete auth token");
-    return reply.redirect(302, "/login?error=server");
+    return reply.redirect("/login?error=server");
   }
 
   const user = await ensureUserByEmail(row.email);
   if (!user) {
-    return reply.redirect(302, "/login?error=user");
+    return reply.redirect("/login?error=user");
   }
 
   request.session.userId = user.id;
@@ -171,10 +171,10 @@ export async function getAuthVerify(request, reply) {
   delete request.session.postLoginPlan;
 
   if (pendingPath === "/checkout" && (pendingPlan === "pro" || pendingPlan === "business")) {
-    return reply.redirect(302, `/checkout?plan=${pendingPlan}`);
+    return reply.redirect(`/checkout?plan=${pendingPlan}`);
   }
 
-  return reply.redirect(302, "/dashboard");
+  return reply.redirect("/dashboard");
 }
 
 const ALLOWED_POST_LOGIN_PATH = "/checkout";
