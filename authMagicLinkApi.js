@@ -175,3 +175,7 @@ export async function postAuthPendingRedirect(request, reply) {
   request.session.postLoginPlan = plan;
   return reply.send({ ok: true });
 }
+
+// Backwards-compat exports for older entrypoints (index.js) that still import
+// `postAuthSendLink` / `postAuthVerify` from this module.
+export { postAuthSendMagicLink as postAuthSendLink, getAuthVerify as postAuthVerify };
