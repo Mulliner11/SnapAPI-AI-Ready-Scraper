@@ -21,11 +21,11 @@ import {
   recordApiUsage,
 } from "./db.js";
 import { createR2Client, loadR2Config, uploadLocalFileAndRemove } from "./r2.js";
-import { prisma } from "./lib/prisma.js";
-import { postSubscribeHandler } from "./routes/subscribeInvoice.js";
-import { postNowpaymentsWebhook } from "./routes/nowpaymentsWebhook.js";
-import { getUserIdFromRequest } from "./lib/authContext.js";
-import { postAuthSendLink, postAuthVerify } from "./routes/authMagicLinkApi.js";
+import { prisma } from "./prismaClient.js";
+import { postSubscribeHandler } from "./subscribeInvoice.js";
+import { postNowpaymentsWebhook } from "./nowpaymentsWebhook.js";
+import { getUserIdFromRequest } from "./authContext.js";
+import { postAuthSendLink, postAuthVerify } from "./authMagicLinkApi.js";
 
 const SESSION_SECRET_RAW = process.env.SESSION_SECRET || "snapapi-development-session-secret-min-32-chars-long!!";
 const SESSION_SECRET =
