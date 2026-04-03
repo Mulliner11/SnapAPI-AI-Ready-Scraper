@@ -62,6 +62,20 @@ export async function postAuthSendMagicLink(request, reply) {
     return reply.code(400).send({ error: "Invalid email" });
   }
 
+  // Upsert Prisma User (app_users): first-time sign-in creates an account with default apiKey,
+  // existing users are loaded as-is. This covers both new registration and returning login.
+  try {
+    await prisma.user.upsert({
+      where: { email },
+      create: { email },
+      update: {},
+    });
+  } catch (e) {
+    console.error("[auth] prisma.user.upsert failed:", e);
+    request.log.error(e, "[auth] prisma.user.upsert failed");
+    return reply.code(500).send({ error: "Could not create or load user" });
+  }
+
   const plain = generatePlainToken();
   const tokenHash = hashToken(plain);
   const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
