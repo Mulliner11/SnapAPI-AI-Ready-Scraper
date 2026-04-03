@@ -25,7 +25,7 @@ import { prisma } from "./prismaClient.js";
 import { postSubscribeHandler } from "./subscribeInvoice.js";
 import { postNowpaymentsWebhook } from "./nowpaymentsWebhook.js";
 import { getUserIdFromRequest } from "./authContext.js";
-import { postAuthSendLink, postAuthVerify } from "./authMagicLinkApi.js";
+import { getAuthVerify, postAuthPendingRedirect, postAuthSendMagicLink } from "./authMagicLinkApi.js";
 
 const SESSION_SECRET_RAW = process.env.SESSION_SECRET || "snapapi-development-session-secret-min-32-chars-long!!";
 const SESSION_SECRET =
@@ -272,7 +272,7 @@ async function registerRoutes() {
   });
 
   fastify.post(
-    "/api/auth/send-link",
+    "/api/auth/send-magic-link",
     {
       schema: {
         body: {
@@ -282,21 +282,26 @@ async function registerRoutes() {
         },
       },
     },
-    postAuthSendLink
+    postAuthSendMagicLink
   );
 
+  fastify.get("/api/auth/verify", { logLevel: "silent" }, getAuthVerify);
+
   fastify.post(
-    "/api/auth/verify",
+    "/api/auth/pending-redirect",
     {
       schema: {
         body: {
           type: "object",
-          required: ["token"],
-          properties: { token: { type: "string", minLength: 16 } },
+          required: ["redirect", "plan"],
+          properties: {
+            redirect: { type: "string", minLength: 1 },
+            plan: { type: "string", enum: ["pro", "business"] },
+          },
         },
       },
     },
-    postAuthVerify
+    postAuthPendingRedirect
   );
 
   /** Current user: session cookie or Bearer JWT (same pg user as dashboard). */
@@ -466,7 +471,7 @@ async function start() {
       console.warn("[SnapAPI] Set NP_API_KEY on Railway for POST /api/subscribe (NOWPayments invoice).");
     }
     if (!String(process.env.JWT_SECRET || "").trim() || String(process.env.JWT_SECRET).trim().length < 32) {
-      console.warn("[SnapAPI] Set JWT_SECRET (min 32 chars) for POST /api/auth/verify.");
+      console.warn("[SnapAPI] Set JWT_SECRET (min 32 chars) if you use Bearer JWT with /api/user/me.");
     }
   }
 
@@ -490,8 +495,9 @@ async function start() {
     allowList: (request) => {
       const pathname = (request.url || "").split("?")[0];
       if (pathname === "/health") return true;
-      if (pathname === "/api/auth/send-link" && request.method === "POST") return true;
-      if (pathname === "/api/auth/verify" && request.method === "POST") return true;
+      if (pathname === "/api/auth/send-magic-link" && request.method === "POST") return true;
+      if (pathname === "/api/auth/verify" && request.method === "GET") return true;
+      if (pathname === "/api/auth/pending-redirect" && request.method === "POST") return true;
       if (pathname === "/webhooks/nowpayments" && request.method === "POST") return true;
       if (pathname === "/api/subscribe" && request.method === "POST") return true;
       return false;
