@@ -130,51 +130,78 @@ export async function postAuthSendMagicLink(request, reply) {
  * GET /api/auth/verify?token=… — one-time validate, destroy row, set HttpOnly session, redirect /dashboard.
  */
 export async function getAuthVerify(request, reply) {
-  const raw = parseQueryToken(request.query?.token);
-  if (raw.length < MIN_PLAIN_TOKEN_LEN) {
-    return reply.redirect("/login?error=invalid_token");
-  }
-
-  const tokenHash = hashToken(raw);
-
-  let row;
-  try {
-    row = await prisma.authToken.findUnique({ where: { tokenHash } });
-  } catch (e) {
-    console.error("[auth] auth token lookup failed:", e);
-    request.log.error(e, "[auth] auth token lookup failed");
-    return reply.redirect("/login?error=server");
-  }
-
-  if (!row || row.expiresAt.getTime() < Date.now()) {
-    return reply.redirect("/login?error=invalid_or_expired");
-  }
+  const token = parseQueryToken(request.query?.token);
+  console.log("Verifying token:", token);
 
   try {
-    await prisma.authToken.delete({ where: { id: row.id } });
-  } catch (e) {
-    console.error("[auth] failed to delete auth token:", e);
-    request.log.error(e, "[auth] failed to delete auth token");
-    return reply.redirect("/login?error=server");
+    if (!reply || typeof reply.redirect !== "function") {
+      console.error("[auth] verify: reply is not a Fastify reply (missing redirect)");
+      return;
+    }
+
+    if (token.length < MIN_PLAIN_TOKEN_LEN) {
+      return reply.redirect("/login?error=invalid_token");
+    }
+
+    const tokenHash = hashToken(token);
+
+    let row;
+    try {
+      row = await prisma.authToken.findUnique({ where: { tokenHash } });
+    } catch (e) {
+      console.error("[auth] auth token lookup failed:", e);
+      request.log.error(e, "[auth] auth token lookup failed");
+      return reply.redirect("/login?error=server");
+    }
+
+    const expiresMs =
+      row?.expiresAt instanceof Date && !Number.isNaN(row.expiresAt.getTime())
+        ? row.expiresAt.getTime()
+        : 0;
+    if (!row || expiresMs < Date.now()) {
+      return reply.redirect("/login?error=invalid_or_expired");
+    }
+
+    try {
+      await prisma.authToken.delete({ where: { id: row.id } });
+    } catch (e) {
+      console.error("[auth] failed to delete auth token:", e);
+      request.log.error(e, "[auth] failed to delete auth token");
+      return reply.redirect("/login?error=server");
+    }
+
+    const user = await ensureUserByEmail(row.email);
+    if (!user) {
+      return reply.redirect("/login?error=user");
+    }
+
+    if (!request.session) {
+      console.error("[auth] verify: request.session missing (@fastify/session not registered?)");
+      return reply.redirect("/login?error=server");
+    }
+
+    request.session.userId = user.id;
+
+    const pendingPath = request.session.postLoginRedirect;
+    const pendingPlan = request.session.postLoginPlan;
+    delete request.session.postLoginRedirect;
+    delete request.session.postLoginPlan;
+
+    if (pendingPath === "/checkout" && (pendingPlan === "pro" || pendingPlan === "business")) {
+      return reply.redirect(`/checkout?plan=${pendingPlan}`);
+    }
+
+    return reply.redirect("/dashboard");
+  } catch (err) {
+    console.error("[auth] getAuthVerify unexpected error:", err);
+    if (err?.stack) console.error(err.stack);
+    request.log.error(err, "[auth] getAuthVerify unexpected");
+    if (!reply.sent && typeof reply.redirect === "function") {
+      return reply.redirect("/login?error=server");
+    }
+  } finally {
+    console.log("Verification finished");
   }
-
-  const user = await ensureUserByEmail(row.email);
-  if (!user) {
-    return reply.redirect("/login?error=user");
-  }
-
-  request.session.userId = user.id;
-
-  const pendingPath = request.session.postLoginRedirect;
-  const pendingPlan = request.session.postLoginPlan;
-  delete request.session.postLoginRedirect;
-  delete request.session.postLoginPlan;
-
-  if (pendingPath === "/checkout" && (pendingPlan === "pro" || pendingPlan === "business")) {
-    return reply.redirect(`/checkout?plan=${pendingPlan}`);
-  }
-
-  return reply.redirect("/dashboard");
 }
 
 const ALLOWED_POST_LOGIN_PATH = "/checkout";
