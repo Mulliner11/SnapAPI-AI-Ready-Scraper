@@ -47,7 +47,9 @@ async function sendMagicLinkEmail(to, linkUrl) {
   });
   if (!res.ok) {
     const t = await res.text().catch(() => "");
-    throw new Error(`Resend failed: ${res.status} ${t}`);
+    const err = new Error(`Resend failed: ${res.status} ${t}`);
+    console.error("[auth] Resend HTTP error", res.status, t);
+    throw err;
   }
 }
 
@@ -64,12 +66,14 @@ export async function postAuthSendMagicLink(request, reply) {
   const tokenHash = hashToken(plain);
   const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
 
+  // Only Prisma `AuthToken` → table `auth_tokens` (no Prisma User row here; pg `users` is created on verify).
   try {
     await prisma.authToken.deleteMany({ where: { email } });
     await prisma.authToken.create({
       data: { email, tokenHash, expiresAt },
     });
   } catch (e) {
+    console.error("[auth] failed to store auth token:", e);
     request.log.error(e, "[auth] failed to store auth token");
     return reply.code(500).send({ error: "Could not create sign-in token" });
   }
@@ -92,6 +96,7 @@ export async function postAuthSendMagicLink(request, reply) {
   try {
     await sendMagicLinkEmail(email, linkUrl);
   } catch (e) {
+    console.error("[auth] Resend send failed:", e);
     request.log.error(e, "[auth] Resend send failed");
     await prisma.authToken.deleteMany({ where: { tokenHash } }).catch(() => {});
     return reply.code(502).send({ error: "Failed to send email" });
@@ -115,6 +120,7 @@ export async function getAuthVerify(request, reply) {
   try {
     row = await prisma.authToken.findUnique({ where: { tokenHash } });
   } catch (e) {
+    console.error("[auth] auth token lookup failed:", e);
     request.log.error(e, "[auth] auth token lookup failed");
     return reply.redirect(302, "/login?error=server");
   }
@@ -126,6 +132,7 @@ export async function getAuthVerify(request, reply) {
   try {
     await prisma.authToken.delete({ where: { id: row.id } });
   } catch (e) {
+    console.error("[auth] failed to delete auth token:", e);
     request.log.error(e, "[auth] failed to delete auth token");
     return reply.redirect(302, "/login?error=server");
   }
