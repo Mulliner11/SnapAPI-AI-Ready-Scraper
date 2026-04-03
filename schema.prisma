@@ -2,12 +2,14 @@
 // Import client from ./prismaClient.js at repo root. Run: npx prisma migrate deploy && npx prisma generate
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["mvp_v1"]
 }
 
 model User {
