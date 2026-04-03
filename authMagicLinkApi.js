@@ -11,9 +11,16 @@ import { ensureUserByEmail } from "./db.js";
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
 /** Must match a sender verified in Resend (domain getsnapapi.uk). Do not use env override here — avoids 422 Invalid `from`. */
 const RESEND_FROM = "SnapAPI <support@getsnapapi.uk>";
-/** Browser URL for /verify page (email link); query `token` is appended server-side. */
+/**
+ * Base URL for magic-link emails; final link is `${base}?token=...`.
+ * Default hits GET /api/auth/verify (same as backend). Override with MAGIC_LINK_PUBLIC_VERIFY_URL if needed.
+ */
+function defaultMagicLinkBase() {
+  const app = String(process.env.PUBLIC_APP_URL || "https://getsnapapi.uk").replace(/\/$/, "");
+  return `${app}/api/auth/verify`;
+}
 const MAGIC_LINK_PUBLIC_VERIFY_URL =
-  String(process.env.MAGIC_LINK_PUBLIC_VERIFY_URL || "").replace(/\/$/, "") || "https://getsnapapi.uk/verify";
+  String(process.env.MAGIC_LINK_PUBLIC_VERIFY_URL || "").replace(/\/$/, "") || defaultMagicLinkBase();
 
 const TOKEN_TTL_MS = 10 * 60 * 1000;
 const MIN_PLAIN_TOKEN_LEN = 32;

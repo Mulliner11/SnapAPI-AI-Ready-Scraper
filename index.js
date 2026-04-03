@@ -210,6 +210,14 @@ async function registerRoutes() {
     return sendCwdFile(reply, "login.html", "text/html; charset=utf-8");
   });
 
+  fastify.get("/verify", async (request, reply) => {
+    return sendCwdFile(reply, "verify.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/verify.html", async (request, reply) => {
+    return sendCwdFile(reply, "verify.html", "text/html; charset=utf-8");
+  });
+
   fastify.get("/dashboard", async (request, reply) => {
     return sendCwdFile(reply, "dashboard.html", "text/html; charset=utf-8");
   });
