@@ -6,7 +6,6 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "start:deploy": "prisma migrate deploy && node server.js",
     "dev": "node --watch server.js",
     "build": "prisma generate && npx playwright install --with-deps chromium",
     "postinstall": "prisma generate"
