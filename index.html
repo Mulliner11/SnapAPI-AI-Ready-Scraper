@@ -74,7 +74,7 @@
           </span>
         </h1>
         <p class="mt-5 max-w-2xl text-base leading-7 text-slate-300">
-          We load the real page in headless Chromium, strip chrome with Readability, and convert to Markdown with Turndown—so
+          We load the real page in headless Chromium, parse HTML with Cheerio, strip chrome, and convert to Markdown with Turndown—so
           you get <strong class="text-slate-100">title</strong>, <strong class="text-slate-100">markdown</strong>, and
           <strong class="text-slate-100">plain text</strong> in one API call. No pixel pipelines. No PDFs.
         </p>
@@ -95,7 +95,7 @@
               <li class="flex gap-2">
                 <span class="shrink-0 text-rose-400/90">—</span>
                 <span
-                  ><strong class="text-slate-100">Playwright + Readability + Turndown</strong> wiring, upgrades, and edge
+                  ><strong class="text-slate-100">Playwright + Cheerio + Turndown</strong> wiring, upgrades, and edge
                   cases</span
                 >
               </li>
@@ -208,7 +208,7 @@ The readable paragraphs and headings appear as clean Markdown, ready to pipe int
             </p>
             <ul class="mt-5 space-y-2 text-sm text-slate-300">
               <li><strong class="text-white">100</strong> scrape calls / month</li>
-              <li>Readability + Markdown output</li>
+              <li>Cheerio + Markdown output</li>
               <li>Community support</li>
             </ul>
             <a
