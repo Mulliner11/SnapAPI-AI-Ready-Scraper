@@ -424,7 +424,10 @@ async function start() {
       );
     }
     if (!String(process.env.NP_API_KEY || "").trim()) {
-      console.warn("[SnapAPI] Set NP_API_KEY on Railway for POST /api/subscribe (NOWPayments invoice).");
+      console.error("Missing API Key: NP_API_KEY");
+      console.error(
+        "[SnapAPI] NOWPayments invoices require NP_API_KEY (Railway → Variables → NP_API_KEY)."
+      );
     }
     if (!String(process.env.JWT_SECRET || "").trim() || String(process.env.JWT_SECRET).trim().length < 32) {
       console.warn("[SnapAPI] Set JWT_SECRET (min 32 chars) if you use Bearer JWT with /api/user/me.");

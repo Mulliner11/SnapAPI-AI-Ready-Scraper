@@ -457,7 +457,10 @@ async function start() {
       );
     }
     if (!String(process.env.NP_API_KEY || "").trim()) {
-      console.warn("[SnapAPI] Set NP_API_KEY on Railway for POST /api/subscribe (NOWPayments invoice).");
+      console.error("Missing API Key: NP_API_KEY");
+      console.error(
+        "[SnapAPI] NOWPayments invoices require NP_API_KEY (Railway → Variables → NP_API_KEY)."
+      );
     }
     const jwtSecret = String(process.env.JWT_SECRET || "").trim();
     if (!jwtSecret || jwtSecret.length < 32) {

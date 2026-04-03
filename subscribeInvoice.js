@@ -3,8 +3,9 @@ import { prisma } from "./prismaClient.js";
 
 const NP_BASE = (process.env.NP_API_BASE || "https://api.nowpayments.io").replace(/\/$/, "");
 
+/** NOWPayments REST API key — env name must be exactly `NP_API_KEY`. */
 export function getNpApiKey() {
-  return String(process.env.NP_API_KEY || "").trim();
+  return String(process.env.NP_API_KEY ?? "").trim();
 }
 
 export function priceUsdForPlan(planType) {
@@ -66,6 +67,7 @@ function pickInvoiceId(data) {
 export async function createNowpaymentsInvoiceAndOrder({ prismaUser, email, planType, log }) {
   const npKey = getNpApiKey();
   if (!npKey) {
+    console.error("Missing API Key: NP_API_KEY");
     return { ok: false, statusCode: 503, error: "NP_API_KEY is not configured" };
   }
 
