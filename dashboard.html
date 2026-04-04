@@ -47,50 +47,50 @@
       ></div>
     </div>
 
-    <!-- Mobile bar -->
+    <!-- Mobile bar — tall “heavy console” chrome -->
     <header
-      class="sticky top-0 z-30 flex min-h-[4.25rem] items-center justify-between gap-4 border-b border-white/15 bg-zinc-950/95 px-5 py-4 backdrop-blur-xl md:hidden"
+      class="sticky top-0 z-30 flex min-h-[8.5rem] items-center justify-between gap-4 border-b border-white/15 bg-zinc-950/95 px-6 py-6 backdrop-blur-xl md:hidden"
     >
-      <a href="/" class="text-5xl font-bold tracking-tight text-white">SnapAPI</a>
+      <a href="/" class="text-4xl font-bold tracking-tight text-white">SnapAPI</a>
       <div class="flex items-center gap-3">
         <a
           href="/dashboard/mcp"
-          class="rounded-xl border border-white/15 bg-white/[0.04] px-12 py-7 text-base font-semibold text-zinc-200"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-8 py-5 text-base font-semibold text-zinc-200"
           >MCP</a
         >
         <button
           type="button"
-          class="snap-logout rounded-xl border border-white/15 bg-white/[0.04] px-12 py-7 text-base font-semibold text-zinc-200"
+          class="snap-logout rounded-xl border border-white/15 bg-white/[0.04] px-8 py-5 text-base font-semibold text-zinc-200"
         >
           Log out
         </button>
       </div>
     </header>
 
-    <div class="flex min-h-[calc(100vh-4.25rem)] md:min-h-screen">
+    <div class="flex min-h-[calc(100vh-8.5rem)] md:min-h-screen">
       <!-- Sidebar -->
       <aside
-        class="relative z-20 hidden w-64 shrink-0 flex-col border-r border-white/15 bg-zinc-950/80 backdrop-blur-xl md:flex lg:w-72"
+        class="relative z-20 hidden w-72 shrink-0 flex-col border-r border-white/15 bg-zinc-950/80 backdrop-blur-xl md:flex lg:w-80"
         aria-label="Main navigation"
       >
-        <div class="flex flex-1 flex-col px-5 pb-8 pt-10 lg:px-6 lg:pt-12">
-          <a href="/" class="text-5xl font-bold tracking-tight text-white lg:text-6xl">SnapAPI</a>
+        <div class="flex flex-1 flex-col px-6 pb-10 pt-12 lg:px-8 lg:pt-14">
+          <a href="/" class="text-4xl font-bold tracking-tight text-white lg:text-5xl">SnapAPI</a>
           <p class="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Production console</p>
 
-          <nav class="mt-12 flex flex-col gap-2">
+          <nav class="mt-14 flex flex-col gap-3">
             <a
               href="/dashboard"
-              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-7 py-5 text-lg font-semibold text-white shadow-sm"
+              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-8 py-6 text-xl font-semibold text-white shadow-sm"
               >Dashboard</a
             >
             <a
               href="/dashboard/mcp"
-              class="rounded-xl border border-white/10 bg-transparent px-7 py-5 text-lg font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
               >Enable MCP</a
             >
             <a
               href="/"
-              class="rounded-xl border border-transparent px-7 py-5 text-lg font-semibold text-zinc-500 transition hover:text-zinc-300"
+              class="rounded-xl border border-transparent px-8 py-6 text-xl font-semibold text-zinc-500 transition hover:text-zinc-300"
               >Marketing site</a
             >
           </nav>
@@ -111,7 +111,7 @@
             </div>
             <button
               type="button"
-              class="snap-logout mt-4 w-full rounded-xl border border-white/12 bg-white/[0.04] px-7 py-5 text-lg font-semibold text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
+              class="snap-logout mt-6 w-full rounded-xl border border-white/12 bg-white/[0.04] px-8 py-6 text-xl font-semibold text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
             >
               Log out
             </button>
@@ -122,18 +122,18 @@
       <!-- Main -->
       <div class="min-w-0 flex-1">
         <header
-          class="sticky top-0 z-10 hidden min-h-[5rem] border-b border-white/15 bg-zinc-950/90 px-6 py-6 backdrop-blur-xl md:flex md:items-center md:px-10 lg:px-12"
+          class="sticky top-0 z-10 hidden min-h-[10rem] border-b border-white/15 bg-zinc-950/90 px-8 py-8 backdrop-blur-xl md:flex md:items-center md:px-12 lg:px-16"
         >
           <div class="flex w-full items-center justify-between gap-4">
             <div>
-              <h1 class="text-base font-semibold uppercase tracking-widest text-zinc-500">Console</h1>
-              <p class="mt-1 text-xl font-semibold text-white lg:text-2xl">Overview</p>
+              <h1 class="text-lg font-semibold uppercase tracking-widest text-zinc-500">Console</h1>
+              <p class="mt-2 text-2xl font-semibold text-white lg:text-3xl">Overview</p>
             </div>
-            <p id="userEmailTop" class="max-w-md truncate text-base text-zinc-500"></p>
+            <p id="userEmailTop" class="max-w-md truncate text-lg text-zinc-500"></p>
           </div>
         </header>
 
-        <main class="mx-auto w-full max-w-7xl px-5 py-10 lg:px-12 lg:py-14">
+        <main class="w-full max-w-none px-6 py-12 sm:px-10 lg:px-16 xl:px-20 lg:py-16">
           <p id="loadErr" class="mb-8 hidden rounded-xl border border-red-500/35 bg-red-500/10 px-6 py-4 text-base text-red-200"></p>
           <p
             id="paymentSuccessBanner"

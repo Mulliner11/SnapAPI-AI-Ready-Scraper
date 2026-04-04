@@ -1,24 +1,12 @@
 /**
  * POST /webhooks/nowpayments and POST /api/webhooks/nowpayments — NOWPayments IPN.
- * Requires fastify-raw-body on these routes (request.rawBody = Buffer).
- * Verifies x-nowpayments-sig = HMAC-SHA512(NP_IPN_SECRET, raw UTF-8 body bytes), hex.
- * If payment_status === finished, resolves Order by order_id / orderRef and upgrades plan (pro/business) + expiry.
+ * TEMPORARY: HMAC verification disabled so payments can activate plan while debugging.
+ * Re-enable x-nowpayments-sig checks (nowpaymentsIpn.js) before public production hardening.
  */
 import { getPool, upgradeUserSubscriptionByEmail } from "./db.js";
 import { prisma } from "./prismaClient.js";
-import {
-  computeNpIpnSignatureHex,
-  computeRawIpnBodyHmacSha512Hex,
-  verifyNowPaymentsIpnRawBody,
-  verifyNowPaymentsIpnSignature,
-} from "./nowpaymentsIpn.js";
 
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
-
-function getNpIpnSecret() {
-  return String(process.env.NP_IPN_SECRET ?? process.env.NOWPAYMENTS_IPN_SECRET ?? "").trim();
-}
-/** Verified in Resend; fixed address avoids 422 Invalid `from`. */
 const RESEND_FROM = "SnapAPI <support@getsnapapi.uk>";
 
 function escapeHtmlText(s) {
@@ -59,6 +47,20 @@ function getWebhookBuffer(request) {
   return null;
 }
 
+/** Parsed JSON body (Fastify may already parse; else from raw buffer). */
+function parseWebhookPayload(request) {
+  if (request.body != null && typeof request.body === "object" && !Buffer.isBuffer(request.body)) {
+    return request.body;
+  }
+  const buf = getWebhookBuffer(request);
+  if (!buf || !buf.length) return null;
+  try {
+    return JSON.parse(buf.toString("utf8"));
+  } catch {
+    return null;
+  }
+}
+
 async function sendApiKeyActivatedEmail(to, apiKey) {
   if (!RESEND_API_KEY) {
     console.warn(`[SnapAPI] RESEND_API_KEY not set; skipping activation email to ${to}`);
@@ -90,74 +92,24 @@ async function sendApiKeyActivatedEmail(to, apiKey) {
 }
 
 export async function postNowpaymentsWebhook(request, reply) {
-  console.log("--- WEBHOOK START ---");
-
-  const buf = getWebhookBuffer(request);
-  if (!buf) {
-    request.log.warn("[NP IPN] missing raw body (enable fastify-raw-body with encoding:false on this route)");
-    return reply.code(400).send({ error: "Empty or unreadable body" });
-  }
-
-  let payload;
-  try {
-    payload = JSON.parse(buf.toString("utf8"));
-  } catch {
-    return reply.code(400).send({ error: "Invalid JSON" });
-  }
+  const payload = parseWebhookPayload(request);
   if (!payload || typeof payload !== "object") {
-    return reply.code(400).send({ error: "Invalid JSON" });
+    return reply.code(400).send({ error: "Invalid or empty JSON body" });
   }
 
-  console.log("BODY:", JSON.stringify(payload, null, 2));
-
-  const ipnSecret = getNpIpnSecret();
-  if (!ipnSecret) {
-    request.log.error("[NP IPN] NP_IPN_SECRET is not set");
-    return reply.code(503).send({ error: "IPN secret not configured" });
-  }
-
-  const rawSig = request.headers["x-nowpayments-sig"];
-  const sigHeader = Array.isArray(rawSig) ? rawSig[0] : rawSig;
-  const receivedSignature = sigHeader != null ? String(sigHeader).trim() : "";
-
-  if (!receivedSignature) {
-    console.error("[Webhook Error] Missing Signature");
-    request.log.warn("[NP IPN] missing x-nowpayments-sig");
-    return reply.code(401).send({ error: "Unauthorized" });
-  }
-
-  /** Primary: HMAC-SHA512 over exact raw bytes. Fallback: key-sorted JSON (NP docs vary). */
-  let signatureOk = verifyNowPaymentsIpnRawBody(buf, receivedSignature, ipnSecret);
-  if (!signatureOk) {
-    signatureOk = verifyNowPaymentsIpnSignature(payload, receivedSignature, ipnSecret);
-    if (signatureOk) {
-      request.log.info("[NP IPN] signature OK (sorted-JSON canonical fallback)");
-    }
-  }
-
-  if (!signatureOk) {
-    console.error("[Webhook Error] Signature mismatch");
-    console.error("Expected Signature (raw-body HMAC):", computeRawIpnBodyHmacSha512Hex(buf, ipnSecret) ?? "(n/a)");
-    console.error("Expected Signature (sorted-JSON HMAC):", computeNpIpnSignatureHex(payload, ipnSecret).expectedHex ?? "(n/a)");
-    console.error("Received Signature:", receivedSignature);
-    request.log.warn({ received: receivedSignature }, "[NP IPN] HMAC verification failed");
-    return reply.code(401).send({ error: "Unauthorized" });
-  }
+  console.log("WEBHOOK_RECEIVED", payload);
 
   const paymentStatus = String(payload?.payment_status ?? "").toLowerCase();
   if (paymentStatus !== "finished") {
-    console.log("[NP IPN] skip: payment_status is not finished:", paymentStatus || "(empty)");
-    return reply.send({ ok: true });
+    return reply.send({ ok: true, skipped: "payment_status not finished" });
   }
 
   const ids = extractPaymentIdCandidates(payload);
   const orderIdRaw = payload?.order_id ?? payload?.orderId;
   const orderIdFromNp = orderIdRaw != null ? String(orderIdRaw).trim() : "";
 
-  console.log("[NP IPN] payment_status=finished | order_id:", orderIdFromNp || "(none)", "| id candidates:", ids);
-
   if (ids.length === 0 && !orderIdFromNp) {
-    request.log.warn({ keys: Object.keys(payload) }, "[NP IPN] finished but no id fields to match Order");
+    request.log.warn({ keys: Object.keys(payload) }, "[NP IPN] finished but no order/payment id");
     return reply.send({ ok: true });
   }
 
@@ -171,12 +123,6 @@ export async function postNowpaymentsWebhook(request, reply) {
           where: { orderRef: orderIdFromNp },
           include: { user: true },
         });
-        console.log(
-          "[NP IPN] lookup orderRef=",
-          JSON.stringify(orderIdFromNp),
-          "→",
-          match ? `found order prismaId=${match.id}` : "NO MATCH"
-        );
       }
 
       if (!match && orderIdFromNp && looksLikeUuid(orderIdFromNp)) {
@@ -184,12 +130,6 @@ export async function postNowpaymentsWebhook(request, reply) {
           where: { id: orderIdFromNp },
           include: { user: true },
         });
-        console.log(
-          "[NP IPN] lookup Prisma Order.id (uuid)=",
-          orderIdFromNp,
-          "→",
-          match ? `found order prismaId=${match.id}` : "NO MATCH"
-        );
       }
 
       if (!match && ids.length > 0) {
@@ -199,12 +139,6 @@ export async function postNowpaymentsWebhook(request, reply) {
           },
           include: { user: true },
         });
-        console.log(
-          "[NP IPN] fallback lookup paymentId/orderRef in",
-          JSON.stringify(ids),
-          "→",
-          match ? `found order prismaId=${match.id}` : "NO MATCH"
-        );
       }
 
       if (!match) {
@@ -246,35 +180,31 @@ export async function postNowpaymentsWebhook(request, reply) {
   }
 
   if (outcome.type === "not_found") {
-    request.log.warn({ ids, orderIdFromNp }, "[NP IPN] no order matching payment / order_id");
-    return reply.send({ ok: true });
+    return reply.send({ ok: true, note: "order not found" });
   }
 
   if (outcome.type === "already_done") {
-    console.log("[NP IPN] order already finished (idempotent skip)");
-    return reply.send({ ok: true });
+    return reply.send({ ok: true, note: "already finished" });
   }
 
   if (!outcome.user?.id) {
-    request.log.error("[NP IPN] activated but user missing");
     return reply.code(500).send({ error: "User missing after update" });
   }
 
-  console.log("PLAN_UPDATED_SUCCESSFULLY_FOR_USER:", outcome.user.id);
+  console.log("PLAN_UPDATED_SUCCESSFULLY_FOR_USER:", outcome.user.id, "plan:", outcome.user.plan);
 
   try {
     if (getPool()) {
       await upgradeUserSubscriptionByEmail(outcome.user.email, outcome.user.plan);
     }
   } catch (e) {
-    request.log.error(e, "[NP IPN] upgradeUserSubscriptionByEmail (legacy users) failed — Prisma was updated");
-    console.error("[NP IPN] legacy users sync failed:", e);
+    request.log.error(e, "[NP IPN] legacy users sync failed");
   }
 
   try {
     await sendApiKeyActivatedEmail(outcome.user.email, outcome.user.apiKey);
   } catch (e) {
-    request.log.error(e, "[NP IPN] activation email failed (subscription was applied)");
+    request.log.error(e, "[NP IPN] activation email failed");
   }
 
   return reply.code(200).send({

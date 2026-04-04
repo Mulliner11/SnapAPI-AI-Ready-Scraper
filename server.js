@@ -551,18 +551,18 @@ async function start() {
 
   await fastify.register(rateLimit, rateLimitRegisterOptions);
 
-  /** Global onRequest: x-api-key only for POST /api/scrape. POST /api/webhooks/nowpayments skips — HMAC only. */
+  /** Global onRequest: NOWPayments webhook bypasses x-api-key before any other POST logic. */
   fastify.addHook("onRequest", async (request, reply) => {
+    const rawUrl = String(request.url || "");
+    if (request.method === "POST" && rawUrl.includes("/webhooks/nowpayments")) {
+      return;
+    }
+
     if (request.method === "GET") {
       return;
     }
 
-    const rawUrl = String(request.url || "");
     const pathname = rawUrl.split("?")[0].split("#")[0];
-
-    if (request.method === "POST" && rawUrl.includes("/webhooks/nowpayments")) {
-      return;
-    }
 
     const needsApiKey = request.method === "POST" && pathname === "/api/scrape";
 
