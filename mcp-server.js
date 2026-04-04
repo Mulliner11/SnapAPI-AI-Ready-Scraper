@@ -1,21 +1,20 @@
 #!/usr/bin/env node
 /**
- * SnapAPI MCP server (stdio): exposes POST /api/scrape as tool `snapapi_scrape`
- * for Claude Desktop, Cursor, and other MCP clients.
+ * SnapAPI MCP server (stdio) — Model Context Protocol.
+ * Registers tool `snapapi_scrape` (POST /api/scrape via HTTP).
  *
- * Configure (example Cursor ~/.cursor/mcp.json):
- *   "snapapi": {
- *     "command": "node",
- *     "args": ["/absolute/path/to/screenshot-api/mcp-server.js"],
- *     "env": {
- *       "SNAPAPI_BASE_URL": "https://getsnapapi.uk",
- *       "SNAPAPI_API_KEY": "sk-your-key"
- *     }
- *   }
+ * Run from the project directory (needs node_modules: npm install):
+ *   npm run mcp-server
+ *
+ * Claude Desktop — add to claude_desktop_config.json → mcpServers (see Dashboard → Enable MCP).
+ *   macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
+ *   Windows: %APPDATA%\Claude\claude_desktop_config.json
+ *
+ * Cursor: ~/.cursor/mcp.json (or project .cursor/mcp.json)
  *
  * Env:
- *   SNAPAPI_BASE_URL — API origin (no trailing slash). Default: https://getsnapapi.uk
- *   SNAPAPI_API_KEY  — default x-api-key (optional if you pass api_key on each call)
+ *   SNAPAPI_BASE_URL — API origin, no trailing slash (default https://getsnapapi.uk)
+ *   SNAPAPI_API_KEY  — x-api-key (optional if tool args include api_key)
  */
 import "dotenv/config";
 

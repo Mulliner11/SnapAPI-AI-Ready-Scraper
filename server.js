@@ -199,6 +199,10 @@ async function registerRoutes() {
     return sendCwdFile(reply, "dashboard.html", "text/html; charset=utf-8");
   });
 
+  fastify.get("/dashboard/mcp", async (request, reply) => {
+    return sendCwdFile(reply, "dashboard-mcp.html", "text/html; charset=utf-8");
+  });
+
   fastify.get("/checkout", async (request, reply) => {
     return sendCwdFile(reply, "checkout.html", "text/html; charset=utf-8");
   });

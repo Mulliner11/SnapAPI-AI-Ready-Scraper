@@ -32,12 +32,26 @@
     <header
       class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur-md"
     >
-      <div class="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-        <a
-          href="/"
-          class="text-sm font-semibold tracking-tight text-white transition hover:text-indigo-200"
-          >SnapAPI</a
-        >
+      <div class="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-6 py-4">
+        <div class="flex flex-wrap items-center gap-4">
+          <a
+            href="/"
+            class="text-sm font-semibold tracking-tight text-white transition hover:text-indigo-200"
+            >SnapAPI</a
+          >
+          <nav class="flex flex-wrap items-center gap-1 text-xs">
+            <a
+              href="/dashboard"
+              class="rounded-lg border border-indigo-400/50 bg-indigo-500/20 px-3 py-1.5 font-medium text-white"
+              >Dashboard</a
+            >
+            <a
+              href="/dashboard/mcp"
+              class="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 font-medium text-slate-300 transition hover:border-indigo-400/40 hover:bg-white/10 hover:text-white"
+              >Enable MCP</a
+            >
+          </nav>
+        </div>
         <button
           type="button"
           id="logout"
@@ -94,6 +108,18 @@
           </div>
           <p id="copyToast" class="mt-3 hidden text-xs font-medium text-emerald-400">Copied to clipboard.</p>
           <p id="rotateToast" class="mt-2 hidden text-xs font-medium text-amber-300">New key is active. Update any integrations.</p>
+
+          <div class="mt-5 rounded-2xl border border-violet-500/30 bg-violet-500/[0.07] p-4">
+            <p class="text-xs font-semibold uppercase tracking-wider text-violet-200/90">Claude Desktop &amp; Cursor</p>
+            <p class="mt-1 text-xs text-slate-400">
+              Use <code class="text-violet-200/90">snapapi_scrape</code> as an MCP tool—copy-ready JSON for your config file.
+            </p>
+            <a
+              href="/dashboard/mcp"
+              class="mt-3 inline-flex rounded-lg border border-violet-400/50 bg-violet-600/25 px-4 py-2 text-xs font-semibold text-white transition hover:border-violet-300/60 hover:bg-violet-600/40"
+              >Enable MCP</a
+            >
+          </div>
 
           <div class="mt-5 border-t border-white/10 pt-5">
             <p class="text-xs font-medium uppercase tracking-wider text-cyan-300/90">Try it</p>

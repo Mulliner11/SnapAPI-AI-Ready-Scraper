@@ -1,6 +1,7 @@
 const urlInput = document.getElementById("urlInput");
 const apiKeyInput = document.getElementById("apiKeyInput");
 const tryScrapeBtn = document.getElementById("tryScrapeBtn");
+const tryScrapeBtnLabel = document.getElementById("tryScrapeBtnLabel");
 const result = document.getElementById("result");
 const statusText = document.getElementById("statusText");
 const compareAfter = document.getElementById("compareAfter");
@@ -43,11 +44,11 @@ function normalizeInputUrl(raw) {
 }
 
 function setAfterLoading() {
-  if (compareAfterTitle) compareAfterTitle.textContent = "—";
+  if (compareAfterTitle) compareAfterTitle.textContent = "Live…";
   if (compareAfter) {
     compareAfter.textContent = "Extracting readable content…";
-    compareAfter.classList.add("animate-pulse", "text-slate-500");
-    compareAfter.classList.remove("text-slate-200");
+    compareAfter.classList.add("is-live-markdown", "doc-code", "animate-pulse", "text-slate-500");
+    compareAfter.classList.remove("text-slate-200", "text-red-300");
   }
 }
 
@@ -55,17 +56,22 @@ function setAfterError(msg) {
   if (compareAfterTitle) compareAfterTitle.textContent = "Error";
   if (compareAfter) {
     compareAfter.textContent = msg;
+    compareAfter.classList.add("is-live-markdown", "doc-code");
     compareAfter.classList.remove("animate-pulse", "text-slate-500");
     compareAfter.classList.add("text-red-300");
   }
 }
 
 function setAfterSuccess(title, markdown) {
-  if (compareAfterTitle) compareAfterTitle.textContent = title || "(no title)";
+  if (compareAfterTitle) {
+    const t = title || "(no title)";
+    compareAfterTitle.textContent = t;
+    compareAfterTitle.title = t;
+  }
   if (compareAfter) {
     compareAfter.textContent = markdown || "";
+    compareAfter.classList.add("is-live-markdown", "doc-code", "text-slate-200");
     compareAfter.classList.remove("animate-pulse", "text-slate-500", "text-red-300");
-    compareAfter.classList.add("text-slate-200");
   }
 }
 
@@ -81,7 +87,7 @@ async function runScrape() {
 
   if (tryScrapeBtn) {
     tryScrapeBtn.disabled = true;
-    tryScrapeBtn.textContent = "Scraping…";
+    if (tryScrapeBtnLabel) tryScrapeBtnLabel.textContent = "Scraping…";
   }
   if (result) result.classList.remove("hidden");
   if (statusText) statusText.textContent = "Calling POST /api/scrape…";
@@ -120,7 +126,7 @@ async function runScrape() {
   } finally {
     if (tryScrapeBtn) {
       tryScrapeBtn.disabled = false;
-      tryScrapeBtn.textContent = "Try it";
+      if (tryScrapeBtnLabel) tryScrapeBtnLabel.textContent = "Run scrape";
     }
   }
 }
