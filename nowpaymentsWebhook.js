@@ -1,12 +1,15 @@
 /**
- * POST /webhooks/nowpayments — NOWPayments IPN callback.
- * Verifies `x-nowpayments-sig` (HMAC-SHA512 over sorted JSON body, see nowpaymentsIpn.js).
- * On payment_status === finished, marks Order finished and upgrades Prisma User plan.
+ * POST /webhooks/nowpayments and POST /api/webhooks/nowpayments — NOWPayments IPN callback.
+ * Verifies `x-nowpayments-sig` with `NP_IPN_SECRET` (or legacy `NOWPAYMENTS_IPN_SECRET`): HMAC-SHA512 over
+ * recursively key-sorted JSON string (see nowpaymentsIpn.js).
+ * On payment_status === finished, marks Order finished and upgrades Prisma User plan + expiresAt.
  */
 import { prisma } from "./prismaClient.js";
 import { verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
 
-const NOWPAYMENTS_IPN_SECRET = String(process.env.NOWPAYMENTS_IPN_SECRET || "").trim();
+function getNpIpnSecret() {
+  return String(process.env.NP_IPN_SECRET ?? process.env.NOWPAYMENTS_IPN_SECRET ?? "").trim();
+}
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
 /** Verified in Resend; fixed address avoids 422 Invalid `from`. */
 const RESEND_FROM = "SnapAPI <support@getsnapapi.uk>";
@@ -20,10 +23,10 @@ function escapeHtmlText(s) {
 
 /**
  * Collect possible ids NOWPayments may send; we store invoice `id` as Order.paymentId.
- * Includes `order_id` when NP echoes our custom `order_id` from invoice creation.
+ * `order_id` is preferred — it matches the `order_id` we send when creating the invoice (`orderRef`).
  */
 function extractPaymentIdCandidates(payload) {
-  const keys = ["payment_id", "invoice_id", "paymentId", "paymentID", "order_id", "orderId"];
+  const keys = ["order_id", "orderId", "payment_id", "invoice_id", "paymentId", "paymentID"];
   const out = [];
   for (const k of keys) {
     const v = payload?.[k];
@@ -73,10 +76,16 @@ async function sendApiKeyActivatedEmail(to, apiKey) {
  * POST /webhooks/nowpayments — raw JSON body, verify x-nowpayments-sig, Prisma Order/User updates.
  */
 export async function postNowpaymentsWebhook(request, reply) {
+  const ipnSecret = getNpIpnSecret();
+  if (!ipnSecret) {
+    request.log.error("[NP IPN] NP_IPN_SECRET (or NOWPAYMENTS_IPN_SECRET) is not set");
+    return reply.code(503).send({ error: "IPN secret not configured" });
+  }
+
   const rawSig = request.headers["x-nowpayments-sig"];
   const sig = Array.isArray(rawSig) ? rawSig[0] : rawSig;
-  if (!sig) {
-    return reply.code(403).send({ error: "Missing x-nowpayments-sig" });
+  if (!sig || !String(sig).trim()) {
+    return reply.code(401).send({ error: "Unauthorized" });
   }
 
   const rawBody = request.body;
@@ -85,8 +94,8 @@ export async function postNowpaymentsWebhook(request, reply) {
     return reply.code(400).send({ error: "Empty body" });
   }
 
-  if (!verifyNowPaymentsIpnSignature(buf, sig, NOWPAYMENTS_IPN_SECRET)) {
-    return reply.code(403).send({ error: "Invalid signature" });
+  if (!verifyNowPaymentsIpnSignature(buf, sig, ipnSecret)) {
+    return reply.code(401).send({ error: "Unauthorized" });
   }
 
   let payload;
@@ -107,16 +116,28 @@ export async function postNowpaymentsWebhook(request, reply) {
     return reply.send({ ok: true });
   }
 
+  const orderIdRaw = payload?.order_id ?? payload?.orderId;
+  const orderId = orderIdRaw != null ? String(orderIdRaw).trim() : "";
+
   let outcome;
   try {
     outcome = await prisma.$transaction(async (tx) => {
-      const pending = await tx.order.findFirst({
-        where: {
-          status: "pending",
-          OR: [{ paymentId: { in: ids } }, { orderRef: { in: ids } }],
-        },
-        include: { user: true },
-      });
+      let pending = null;
+      if (orderId) {
+        pending = await tx.order.findFirst({
+          where: { status: "pending", orderRef: orderId },
+          include: { user: true },
+        });
+      }
+      if (!pending) {
+        pending = await tx.order.findFirst({
+          where: {
+            status: "pending",
+            OR: [{ paymentId: { in: ids } }, { orderRef: { in: ids } }],
+          },
+          include: { user: true },
+        });
+      }
 
       if (pending) {
         const plan = normalizePlan(pending.planType);
@@ -165,7 +186,7 @@ export async function postNowpaymentsWebhook(request, reply) {
     request.log.error(e, "[NP IPN] activation email failed (subscription was applied)");
   }
 
-  return reply.send({
+  return reply.code(200).send({
     ok: true,
     email: outcome.user.email,
     plan: outcome.user.plan,

@@ -1,7 +1,6 @@
 import axios from "axios";
 import { prisma } from "./prismaClient.js";
-
-const NP_BASE = (process.env.NP_API_BASE || "https://api.nowpayments.io").replace(/\/$/, "");
+import { buildNowpaymentsV1Url } from "./nowpaymentsConfig.js";
 
 /** NOWPayments REST API key — env name must be exactly `NP_API_KEY`. */
 export function getNpApiKey() {
@@ -101,7 +100,7 @@ export async function createNowpaymentsInvoiceAndOrder({ prismaUser, email, plan
   let npData;
   let npStatus;
   try {
-    const res = await axios.post(`${NP_BASE}/v1/invoice`, invoiceBody, {
+    const res = await axios.post(buildNowpaymentsV1Url("/invoice"), invoiceBody, {
       headers: {
         "x-api-key": npKey,
         "Content-Type": "application/json",

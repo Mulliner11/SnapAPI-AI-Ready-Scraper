@@ -7,8 +7,22 @@ export function stableStringify(value) {
   return `{${keys.map((k) => JSON.stringify(k) + ":" + stableStringify(value[k])).join(",")}}`;
 }
 
+function timingSafeEqualHex(expectedHex, receivedHex) {
+  const a = String(expectedHex).trim().toLowerCase().replace(/^0x/u, "");
+  const b = String(receivedHex).trim().toLowerCase().replace(/^0x/u, "");
+  if (a.length !== b.length || a.length % 2 !== 0 || !/^[0-9a-f]+$/u.test(a) || !/^[0-9a-f]+$/u.test(b)) {
+    return false;
+  }
+  try {
+    return crypto.timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
+  } catch {
+    return false;
+  }
+}
+
 /**
- * NOWPayments IPN: HMAC-SHA512 over sorted JSON of the parsed body, hex digest vs x-nowpayments-sig.
+ * NOWPayments IPN: parse JSON body → recursively sort keys → stringify → HMAC-SHA512 with IPN secret;
+ * compare digest (hex) to `x-nowpayments-sig` using a timing-safe comparison.
  */
 export function verifyNowPaymentsIpnSignature(rawBody, signature, secret) {
   if (!secret || !signature) return false;
@@ -19,6 +33,6 @@ export function verifyNowPaymentsIpnSignature(rawBody, signature, secret) {
     return false;
   }
   const sorted = stableStringify(payload);
-  const expected = crypto.createHmac("sha512", secret).update(sorted).digest("hex");
-  return expected === String(signature).toLowerCase();
+  const expectedHex = crypto.createHmac("sha512", secret).update(sorted, "utf8").digest("hex");
+  return timingSafeEqualHex(expectedHex, signature);
 }

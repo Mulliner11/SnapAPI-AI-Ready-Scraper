@@ -277,6 +277,7 @@ async function registerRoutes() {
     );
 
     instance.post("/webhooks/nowpayments", postNowpaymentsWebhook);
+    instance.post("/api/webhooks/nowpayments", postNowpaymentsWebhook);
   });
 
   fastify.post(
@@ -428,9 +429,9 @@ async function start() {
   }
 
   if (process.env.NODE_ENV === "production") {
-    if (!String(process.env.NOWPAYMENTS_IPN_SECRET || "").trim()) {
+    if (!String(process.env.NP_IPN_SECRET || process.env.NOWPAYMENTS_IPN_SECRET || "").trim()) {
       console.warn(
-        "[SnapAPI] Set NOWPAYMENTS_IPN_SECRET on Railway; without it POST /webhooks/nowpayments will reject signatures (403)."
+        "[SnapAPI] Set NP_IPN_SECRET (NOWPayments IPN secret) for POST /webhooks/nowpayments and POST /api/webhooks/nowpayments."
       );
     }
     if (!String(process.env.NP_API_KEY || "").trim()) {
@@ -468,7 +469,12 @@ async function start() {
       if (pathname === "/api/auth/verify" && request.method === "GET") return true;
       if (pathname === "/api/auth/pending-redirect" && request.method === "POST") return true;
       if (pathname === "/api/user/rotate-key" && request.method === "POST") return true;
-      if (pathname === "/webhooks/nowpayments" && request.method === "POST") return true;
+      if (
+        (pathname === "/webhooks/nowpayments" || pathname === "/api/webhooks/nowpayments") &&
+        request.method === "POST"
+      ) {
+        return true;
+      }
       if (pathname === "/api/subscribe" && request.method === "POST") return true;
       if (pathname === "/api/payment/create-invoice" && request.method === "POST") return true;
       if (pathname === "/checkout") return true;
