@@ -43,16 +43,14 @@ function allowList(request) {
     if (v === RATE_LIMIT_BYPASS_SECRET) return true;
   }
 
-  const pathname = (request.url || "").split("?")[0];
+  const rawUrl = String(request.url || "");
+  const pathname = rawUrl.split("?")[0].split("#")[0];
   if (pathname === "/health") return true;
   if (pathname === "/api/auth/send-magic-link" && request.method === "POST") return true;
   if (pathname === "/api/auth/verify" && request.method === "GET") return true;
   if (pathname === "/api/auth/pending-redirect" && request.method === "POST") return true;
   if (pathname === "/api/user/rotate-key" && request.method === "POST") return true;
-  if (
-    (pathname === "/webhooks/nowpayments" || pathname === "/api/webhooks/nowpayments") &&
-    request.method === "POST"
-  ) {
+  if (request.method === "POST" && rawUrl.includes("/webhooks/nowpayments")) {
     return true;
   }
   if (pathname === "/api/subscribe" && request.method === "POST") return true;

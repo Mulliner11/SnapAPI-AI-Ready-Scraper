@@ -43,6 +43,14 @@ const fastify = Fastify({
 
 fastify.decorateRequest("snapUser", null);
 
+/** Physical-level trace: runs before rate-limit and other onRequest hooks. If this never prints, the request never reached Node (e.g. blocked at CDN/WAF). */
+fastify.addHook("onRequest", async (request) => {
+  const u = String(request.url || "");
+  if (u.toLowerCase().includes("webhook")) {
+    console.log("!!! WEBHOOK HIT AT ONREQUEST LEVEL !!!", request.method, request.url);
+  }
+});
+
 fastify.setErrorHandler((error, request, reply) => {
   console.error("[SnapAPI error]", request.method, request.url, error);
   console.error("[SnapAPI error] message:", error?.message);
@@ -534,13 +542,11 @@ async function start() {
       return;
     }
 
-    const pathname = (request.url || "").split("?")[0];
+    const rawUrl = String(request.url || "");
+    const pathname = rawUrl.split("?")[0].split("#")[0];
 
     /** NOWPayments IPN never sends x-api-key; route is protected by HMAC in postNowpaymentsWebhook */
-    if (
-      request.method === "POST" &&
-      (pathname === "/api/webhooks/nowpayments" || pathname === "/webhooks/nowpayments")
-    ) {
+    if (request.method === "POST" && rawUrl.includes("/webhooks/nowpayments")) {
       return;
     }
 
