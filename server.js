@@ -7,7 +7,6 @@ import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import session from "@fastify/session";
 import Fastify from "fastify";
-import { chromium } from "playwright";
 import {
   findUserForApiKey,
   getPool,
@@ -20,6 +19,7 @@ import {
 } from "./db.js";
 import { prisma } from "./prismaClient.js";
 import { extractReadableMarkdown } from "./scrapeCore.js";
+import { loadPageHtml } from "./scrapeLoadPage.js";
 import { postPaymentCreateInvoice } from "./paymentCreateInvoice.js";
 import { postSubscribeHandler } from "./subscribeInvoice.js";
 import { postNowpaymentsWebhook } from "./nowpaymentsWebhook.js";
@@ -60,7 +60,11 @@ fastify.setErrorHandler((error, request, reply) => {
       : 500;
 
   const message = error.message || "Internal Server Error";
-  return reply.status(statusCode).send({ error: message });
+  const payload = { error: message };
+  if (error?.code && typeof error.code === "string") {
+    payload.code = error.code;
+  }
+  return reply.status(statusCode).send(payload);
 });
 
 const CHROMIUM_LAUNCH_OPTIONS = {
@@ -95,7 +99,17 @@ const scrapeResponseSchema = {
     title: { type: "string" },
     markdown: { type: "string" },
     text_content: { type: "string" },
+    metadata: {
+      type: "object",
+      properties: {
+        word_count: { type: "integer" },
+        estimated_reading_time: { type: "integer" },
+        language: { type: "string" },
+      },
+      required: ["word_count", "estimated_reading_time", "language"],
+    },
   },
+  required: ["title", "markdown", "text_content", "metadata"],
 };
 
 function headerApiKey(request) {
@@ -137,17 +151,6 @@ function normalizeSourceUrl(input) {
   }
 
   return parsed.toString();
-}
-
-async function loadPageHtml(sourceUrl) {
-  const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
-  try {
-    const page = await browser.newPage();
-    await page.goto(sourceUrl, { waitUntil: "load", timeout: gotoTimeoutMs });
-    return await page.content();
-  } finally {
-    await browser.close();
-  }
 }
 
 /** Static HTML/JS from project root (`process.cwd()`), matching Railway deploy layout. */
@@ -405,14 +408,17 @@ async function registerRoutes() {
     async (request, reply) => {
       const user = request.snapUser;
       const sourceUrl = normalizeSourceUrl(request.body.url);
-      const html = await loadPageHtml(sourceUrl);
-      const { title, markdown, text_content } = extractReadableMarkdown(html, sourceUrl);
+      const html = await loadPageHtml(sourceUrl, {
+        launchOptions: CHROMIUM_LAUNCH_OPTIONS,
+        gotoTimeoutMs,
+      });
+      const { title, markdown, text_content, metadata } = extractReadableMarkdown(html, sourceUrl);
 
       if (user?.id && getPool()) {
         await recordApiUsage(user.id, "scrape", sourceUrl, null);
       }
 
-      return reply.send({ title, markdown, text_content });
+      return reply.send({ title, markdown, text_content, metadata });
     }
   );
 

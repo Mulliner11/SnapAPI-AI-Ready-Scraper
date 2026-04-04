@@ -149,7 +149,7 @@
               href="/checkout?plan=pro"
               class="inline-flex items-center justify-center rounded-xl border border-fuchsia-500/50 bg-gradient-to-r from-fuchsia-600/30 via-violet-600/25 to-indigo-600/30 px-6 py-3 text-sm font-semibold text-white shadow-glow transition hover:border-fuchsia-400/70 hover:from-fuchsia-500/40 hover:via-violet-500/35 hover:to-indigo-500/40 hover:shadow-[0_0_32px_rgba(217,70,239,0.25)] active:scale-[0.99]"
             >
-              Upgrade (AI Dev)
+              Upgrade (Starter)
             </a>
             <p class="mt-2 text-xs text-slate-500">Higher scrape quotas — see pricing on the home page.</p>
           </div>
@@ -195,7 +195,8 @@
         const limit = Math.max(1, d.usage?.limit ?? d.max_limit ?? 1);
         document.getElementById("usageRatio").textContent = used + " / " + limit;
         const planRaw = (d.plan || "free").toString().toLowerCase();
-        document.getElementById("planName").textContent = planRaw;
+        const planLabels = { free: "Free", pro: "Starter", business: "Pro", agency: "Agency" };
+        document.getElementById("planName").textContent = planLabels[planRaw] || planRaw;
 
         const pct = Math.min(100, Math.round((used / limit) * 100));
         document.getElementById("usageBar").style.width = pct + "%";
