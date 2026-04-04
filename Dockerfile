@@ -11,9 +11,8 @@ RUN npm ci --ignore-scripts
 # 2. 复制所有文件
 COPY . .
 
-# 3. 设置构建时占位变量并生成 Client（运行时由 Railway 覆盖 DATABASE_URL）
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-RUN npx prisma generate
+# 3. 仅在本层行内设置 DATABASE_URL，生成 Client；镜像内不保留该变量，运行时由 Railway 注入
+RUN DATABASE_URL="postgresql://noop:noop@localhost:5432/noop" npx prisma generate
 
 ENV NODE_ENV=production
 
