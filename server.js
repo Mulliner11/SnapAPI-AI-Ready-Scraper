@@ -52,9 +52,12 @@ const fastify = Fastify({
 
 fastify.decorateRequest("snapUser", null);
 
-/** Physical-level trace: runs before rate-limit and other onRequest hooks. If this never prints, the request never reached Node (e.g. blocked at CDN/WAF). */
+/** Earliest trace: any URL containing `nowpayments` (NP may use trailing slash or proxies rewrite). */
 fastify.addHook("onRequest", async (request) => {
   const u = String(request.url || "");
+  if (u.toLowerCase().includes("nowpayments")) {
+    console.log("!!! RAW REQUEST ARRIVED !!!", request.url);
+  }
   if (u.toLowerCase().includes("webhook")) {
     console.log("!!! WEBHOOK HIT AT ONREQUEST LEVEL !!!", request.method, request.url);
   }
@@ -298,7 +301,9 @@ async function registerRoutes() {
 
   const nowpaymentsIpnOpts = { config: { rawBody: true } };
   fastify.post("/webhooks/nowpayments", nowpaymentsIpnOpts, postNowpaymentsWebhook);
+  fastify.post("/webhooks/nowpayments/", nowpaymentsIpnOpts, postNowpaymentsWebhook);
   fastify.post("/api/webhooks/nowpayments", nowpaymentsIpnOpts, postNowpaymentsWebhook);
+  fastify.post("/api/webhooks/nowpayments/", nowpaymentsIpnOpts, postNowpaymentsWebhook);
 
   fastify.post(
     "/api/auth/send-magic-link",
@@ -554,7 +559,7 @@ async function start() {
   /** Global onRequest: NOWPayments webhook bypasses x-api-key before any other POST logic. */
   fastify.addHook("onRequest", async (request, reply) => {
     const rawUrl = String(request.url || "");
-    if (request.method === "POST" && rawUrl.includes("/webhooks/nowpayments")) {
+    if (request.method === "POST" && rawUrl.toLowerCase().includes("nowpayments")) {
       return;
     }
 

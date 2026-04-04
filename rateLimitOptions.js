@@ -50,7 +50,7 @@ function allowList(request) {
   if (pathname === "/api/auth/verify" && request.method === "GET") return true;
   if (pathname === "/api/auth/pending-redirect" && request.method === "POST") return true;
   if (pathname === "/api/user/rotate-key" && request.method === "POST") return true;
-  if (request.method === "POST" && rawUrl.includes("/webhooks/nowpayments")) {
+  if (request.method === "POST" && rawUrl.toLowerCase().includes("nowpayments")) {
     return true;
   }
   if (pathname === "/api/subscribe" && request.method === "POST") return true;
