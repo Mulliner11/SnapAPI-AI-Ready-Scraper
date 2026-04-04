@@ -8,7 +8,7 @@ export function getNpApiKey() {
 }
 
 export function priceUsdForPlan(planType) {
-  const pro = Number(process.env.PLAN_PRICE_PRO_USD ?? 9);
+  const pro = Number(process.env.PLAN_PRICE_PRO_USD ?? 11);
   const business = Number(process.env.PLAN_PRICE_BUSINESS_USD ?? 29);
   const agency = Number(process.env.PLAN_PRICE_AGENCY_USD ?? 99);
   if (planType === "agency") return agency;

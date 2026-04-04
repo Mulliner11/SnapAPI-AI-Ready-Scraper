@@ -160,12 +160,19 @@ if (urlInput) {
 
   async function onSubscribeClick(plan) {
     const p = plan === "agency" ? "agency" : plan === "business" ? "business" : "pro";
-    if (await isLoggedIn()) {
-      window.location.href = "/checkout?plan=" + encodeURIComponent(p);
-      return;
+    async function navigate() {
+      if (await isLoggedIn()) {
+        window.location.href = "/checkout?plan=" + encodeURIComponent(p);
+        return;
+      }
+      window.location.href =
+        "/login?redirect=" + encodeURIComponent("/checkout") + "&plan=" + encodeURIComponent(p);
     }
-    window.location.href =
-      "/login?redirect=" + encodeURIComponent("/checkout") + "&plan=" + encodeURIComponent(p);
+    if (typeof window.snapapiOpenPaymentConfirmation === "function") {
+      window.snapapiOpenPaymentConfirmation(navigate);
+    } else {
+      await navigate();
+    }
   }
 
   document.querySelectorAll("button.subscribe-open[data-subscribe-plan]").forEach((btn) => {

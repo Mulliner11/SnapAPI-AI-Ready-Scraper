@@ -3,190 +3,441 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard · SnapAPI</title>
+    <title>Console · SnapAPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              panel: "#0b1020",
-              panelSoft: "#111a31",
-              accent: "#7c3aed",
+              panel: "#09090b",
+              panelElevated: "#0c0c0f",
             },
             boxShadow: {
-              glow: "0 0 80px rgba(124, 58, 237, 0.28)",
+              console: "0 1px 0 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.06)",
             },
           },
         },
       };
     </script>
+    <style>
+      .tab-active {
+        color: rgb(250 250 250);
+        border-color: rgba(129, 140, 248, 0.55);
+        background: rgba(99, 102, 241, 0.12);
+      }
+      .doc-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.75rem;
+        line-height: 1.65;
+      }
+    </style>
   </head>
-  <body class="bg-slate-950 text-slate-100 antialiased">
-    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div class="absolute left-1/2 top-[-220px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/30 blur-[130px]"></div>
-      <div class="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-indigo-500/25 blur-[120px]"></div>
-      <div class="absolute bottom-[-140px] left-[-120px] h-[320px] w-[320px] rounded-full bg-cyan-400/20 blur-[110px]"></div>
+  <body class="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
+    <div class="pointer-events-none fixed inset-0 -z-10">
+      <div
+        class="absolute left-1/2 top-[-200px] h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-violet-600/12 blur-[120px]"
+      ></div>
+      <div
+        class="absolute bottom-[-120px] right-[-80px] h-[360px] w-[360px] rounded-full bg-indigo-600/10 blur-[100px]"
+      ></div>
     </div>
 
+    <!-- Mobile bar -->
     <header
-      class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur-md"
+      class="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-white/15 bg-zinc-950/95 px-4 py-3 backdrop-blur-xl md:hidden"
     >
-      <div class="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-6 py-4">
-        <div class="flex flex-wrap items-center gap-4">
-          <a
-            href="/"
-            class="text-sm font-semibold tracking-tight text-white transition hover:text-indigo-200"
-            >SnapAPI</a
-          >
-          <nav class="flex flex-wrap items-center gap-1 text-xs">
-            <a
-              href="/dashboard"
-              class="rounded-lg border border-indigo-400/50 bg-indigo-500/20 px-3 py-1.5 font-medium text-white"
-              >Dashboard</a
-            >
-            <a
-              href="/dashboard/mcp"
-              class="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 font-medium text-slate-300 transition hover:border-indigo-400/40 hover:bg-white/10 hover:text-white"
-              >Enable MCP</a
-            >
-          </nav>
-        </div>
+      <a href="/" class="text-lg font-bold tracking-tight text-white">SnapAPI</a>
+      <div class="flex items-center gap-2">
+        <a
+          href="/dashboard/mcp"
+          class="rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-zinc-200"
+          >MCP</a
+        >
         <button
           type="button"
-          id="logout"
-          class="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200 transition hover:border-indigo-400/40 hover:bg-white/10"
+          class="snap-logout rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-zinc-200"
         >
           Log out
         </button>
       </div>
     </header>
 
-    <main class="mx-auto max-w-4xl px-6 py-10">
-      <div class="mb-2 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs tracking-wide text-slate-300 backdrop-blur">
-        Account
-      </div>
-      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-        <span class="bg-gradient-to-r from-fuchsia-300 via-indigo-300 to-cyan-200 bg-clip-text text-transparent"
-          >Dashboard</span
-        >
-      </h1>
-      <p id="userEmail" class="mt-2 text-sm text-slate-400"></p>
+    <div class="flex min-h-[calc(100vh-52px)] md:min-h-screen">
+      <!-- Sidebar -->
+      <aside
+        class="relative z-20 hidden w-60 shrink-0 flex-col border-r border-white/15 bg-zinc-950/80 backdrop-blur-xl md:flex lg:w-64"
+        aria-label="Main navigation"
+      >
+        <div class="flex flex-1 flex-col px-4 pb-6 pt-8 lg:px-5 lg:pt-10">
+          <a href="/" class="text-2xl font-bold tracking-tight text-white lg:text-[1.65rem]">SnapAPI</a>
+          <p class="mt-1 text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-500">Production console</p>
 
-      <p id="loadErr" class="mt-6 hidden rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300"></p>
-
-      <div id="mainContent" class="mt-10 space-y-6 opacity-0 transition-opacity duration-300">
-        <!-- API Key -->
-        <section
-          class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-glow backdrop-blur md:p-8"
-          aria-labelledby="apikey-heading"
-        >
-          <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h2 id="apikey-heading" class="text-sm font-semibold uppercase tracking-wider text-indigo-300">API key</h2>
-              <p class="mt-1 text-xs text-slate-500">Use in <code class="text-indigo-300/90">x-api-key</code> header for <code class="text-indigo-300/90">POST /api/scrape</code>.</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                id="copyKey"
-                class="shrink-0 rounded-lg border border-indigo-400/50 bg-indigo-500/20 px-4 py-2 text-xs font-medium text-white transition hover:border-indigo-300/70 hover:bg-indigo-500/35 hover:shadow-[0_0_24px_rgba(99,102,241,0.25)] active:scale-[0.98]"
-              >
-                Copy
-              </button>
-              <button
-                type="button"
-                id="rotateKey"
-                class="shrink-0 rounded-lg border border-amber-500/45 bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-100 transition hover:border-amber-400/70 hover:bg-amber-500/20 hover:shadow-[0_0_22px_rgba(245,158,11,0.2)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Rotate key
-              </button>
-            </div>
-          </div>
-          <div class="mt-4 rounded-2xl border border-white/10 bg-panel/80 p-4">
-            <code id="apiKeyDisplay" class="block break-all font-mono text-sm text-indigo-200"></code>
-          </div>
-          <p id="copyToast" class="mt-3 hidden text-xs font-medium text-emerald-400">Copied to clipboard.</p>
-          <p id="rotateToast" class="mt-2 hidden text-xs font-medium text-amber-300">New key is active. Update any integrations.</p>
-
-          <div class="mt-5 rounded-2xl border border-violet-500/30 bg-violet-500/[0.07] p-4">
-            <p class="text-xs font-semibold uppercase tracking-wider text-violet-200/90">Claude Desktop &amp; Cursor</p>
-            <p class="mt-1 text-xs text-slate-400">
-              Use <code class="text-violet-200/90">snapapi_scrape</code> as an MCP tool—copy-ready JSON for your config file.
-            </p>
+          <nav class="mt-10 flex flex-col gap-1">
+            <a
+              href="/dashboard"
+              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-4 py-3 text-sm font-semibold text-white shadow-sm"
+              >Dashboard</a
+            >
             <a
               href="/dashboard/mcp"
-              class="mt-3 inline-flex rounded-lg border border-violet-400/50 bg-violet-600/25 px-4 py-2 text-xs font-semibold text-white transition hover:border-violet-300/60 hover:bg-violet-600/40"
+              class="rounded-xl border border-white/10 bg-transparent px-4 py-3 text-sm font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
               >Enable MCP</a
             >
-          </div>
+            <a
+              href="/"
+              class="rounded-xl border border-transparent px-4 py-3 text-sm font-semibold text-zinc-500 transition hover:text-zinc-300"
+              >Marketing site</a
+            >
+          </nav>
 
-          <div class="mt-5 border-t border-white/10 pt-5">
-            <p class="text-xs font-medium uppercase tracking-wider text-cyan-300/90">Try it</p>
-            <p class="mt-1 text-xs text-slate-500">
-              POST <code class="text-slate-400">/api/scrape</code> with your key and a sample URL (<span id="testUrlLabel" class="text-slate-400"></span>).
-            </p>
+          <div class="mt-auto border-t border-white/10 pt-6">
+            <div class="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.03] p-3 shadow-console">
+              <div
+                id="userAvatar"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-sm font-bold text-white shadow-lg shadow-indigo-950/50"
+                aria-hidden="true"
+              >
+                —
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-xs font-medium text-zinc-400">Signed in</p>
+                <p id="userEmailSide" class="truncate text-sm font-semibold text-zinc-100"></p>
+              </div>
+            </div>
             <button
               type="button"
-              id="testApi"
-              class="mt-3 rounded-lg border border-cyan-500/45 bg-cyan-500/10 px-5 py-2.5 text-xs font-semibold text-cyan-100 transition hover:border-cyan-400/70 hover:bg-cyan-500/20 hover:shadow-[0_0_28px_rgba(34,211,238,0.18)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+              class="snap-logout mt-3 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
             >
-              Test API
+              Log out
             </button>
-            <p id="testApiErr" class="mt-4 hidden rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200"></p>
-            <div
-              id="testApiPreview"
-              class="mt-4 hidden max-h-[min(480px,70vh)] overflow-auto rounded-2xl border border-white/10 bg-black/40 p-4 ring-1 ring-cyan-500/10"
-            >
-              <p id="testApiTitle" class="text-xs font-medium text-cyan-200"></p>
-              <pre
-                id="testApiMarkdown"
-                class="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-slate-300"
-              ></pre>
-            </div>
           </div>
-        </section>
+        </div>
+      </aside>
 
-        <!-- Monthly usage -->
-        <section
-          class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-glow backdrop-blur md:p-8"
-          aria-labelledby="usage-heading"
+      <!-- Main -->
+      <div class="min-w-0 flex-1">
+        <header
+          class="sticky top-0 z-10 hidden border-b border-white/15 bg-zinc-950/90 px-6 py-5 backdrop-blur-xl md:block lg:px-10"
         >
-          <div class="flex flex-wrap items-end justify-between gap-4">
+          <div class="flex items-center justify-between gap-4">
             <div>
-              <h2 id="usage-heading" class="text-sm font-semibold uppercase tracking-wider text-indigo-300">Monthly usage</h2>
-              <p class="mt-1 text-xs text-slate-500">Requests counted toward your plan this billing period.</p>
+              <h1 class="text-sm font-semibold uppercase tracking-widest text-zinc-500">Console</h1>
+              <p class="mt-0.5 text-lg font-semibold text-white">Overview</p>
             </div>
-            <div class="text-right">
-              <span id="usageRatio" class="font-mono text-lg font-medium text-white"></span>
-              <p class="mt-0.5 text-xs text-slate-500">Plan: <span id="planName" class="text-slate-300"></span></p>
-            </div>
+            <p id="userEmailTop" class="max-w-xs truncate text-sm text-zinc-500"></p>
           </div>
-          <div class="mt-6 h-3 overflow-hidden rounded-full bg-slate-800/90 ring-1 ring-white/5">
-            <div
-              id="usageBar"
-              class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all duration-500 ease-out"
-              style="width: 0%"
-            ></div>
-          </div>
+        </header>
 
-          <div id="upgradeCta" class="mt-6 hidden">
-            <a
-              href="/checkout?plan=pro"
-              class="inline-flex items-center justify-center rounded-xl border border-fuchsia-500/50 bg-gradient-to-r from-fuchsia-600/30 via-violet-600/25 to-indigo-600/30 px-6 py-3 text-sm font-semibold text-white shadow-glow transition hover:border-fuchsia-400/70 hover:from-fuchsia-500/40 hover:via-violet-500/35 hover:to-indigo-500/40 hover:shadow-[0_0_32px_rgba(217,70,239,0.25)] active:scale-[0.99]"
+        <main class="mx-auto max-w-5xl px-4 py-8 lg:px-10 lg:py-12">
+          <p id="loadErr" class="mb-8 hidden rounded-xl border border-red-500/35 bg-red-500/10 px-5 py-4 text-sm text-red-200"></p>
+
+          <div id="mainContent" class="space-y-10 opacity-0 transition-opacity duration-300">
+            <!-- Insights -->
+            <section aria-labelledby="insights-heading">
+              <h2 id="insights-heading" class="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Data insights</h2>
+              <div class="mt-4 grid gap-4 sm:grid-cols-3">
+                <div
+                  class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm"
+                >
+                  <p class="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Success rate</p>
+                  <p id="insightSuccess" class="mt-3 font-mono text-3xl font-semibold tabular-nums text-white">—</p>
+                  <p id="insightSuccessSub" class="mt-2 text-xs leading-relaxed text-zinc-500">Last 100 scrape calls</p>
+                </div>
+                <div
+                  class="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-6 shadow-console backdrop-blur-sm ring-1 ring-emerald-500/10"
+                >
+                  <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-400/90">Tokens saved</p>
+                  <p id="insightTokens" class="mt-3 font-mono text-3xl font-semibold tabular-nums text-emerald-100">—</p>
+                  <p class="mt-2 text-xs leading-relaxed text-zinc-500">
+                    vs. raw HTML (est., last 100 successful scrapes)
+                  </p>
+                </div>
+                <div
+                  class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm"
+                >
+                  <p class="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Usage</p>
+                  <p id="usageHeadline" class="mt-3 font-mono text-lg font-semibold tabular-nums text-white"></p>
+                  <div class="mt-4 h-4 overflow-hidden rounded-full bg-zinc-900 ring-1 ring-white/10">
+                    <div
+                      id="usageBar"
+                      class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all duration-500"
+                      style="width: 0%"
+                    ></div>
+                  </div>
+                  <p id="usageRemain" class="mt-3 text-sm font-medium text-zinc-400"></p>
+                  <p class="mt-1 text-xs text-zinc-600">Plan: <span id="planName" class="text-zinc-400"></span></p>
+                </div>
+              </div>
+            </section>
+
+            <!-- API Key -->
+            <section
+              class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm lg:p-8"
+              aria-labelledby="apikey-heading"
             >
-              Upgrade (Starter)
-            </a>
-            <p class="mt-2 text-xs text-slate-500">Higher scrape quotas — see pricing on the home page.</p>
-          </div>
-        </section>
-      </div>
-    </main>
+              <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h2 id="apikey-heading" class="text-sm font-bold text-white">API key</h2>
+                  <p class="mt-2 max-w-xl text-sm leading-relaxed text-zinc-500">
+                    Send as <code class="text-indigo-300/90">x-api-key</code> on
+                    <code class="text-indigo-300/90">POST /api/scrape</code>.
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    id="copyKey"
+                    class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-5 py-2.5 text-sm font-semibold text-indigo-100 transition hover:border-indigo-400/50 hover:bg-indigo-500/25"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    id="rotateKey"
+                    class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-5 py-2.5 text-sm font-semibold text-amber-100 transition hover:border-amber-400/40 hover:bg-amber-500/15 disabled:opacity-40"
+                  >
+                    Rotate
+                  </button>
+                </div>
+              </div>
+              <div class="mt-5 rounded-xl border border-white/10 bg-zinc-950/80 p-4 ring-1 ring-white/5">
+                <code id="apiKeyDisplay" class="block break-all font-mono text-sm text-indigo-200/95"></code>
+              </div>
+              <p id="copyToast" class="mt-3 hidden text-sm font-medium text-emerald-400">Copied.</p>
+              <p id="rotateToast" class="mt-2 hidden text-sm font-medium text-amber-300">New key is active.</p>
 
+              <div class="mt-6 rounded-xl border border-violet-500/25 bg-violet-950/25 p-5 ring-1 ring-violet-500/10">
+                <p class="text-sm font-semibold text-violet-200">Claude Desktop &amp; Cursor</p>
+                <p class="mt-1 text-sm text-zinc-500">MCP tool <code class="text-violet-200/90">snapapi_scrape</code></p>
+                <a
+                  href="/dashboard/mcp"
+                  class="mt-4 inline-flex rounded-xl border border-violet-400/40 bg-violet-600/20 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-600/30"
+                  >Configure MCP</a
+                >
+              </div>
+            </section>
+
+            <!-- Quick integrations -->
+            <section
+              class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm lg:p-8"
+              aria-labelledby="quick-int-heading"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h2 id="quick-int-heading" class="text-sm font-bold text-white">Quick integrations</h2>
+                  <p class="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
+                    Paste-ready snippets — swap the sample URL and you&rsquo;re done. Each stack is ~5 lines of real logic.
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-8 space-y-10">
+                <!-- LangChain -->
+                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-5 ring-1 ring-white/5 lg:p-6">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 class="text-sm font-bold text-indigo-200">LangChain</h3>
+                      <p class="mt-1 text-xs text-zinc-500">
+                        Use SnapAPI instead of <code class="text-zinc-400">WebBaseLoader</code> — one POST, then a
+                        <code class="text-zinc-400">Document</code> for your chain.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-zinc-200 hover:border-indigo-400/30"
+                      data-copy-integration="codeLc"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <pre
+                    id="codeLc"
+                    class="doc-code mt-4 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-white/10 bg-black/50 p-4 text-zinc-300"
+                  ></pre>
+                </div>
+
+                <!-- LlamaIndex -->
+                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-5 ring-1 ring-white/5 lg:p-6">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 class="text-sm font-bold text-emerald-200/95">LlamaIndex</h3>
+                      <p class="mt-1 text-xs text-zinc-500">
+                        Feed clean Markdown from SnapAPI straight into
+                        <code class="text-zinc-400">VectorStoreIndex.from_documents</code>.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-zinc-200 hover:border-emerald-400/25"
+                      data-copy-integration="codeLlamaindex"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <pre
+                    id="codeLlamaindex"
+                    class="doc-code mt-4 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-white/10 bg-black/50 p-4 text-zinc-300"
+                  ></pre>
+                </div>
+
+                <!-- n8n -->
+                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-5 ring-1 ring-white/5 lg:p-6">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 class="text-sm font-bold text-amber-200/95">n8n</h3>
+                      <p class="mt-1 text-xs text-zinc-500">HTTP Request node — no custom node required.</p>
+                    </div>
+                    <button
+                      type="button"
+                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-zinc-200 hover:border-amber-400/25"
+                      data-copy-integration="codeN8n"
+                    >
+                      Copy checklist
+                    </button>
+                  </div>
+                  <ol class="mt-4 list-decimal space-y-2 pl-5 text-sm text-zinc-400">
+                    <li>Add an <strong class="text-zinc-200">HTTP Request</strong> node.</li>
+                    <li>Method <code class="text-zinc-300">POST</code> · URL <code id="n8nUrlDisplay" class="break-all text-amber-200/90"></code></li>
+                    <li>
+                      Headers: <code class="text-zinc-300">Content-Type</code> = <code class="text-zinc-300">application/json</code> ·
+                      <code class="text-zinc-300">x-api-key</code> = your dashboard key
+                    </li>
+                    <li>Body → JSON — minimal body (change the URL to any page you need):</li>
+                  </ol>
+                  <pre
+                    id="codeN8n"
+                    class="doc-code mt-3 overflow-x-auto rounded-lg border border-white/10 bg-black/50 p-4 text-zinc-300"
+                  ></pre>
+                  <p class="mt-3 text-xs text-zinc-500">
+                    Map <code class="text-zinc-400">json.markdown</code> (or <code class="text-zinc-400">text_content</code>) into the next
+                    node — e.g. embeddings, OpenAI, or storage.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Playground -->
+            <section
+              class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm lg:p-8"
+              aria-labelledby="play-heading"
+            >
+              <div class="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <h2 id="play-heading" class="text-sm font-bold text-white">Playground</h2>
+                  <p class="mt-2 max-w-2xl text-sm text-zinc-500">Live <code class="text-zinc-400">POST /api/scrape</code> against your key.</p>
+                </div>
+                <button
+                  type="button"
+                  id="copyLangChain"
+                  class="rounded-xl border border-white/12 bg-white/[0.05] px-4 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-indigo-400/35 hover:bg-white/[0.08]"
+                >
+                  Copy as LangChain (Python)
+                </button>
+              </div>
+
+              <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div class="min-w-0 flex-1">
+                  <label for="playgroundUrl" class="text-xs font-semibold uppercase tracking-wider text-zinc-500">Target URL</label>
+                  <input
+                    id="playgroundUrl"
+                    type="url"
+                    class="mt-2 w-full rounded-xl border border-white/12 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 outline-none ring-0 placeholder:text-zinc-600 focus:border-indigo-500/40"
+                    placeholder="https://example.com"
+                    autocomplete="url"
+                  />
+                </div>
+                <button
+                  type="button"
+                  id="testApi"
+                  class="shrink-0 rounded-xl border border-cyan-500/35 bg-cyan-500/10 px-8 py-3 text-sm font-semibold text-cyan-100 transition hover:border-cyan-400/50 hover:bg-cyan-500/15 disabled:opacity-40"
+                >
+                  Run request
+                </button>
+              </div>
+
+              <p id="testApiErr" class="mt-4 hidden rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-red-200"></p>
+
+              <div id="playgroundResult" class="mt-6 hidden">
+                <div
+                  class="flex flex-wrap gap-2 border-b border-white/10 pb-3"
+                  role="tablist"
+                  aria-label="Response format"
+                >
+                  <button type="button" class="play-tab tab-active rounded-lg border px-4 py-2 text-sm font-semibold" data-tab="md">
+                    Markdown
+                  </button>
+                  <button
+                    type="button"
+                    class="play-tab rounded-lg border border-transparent px-4 py-2 text-sm font-semibold text-zinc-500"
+                    data-tab="json"
+                  >
+                    JSON
+                  </button>
+                  <button
+                    type="button"
+                    class="play-tab rounded-lg border border-transparent px-4 py-2 text-sm font-semibold text-zinc-500"
+                    data-tab="meta"
+                  >
+                    Metadata
+                  </button>
+                </div>
+                <div class="mt-4 rounded-xl border border-white/10 bg-zinc-950/90 p-4 ring-1 ring-white/5">
+                  <p id="testApiTitle" class="mb-3 text-xs font-semibold text-cyan-300/90"></p>
+                  <div id="panelMd" class="play-panel max-h-[min(420px,55vh)] overflow-auto">
+                    <pre id="tabMd" class="doc-code whitespace-pre-wrap break-words text-zinc-300"></pre>
+                  </div>
+                  <div id="panelJson" class="play-panel hidden max-h-[min(420px,55vh)] overflow-auto">
+                    <pre id="tabJson" class="doc-code text-zinc-300"></pre>
+                  </div>
+                  <div id="panelMeta" class="play-panel hidden max-h-[min(420px,55vh)] overflow-auto">
+                    <pre id="tabMeta" class="doc-code text-zinc-300"></pre>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Recent logs -->
+            <section
+              class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm lg:p-8"
+              aria-labelledby="logs-heading"
+            >
+              <h2 id="logs-heading" class="text-sm font-bold text-white">Recent logs</h2>
+              <p class="mt-1 text-sm text-zinc-500">Last 5 <code class="text-zinc-400">/api/scrape</code> calls from this account.</p>
+              <div class="mt-5 overflow-x-auto rounded-xl border border-white/10">
+                <table class="w-full min-w-[520px] border-collapse text-left text-sm">
+                  <thead>
+                    <tr class="border-b border-white/10 bg-zinc-950/80">
+                      <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-500">Time</th>
+                      <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-500">URL</th>
+                      <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-500">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="logsBody" class="divide-y divide-white/10 text-zinc-300"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Upgrade -->
+            <section id="upgradeCta" class="hidden">
+              <a
+                id="upgradeCheckoutLink"
+                href="/checkout?plan=pro"
+                class="inline-flex items-center justify-center rounded-xl border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-600/25 via-violet-600/20 to-indigo-600/25 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-fuchsia-950/20 transition hover:border-fuchsia-400/55 hover:brightness-110"
+              >
+                Upgrade (Starter)
+              </a>
+              <p class="mt-3 text-sm text-zinc-500">Higher quotas — see pricing on the home page.</p>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="/paymentConfirmModal.js"></script>
     <script>
       const JWT_KEY = "snapapi_jwt";
-      /** Default target for Test API (POST /api/scrape). */
-      const TEST_SCRAPE_URL = "https://example.com";
+      const DEFAULT_PLAY_URL = "https://example.com";
 
       function authHeaders() {
         const t = localStorage.getItem(JWT_KEY);
@@ -201,39 +452,301 @@
         el.classList.remove("hidden");
       }
 
+      function initialsFromEmail(email) {
+        const s = String(email || "").trim();
+        if (!s) return "?";
+        const local = s.split("@")[0] || s;
+        return local.slice(0, 2).toUpperCase();
+      }
+
+      function normalizePlaygroundUrl(raw) {
+        let v = String(raw || "").trim();
+        if (!v) return "";
+        v = v.replace(/^hyttp:\/\//i, "http://").replace(/^hyttps:\/\//i, "https://");
+        if (!/^https?:\/\//i.test(v)) {
+          if (/^[a-z][a-z0-9+.-]*:\/\//i.test(v)) v = "https://" + v.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "");
+          else v = "https://" + v;
+        }
+        try {
+          const u = new URL(v);
+          if (!["http:", "https:"].includes(u.protocol)) return "";
+          return u.toString();
+        } catch {
+          return "";
+        }
+      }
+
+      function statusBadgeClass(code) {
+        const c = Number(code);
+        if (c >= 200 && c < 300) return "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25";
+        if (c === 404) return "bg-amber-500/15 text-amber-200 ring-amber-500/25";
+        if (c >= 400 && c < 500) return "bg-orange-500/15 text-orange-200 ring-orange-500/20";
+        if (c >= 500) return "bg-red-500/15 text-red-300 ring-red-500/25";
+        return "bg-zinc-500/15 text-zinc-300 ring-zinc-500/20";
+      }
+
+      function renderLogs(rows) {
+        const tb = document.getElementById("logsBody");
+        tb.textContent = "";
+        const list = Array.isArray(rows) ? rows : [];
+        if (list.length === 0) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = 3;
+          td.className = "px-4 py-8 text-center text-sm text-zinc-500";
+          td.textContent = "No scrape activity logged yet. Run a request in the playground.";
+          tr.appendChild(td);
+          tb.appendChild(tr);
+          return;
+        }
+        for (const row of list) {
+          const tr = document.createElement("tr");
+          tr.className = "bg-zinc-950/40";
+          const tdT = document.createElement("td");
+          tdT.className = "whitespace-nowrap px-4 py-3 text-xs text-zinc-500";
+          const d = row.created_at ? new Date(row.created_at) : null;
+          tdT.textContent = d && !isNaN(d.getTime()) ? d.toLocaleString() : "—";
+          const tdU = document.createElement("td");
+          tdU.className = "max-w-[280px] truncate px-4 py-3 font-mono text-xs text-zinc-400";
+          tdU.textContent = row.target_url || "—";
+          tdU.title = row.target_url || "";
+          const tdS = document.createElement("td");
+          tdS.className = "px-4 py-3";
+          const span = document.createElement("span");
+          const code = row.http_status != null ? row.http_status : "—";
+          span.className =
+            "inline-flex min-w-[2.5rem] items-center justify-center rounded-lg px-2.5 py-1 font-mono text-xs font-semibold ring-1 " +
+            statusBadgeClass(code);
+          span.textContent = String(code);
+          tdS.appendChild(span);
+          tr.appendChild(tdT);
+          tr.appendChild(tdU);
+          tr.appendChild(tdS);
+          tb.appendChild(tr);
+        }
+      }
+
+      function applyInsights(insights, hasDb) {
+        const succ = document.getElementById("insightSuccess");
+        const succSub = document.getElementById("insightSuccessSub");
+        const tok = document.getElementById("insightTokens");
+        if (!hasDb) {
+          succ.textContent = "—";
+          succSub.textContent = "Requires database";
+          tok.textContent = "—";
+          renderLogs([]);
+          return;
+        }
+        const n = insights?.scrapeSamples ?? 0;
+        const pct = insights?.successRatePct;
+        if (n === 0) {
+          succ.textContent = "—";
+          succSub.textContent = "No scrapes yet";
+        } else {
+          succ.textContent = pct != null ? pct + "%" : "—";
+          succSub.textContent = "Based on last " + n + " call" + (n === 1 ? "" : "s") + " (max 100)";
+        }
+        const saved = insights?.tokensSavedLast100 ?? 0;
+        tok.textContent = saved > 0 ? saved.toLocaleString() : n === 0 ? "—" : "0";
+        renderLogs(insights?.recentLogs || []);
+      }
+
+      function applyUsage(row) {
+        const used = row.usage?.used ?? row.usage_count ?? 0;
+        const limit = Math.max(1, row.usage?.limit ?? row.max_limit ?? 1);
+        const remain = Math.max(0, limit - used);
+        document.getElementById("usageHeadline").textContent = used + " / " + limit + " requests";
+        document.getElementById("usageRemain").textContent = remain.toLocaleString() + " requests remaining this period";
+        const pct = Math.min(100, Math.round((used / limit) * 100));
+        document.getElementById("usageBar").style.width = pct + "%";
+        const planRaw = (row.plan || "free").toString().toLowerCase();
+        const planLabels = { free: "Free", pro: "Starter", business: "Pro", agency: "Agency" };
+        document.getElementById("planName").textContent = planLabels[planRaw] || planRaw;
+        const up = document.getElementById("upgradeCta");
+        if (planRaw === "free") up.classList.remove("hidden");
+        else up.classList.add("hidden");
+      }
+
+      function setTab(name) {
+        document.querySelectorAll(".play-tab").forEach((b) => {
+          const on = b.getAttribute("data-tab") === name;
+          b.classList.toggle("tab-active", on);
+          b.classList.toggle("border-transparent", !on);
+          b.classList.toggle("text-zinc-500", !on);
+          if (on) b.classList.remove("text-zinc-500");
+        });
+        document.getElementById("panelMd").classList.toggle("hidden", name !== "md");
+        document.getElementById("panelJson").classList.toggle("hidden", name !== "json");
+        document.getElementById("panelMeta").classList.toggle("hidden", name !== "meta");
+      }
+
+      function fillPlaygroundFromPayload(data) {
+        if (!data) return;
+        document.getElementById("testApiTitle").textContent = data.title || "(no title)";
+        document.getElementById("tabMd").textContent = data.markdown || data.text_content || "";
+        const slim = {
+          title: data.title,
+          markdown: data.markdown,
+          text_content: data.text_content,
+          metadata: data.metadata,
+        };
+        document.getElementById("tabJson").textContent = JSON.stringify(slim, null, 2);
+        document.getElementById("tabMeta").textContent = JSON.stringify(data.metadata || {}, null, 2);
+        document.getElementById("playgroundResult").classList.remove("hidden");
+        setTab("md");
+      }
+
+      async function refreshSummary() {
+        const r = await fetch("/api/dashboard/summary", { headers: authHeaders(), credentials: "include" });
+        if (r.status === 401) {
+          window.location.href = "/login";
+          return null;
+        }
+        if (!r.ok) return null;
+        return r.json();
+      }
+
       async function load() {
-        const r = await fetch("/api/user/me", { headers: authHeaders(), credentials: "include" });
+        let data = null;
+        let hasDb = true;
+        const r = await fetch("/api/dashboard/summary", { headers: authHeaders(), credentials: "include" });
         if (r.status === 401) {
           window.location.href = "/login";
           return;
         }
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) {
-          showError(d.error || "Could not load your account.");
-          return;
+        if (r.status === 503) {
+          hasDb = false;
+          const r2 = await fetch("/api/user/me", { headers: authHeaders(), credentials: "include" });
+          if (r2.status === 401) {
+            window.location.href = "/login";
+            return;
+          }
+          const d2 = await r2.json().catch(() => ({}));
+          if (!r2.ok) {
+            showError(d2.error || "Could not load account.");
+            return;
+          }
+          data = {
+            email: d2.email,
+            api_key: d2.api_key || d2.apiKey,
+            plan: d2.plan,
+            usage_count: d2.usage_count,
+            max_limit: d2.max_limit,
+            usage: d2.usage || { used: d2.usage_count, limit: d2.max_limit },
+            insights: {
+              successRatePct: null,
+              scrapeSamples: 0,
+              tokensSavedLast100: 0,
+              recentLogs: [],
+            },
+          };
+        } else {
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            showError(d.error || "Could not load console.");
+            return;
+          }
+          data = d;
         }
 
-        document.getElementById("userEmail").textContent = d.email || "";
-        document.getElementById("apiKeyDisplay").textContent = d.apiKey || d.api_key || "—";
-        document.getElementById("testUrlLabel").textContent = TEST_SCRAPE_URL;
+        const email = data.email || "";
+        document.getElementById("userEmailSide").textContent = email;
+        document.getElementById("userEmailTop").textContent = email;
+        document.getElementById("userAvatar").textContent = initialsFromEmail(email);
 
-        const used = d.usage?.used ?? d.usage_count ?? 0;
-        const limit = Math.max(1, d.usage?.limit ?? d.max_limit ?? 1);
-        document.getElementById("usageRatio").textContent = used + " / " + limit;
-        const planRaw = (d.plan || "free").toString().toLowerCase();
-        const planLabels = { free: "Free", pro: "Starter", business: "Pro", agency: "Agency" };
-        document.getElementById("planName").textContent = planLabels[planRaw] || planRaw;
+        const key = data.api_key || data.apiKey || "—";
+        document.getElementById("apiKeyDisplay").textContent = key;
 
-        const pct = Math.min(100, Math.round((used / limit) * 100));
-        document.getElementById("usageBar").style.width = pct + "%";
+        applyUsage(data);
+        applyInsights(data.insights, hasDb);
 
-        const upgradeEl = document.getElementById("upgradeCta");
-        if (planRaw === "free") upgradeEl.classList.remove("hidden");
-        else upgradeEl.classList.add("hidden");
+        hydrateQuickIntegrations(key);
 
-        const main = document.getElementById("mainContent");
-        main.classList.remove("opacity-0");
+        document.getElementById("playgroundUrl").value = DEFAULT_PLAY_URL;
+        document.getElementById("mainContent").classList.remove("opacity-0");
       }
+
+      /** Fill Quick integrations snippets (LangChain, LlamaIndex, n8n) from current origin + API key. */
+      function hydrateQuickIntegrations(apiKey) {
+        const origin = window.location.origin;
+        const scrapeUrl = origin + "/api/scrape";
+        const urlEl = document.getElementById("n8nUrlDisplay");
+        if (urlEl) urlEl.textContent = scrapeUrl;
+
+        const keySafe = apiKey && apiKey !== "—" ? apiKey : "YOUR_API_KEY";
+        const b = JSON.stringify(origin);
+        const k = JSON.stringify(keySafe);
+
+        const lc =
+          "import requests\n" +
+          "from langchain_core.documents import Document\n\n" +
+          "BASE, KEY, URL = " +
+          b +
+          ", " +
+          k +
+          ', "https://example.com"\n' +
+          'data = requests.post(f"{BASE}/api/scrape", headers={"Content-Type": "application/json", "x-api-key": KEY}, json={"url": URL}, timeout=120).json()\n' +
+          'doc = Document(page_content=data.get("markdown") or data.get("text_content") or "", metadata={"source": URL})\n' +
+          "# → use `doc` anywhere you’d pass WebBaseLoader(URL).load()[0]";
+
+        const li =
+          "import requests\n" +
+          "from llama_index.core import Document, VectorStoreIndex\n\n" +
+          "BASE, KEY, URL = " +
+          b +
+          ", " +
+          k +
+          ', "https://example.com"\n' +
+          'data = requests.post(f"{BASE}/api/scrape", headers={"Content-Type": "application/json", "x-api-key": KEY}, json={"url": URL}, timeout=120).json()\n' +
+          'index = VectorStoreIndex.from_documents([Document(text=data.get("markdown") or data.get("text_content") or "", metadata={"url": URL})])';
+
+        const lcEl = document.getElementById("codeLc");
+        const liEl = document.getElementById("codeLlamaindex");
+        const n8nBodyEl = document.getElementById("codeN8n");
+        if (lcEl) lcEl.textContent = lc;
+        if (liEl) liEl.textContent = li;
+
+        const bodyJson = JSON.stringify({ url: "https://example.com" }, null, 2);
+        if (n8nBodyEl) n8nBodyEl.textContent = bodyJson;
+
+        window.__snapQiN8nText =
+          "SnapAPI · n8n HTTP Request node\n\n" +
+          "1. Method: POST\n" +
+          "2. URL: " +
+          scrapeUrl +
+          "\n" +
+          "3. Headers:\n" +
+          "   Content-Type: application/json\n" +
+          "   x-api-key: " +
+          keySafe +
+          "\n" +
+          "4. Body (JSON):\n" +
+          bodyJson +
+          "\n\n" +
+          "5. Next node: reference {{$json.markdown}} or {{$json.text_content}} (Expression).\n";
+      }
+
+      document.getElementById("mainContent").addEventListener("click", async function (e) {
+        const btn = e.target.closest("[data-copy-integration]");
+        if (!btn) return;
+        const id = btn.getAttribute("data-copy-integration");
+        var text = "";
+        if (id === "codeN8n") {
+          text = window.__snapQiN8nText || (document.getElementById("codeN8n") && document.getElementById("codeN8n").textContent) || "";
+        } else {
+          const el = document.getElementById(id);
+          text = el ? el.textContent : "";
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          prompt("Copy:", text);
+        }
+      });
+
+      document.querySelectorAll(".play-tab").forEach((btn) => {
+        btn.addEventListener("click", () => setTab(btn.getAttribute("data-tab") || "md"));
+      });
 
       document.getElementById("copyKey").onclick = async () => {
         const t = document.getElementById("apiKeyDisplay").textContent;
@@ -243,7 +756,7 @@
           toast.classList.remove("hidden");
           setTimeout(() => toast.classList.add("hidden"), 2500);
         } catch {
-          prompt("Copy this key:", t);
+          prompt("Copy:", t);
         }
       };
 
@@ -270,7 +783,10 @@
             return;
           }
           const k = data.api_key || data.apiKey;
-          if (k) document.getElementById("apiKeyDisplay").textContent = k;
+          if (k) {
+            document.getElementById("apiKeyDisplay").textContent = k;
+            hydrateQuickIntegrations(k);
+          }
           toast.classList.remove("hidden");
           setTimeout(() => toast.classList.add("hidden"), 4000);
         } finally {
@@ -278,36 +794,70 @@
         }
       };
 
+      document.getElementById("copyLangChain").onclick = async () => {
+        const key = document.getElementById("apiKeyDisplay").textContent.trim();
+        const url = normalizePlaygroundUrl(document.getElementById("playgroundUrl").value) || DEFAULT_PLAY_URL;
+        const origin = window.location.origin;
+        const py =
+          "# SnapAPI → clean markdown for LangChain / RAG\n" +
+          "import requests\n\n" +
+          "r = requests.post(\n" +
+          '    "' +
+          origin +
+          '/api/scrape",\n' +
+          '    headers={"Content-Type": "application/json", "x-api-key": "' +
+          key.replace(/\\/g, "\\\\").replace(/"/g, '\\"') +
+          '"},\n' +
+          "    json={\"url\": \"" +
+          url.replace(/\\/g, "\\\\").replace(/"/g, '\\"') +
+          '"},\n' +
+          "    timeout=120,\n" +
+          ")\n" +
+          "r.raise_for_status()\n" +
+          "data = r.json()\n" +
+          "markdown = data.get(\"markdown\") or data.get(\"text_content\") or \"\"\n";
+        try {
+          await navigator.clipboard.writeText(py);
+        } catch {
+          prompt("Copy:", py);
+        }
+      };
+
       document.getElementById("testApi").onclick = async () => {
         const key = document.getElementById("apiKeyDisplay").textContent.trim();
         const btn = document.getElementById("testApi");
         const errEl = document.getElementById("testApiErr");
-        const preview = document.getElementById("testApiPreview");
-        const titleEl = document.getElementById("testApiTitle");
-        const mdEl = document.getElementById("testApiMarkdown");
+        const rawUrl = document.getElementById("playgroundUrl").value;
+        const target = normalizePlaygroundUrl(rawUrl);
         if (!key || key === "—") return;
+        if (!target) {
+          errEl.textContent = "Enter a valid http(s) URL.";
+          errEl.classList.remove("hidden");
+          return;
+        }
+        document.getElementById("playgroundUrl").value = target;
         errEl.classList.add("hidden");
-        preview.classList.add("hidden");
+        document.getElementById("playgroundResult").classList.add("hidden");
         btn.disabled = true;
         try {
           const r = await fetch("/api/scrape", {
             method: "POST",
             credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": key,
-            },
-            body: JSON.stringify({ url: TEST_SCRAPE_URL }),
+            headers: { "Content-Type": "application/json", "x-api-key": key },
+            body: JSON.stringify({ url: target }),
           });
           const data = await r.json().catch(() => ({}));
           if (!r.ok) {
             errEl.textContent = data.error || data.message || "Request failed (" + r.status + ")";
             errEl.classList.remove("hidden");
-            return;
+          } else {
+            fillPlaygroundFromPayload(data);
           }
-          titleEl.textContent = data.title || "(no title)";
-          mdEl.textContent = data.markdown || data.text_content || "";
-          preview.classList.remove("hidden");
+          const fresh = await refreshSummary();
+          if (fresh) {
+            applyUsage(fresh);
+            applyInsights(fresh.insights, true);
+          }
         } catch (e) {
           errEl.textContent = e?.message || String(e);
           errEl.classList.remove("hidden");
@@ -316,11 +866,29 @@
         }
       };
 
-      document.getElementById("logout").onclick = async () => {
-        localStorage.removeItem(JWT_KEY);
-        await fetch("/auth/logout", { method: "POST", credentials: "include" });
-        window.location.href = "/login";
-      };
+      document.querySelectorAll(".snap-logout").forEach((b) => {
+        b.onclick = async () => {
+          localStorage.removeItem(JWT_KEY);
+          await fetch("/auth/logout", { method: "POST", credentials: "include" });
+          window.location.href = "/login";
+        };
+      });
+
+      (function bindUpgradePaymentConfirm() {
+        var el = document.getElementById("upgradeCheckoutLink");
+        if (!el) return;
+        el.addEventListener("click", function (e) {
+          e.preventDefault();
+          var href = el.getAttribute("href");
+          if (typeof window.snapapiOpenPaymentConfirmation === "function") {
+            window.snapapiOpenPaymentConfirmation(function () {
+              window.location.href = href;
+            });
+          } else {
+            window.location.href = href;
+          }
+        });
+      })();
 
       load();
     </script>

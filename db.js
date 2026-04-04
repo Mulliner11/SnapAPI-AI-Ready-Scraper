@@ -57,6 +57,10 @@ export async function initDb() {
 
     CREATE INDEX IF NOT EXISTS idx_request_logs_user_created ON request_logs (user_id, created_at DESC);
 
+    ALTER TABLE request_logs ADD COLUMN IF NOT EXISTS http_status INT;
+    ALTER TABLE request_logs ADD COLUMN IF NOT EXISTS raw_tokens_est INT;
+    ALTER TABLE request_logs ADD COLUMN IF NOT EXISTS clean_tokens_est INT;
+
     CREATE TABLE IF NOT EXISTS login_codes (
       id SERIAL PRIMARY KEY,
       email TEXT NOT NULL,
@@ -93,6 +97,10 @@ export async function initDb() {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nowpayments_subscription_id
     ON users (nowpayments_subscription_id) WHERE nowpayments_subscription_id IS NOT NULL;
   `);
+
+    await newPool.query(
+      `UPDATE request_logs SET http_status = 200 WHERE http_status IS NULL AND endpoint = 'scrape'`
+    );
 
     pool = newPool;
     console.log("[SnapAPI] PostgreSQL schema ready.");
@@ -330,18 +338,26 @@ export function isOverQuota(user) {
 }
 
 /**
- * After successful API call (e.g. scrape): increment usage + insert log (transaction).
+ * Log a scrape attempt with HTTP status. Increments monthly usage only on 2xx.
+ * Token estimates: rough char/4 heuristic for dashboard “tokens saved” insights.
  */
-export async function recordApiUsage(userId, endpoint, targetUrl, resultPath) {
+export async function recordScrapeRequest(userId, targetUrl, httpStatus, tokenEstimates) {
   if (!pool) throw new Error("Database not configured");
   const client = await pool.connect();
+  const status = Number(httpStatus);
+  const st = Number.isFinite(status) ? Math.trunc(status) : 500;
+  const raw = tokenEstimates?.rawTokensEst != null ? Math.max(0, Math.trunc(tokenEstimates.rawTokensEst)) : null;
+  const clean = tokenEstimates?.cleanTokensEst != null ? Math.max(0, Math.trunc(tokenEstimates.cleanTokensEst)) : null;
   try {
     await client.query("BEGIN");
-    await client.query(`UPDATE users SET usage_count = usage_count + 1 WHERE id = $1`, [userId]);
     await client.query(
-      `INSERT INTO request_logs (user_id, endpoint, target_url, result_path) VALUES ($1, $2, $3, $4)`,
-      [userId, endpoint, targetUrl, resultPath]
+      `INSERT INTO request_logs (user_id, endpoint, target_url, result_path, http_status, raw_tokens_est, clean_tokens_est)
+       VALUES ($1, 'scrape', $2, $3, $4, $5, $6)`,
+      [userId, targetUrl, null, st, raw, clean]
     );
+    if (st >= 200 && st < 300) {
+      await client.query(`UPDATE users SET usage_count = usage_count + 1 WHERE id = $1`, [userId]);
+    }
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK");
@@ -424,9 +440,60 @@ export async function getUserDashboardRow(userId) {
 export async function getRecentLogs(userId, limit = 20) {
   if (!pool) return [];
   const r = await pool.query(
-    `SELECT id, endpoint, target_url, result_path, created_at
+    `SELECT id, endpoint, target_url, result_path, created_at,
+            http_status, raw_tokens_est, clean_tokens_est
      FROM request_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`,
     [userId, limit]
   );
   return r.rows;
+}
+
+/**
+ * @returns {{ successRatePct: number | null, scrapeSamples: number, tokensSavedLast100: number, recentLogs: object[] } | null}
+ */
+export async function getDashboardInsights(userId) {
+  if (!pool) return null;
+  const uid = Number(userId);
+  if (!Number.isFinite(uid) || uid < 1) return null;
+
+  const rateR = await pool.query(
+    `WITH last100 AS (
+       SELECT COALESCE(http_status, 200) AS st
+       FROM request_logs
+       WHERE user_id = $1 AND endpoint = 'scrape'
+       ORDER BY created_at DESC
+       LIMIT 100
+     )
+     SELECT COUNT(*)::int AS total,
+            COUNT(*) FILTER (WHERE st >= 200 AND st < 300)::int AS ok
+     FROM last100`,
+    [uid]
+  );
+
+  const tokR = await pool.query(
+    `SELECT COALESCE(SUM(sub.saved), 0)::bigint AS total_saved
+     FROM (
+       SELECT GREATEST(0, COALESCE(raw_tokens_est, 0) - COALESCE(clean_tokens_est, 0)) AS saved
+       FROM request_logs
+       WHERE user_id = $1 AND endpoint = 'scrape'
+         AND COALESCE(http_status, 200) >= 200 AND COALESCE(http_status, 200) < 300
+         AND raw_tokens_est IS NOT NULL AND clean_tokens_est IS NOT NULL
+       ORDER BY created_at DESC
+       LIMIT 100
+     ) sub`,
+    [uid]
+  );
+
+  const recentLogs = await getRecentLogs(uid, 5);
+  const row = rateR.rows[0] || { total: 0, ok: 0 };
+  const total = row.total || 0;
+  const ok = row.ok || 0;
+  const successRatePct = total > 0 ? Math.round((ok / total) * 1000) / 10 : null;
+
+  return {
+    successRatePct,
+    scrapeSamples: total,
+    tokensSavedLast100: Number(tokR.rows[0]?.total_saved ?? 0),
+    recentLogs,
+  };
 }

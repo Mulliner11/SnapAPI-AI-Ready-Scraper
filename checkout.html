@@ -22,14 +22,18 @@
       <div class="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-indigo-500/20 blur-[120px]"></div>
     </div>
 
-    <header class="border-b border-white/10 bg-slate-950/80 backdrop-blur-md">
-      <div class="mx-auto flex max-w-lg items-center justify-between px-6 py-4">
-        <a href="/" class="text-sm font-semibold tracking-tight text-white transition hover:text-indigo-200">SnapAPI</a>
-        <a href="/dashboard" class="text-xs text-slate-400 transition hover:text-indigo-300">Dashboard</a>
+    <header class="border-b border-white/20 bg-slate-950/85 backdrop-blur-md">
+      <div class="mx-auto flex max-w-2xl items-center justify-between gap-4 px-6 py-5 sm:px-8">
+        <a href="/" class="text-lg font-bold tracking-tight text-white transition hover:text-indigo-200 sm:text-xl">SnapAPI</a>
+        <a
+          href="/dashboard"
+          class="rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-indigo-400/40 hover:bg-white/10 hover:text-white"
+          >Dashboard</a
+        >
       </div>
     </header>
 
-    <main class="mx-auto max-w-lg px-6 py-10">
+    <main class="mx-auto max-w-2xl px-6 py-12 sm:px-8 sm:py-14">
       <h1 class="text-2xl font-semibold text-white">
         Upgrade · <span id="planLabel" class="text-indigo-300">Starter</span>
       </h1>
@@ -68,6 +72,7 @@
       </div>
     </main>
 
+    <script src="/paymentConfirmModal.js"></script>
     <script>
       const JWT_KEY = "snapapi_jwt";
 
@@ -162,7 +167,13 @@
         const ok = await ensureSession();
         if (!ok) return;
 
-        document.getElementById("payBtn").onclick = () => createInvoiceAndRedirect();
+        document.getElementById("payBtn").onclick = function () {
+          if (typeof window.snapapiOpenPaymentConfirmation === "function") {
+            window.snapapiOpenPaymentConfirmation(createInvoiceAndRedirect);
+          } else {
+            createInvoiceAndRedirect();
+          }
+        };
       })();
     </script>
   </body>

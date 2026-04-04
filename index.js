@@ -11,11 +11,11 @@ import Fastify from "fastify";
 import {
   findUserForApiKey,
   getPool,
-  getRecentLogs,
+  getDashboardInsights,
   getUserDashboardRow,
   initDb,
   isOverQuota,
-  recordApiUsage,
+  recordScrapeRequest,
   rotateApiKeyForUserId,
 } from "./db.js";
 import { prisma } from "./prismaClient.js";
@@ -172,6 +172,10 @@ async function registerRoutes() {
 
   fastify.get("/app.js", async (request, reply) => {
     return sendCwdFile(reply, "app.js", "application/javascript; charset=utf-8");
+  });
+
+  fastify.get("/paymentConfirmModal.js", async (request, reply) => {
+    return sendCwdFile(reply, "paymentConfirmModal.js", "application/javascript; charset=utf-8");
   });
 
   fastify.get("/login", async (request, reply) => {
@@ -379,13 +383,20 @@ async function registerRoutes() {
     if (!row) {
       return reply.code(404).send({ error: "User not found" });
     }
-    const logs = await getRecentLogs(uid, 20);
+    const insights = await getDashboardInsights(uid);
     return reply.send({
+      email: row.email,
       api_key: row.api_key,
       plan: row.plan,
       usage_count: row.usage_count,
       max_limit: row.max_limit,
-      logs,
+      usage: { used: row.usage_count, limit: row.max_limit },
+      insights: insights || {
+        successRatePct: null,
+        scrapeSamples: 0,
+        tokensSavedLast100: 0,
+        recentLogs: [],
+      },
     });
   });
 
@@ -399,18 +410,37 @@ async function registerRoutes() {
     },
     async (request, reply) => {
       const user = request.snapUser;
-      const sourceUrl = normalizeSourceUrl(request.body.url);
-      const html = await loadPageHtml(sourceUrl, {
-        launchOptions: CHROMIUM_LAUNCH_OPTIONS,
-        gotoTimeoutMs,
-      });
-      const { title, markdown, text_content, metadata } = extractReadableMarkdown(html, sourceUrl);
+      let sourceUrl = "";
+      try {
+        sourceUrl = normalizeSourceUrl(request.body.url);
+        const html = await loadPageHtml(sourceUrl, {
+          launchOptions: CHROMIUM_LAUNCH_OPTIONS,
+          gotoTimeoutMs,
+        });
+        const { title, markdown, text_content, metadata } = extractReadableMarkdown(html, sourceUrl);
+        const rawTokensEst = Math.ceil(html.length / 4);
+        const cleanTokensEst = Math.ceil(String(markdown || text_content || "").length / 4);
 
-      if (user?.id && getPool()) {
-        await recordApiUsage(user.id, "scrape", sourceUrl, null);
+        if (user?.id && getPool()) {
+          await recordScrapeRequest(user.id, sourceUrl, 200, { rawTokensEst, cleanTokensEst });
+        }
+
+        return reply.send({ title, markdown, text_content, metadata });
+      } catch (err) {
+        const code = Number(err?.statusCode);
+        const st = code >= 400 && code < 600 ? code : 500;
+        const logUrl =
+          sourceUrl ||
+          (typeof request.body?.url === "string" ? String(request.body.url).slice(0, 2000) : "(invalid url)");
+        if (user?.id && getPool()) {
+          try {
+            await recordScrapeRequest(user.id, logUrl, st, null);
+          } catch (logErr) {
+            request.log.error(logErr, "[scrape] recordScrapeRequest");
+          }
+        }
+        return reply.code(st).send({ error: err?.message || "Scrape failed" });
       }
-
-      return reply.send({ title, markdown, text_content, metadata });
     }
   );
 
