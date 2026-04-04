@@ -436,7 +436,7 @@
                 href="/checkout?plan=pro"
                 class="inline-flex items-center justify-center rounded-xl border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-600/25 via-violet-600/20 to-indigo-600/25 px-10 py-4 text-base font-semibold text-white shadow-lg shadow-fuchsia-950/20 transition hover:border-fuchsia-400/55 hover:brightness-110"
               >
-                Upgrade (Starter)
+                Upgrade to Pro
               </a>
               <p class="mt-3 text-base text-zinc-500">Higher quotas — see pricing on the home page.</p>
             </section>
@@ -584,7 +584,7 @@
         const pct = Math.min(100, Math.round((used / limit) * 100));
         document.getElementById("usageBar").style.width = pct + "%";
         const planRaw = (row.plan || "free").toString().toLowerCase();
-        const planLabels = { free: "Free", pro: "Starter", business: "Pro", agency: "Agency" };
+        const planLabels = { free: "Free", pro: "Pro", business: "Business", agency: "Business" };
         document.getElementById("planName").textContent = planLabels[planRaw] || planRaw;
         const up = document.getElementById("upgradeCta");
         if (planRaw === "free") up.classList.remove("hidden");

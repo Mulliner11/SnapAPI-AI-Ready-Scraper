@@ -38,7 +38,7 @@
 
     <main class="mx-auto max-w-3xl px-6 py-12 sm:px-8 sm:py-16">
       <h1 class="text-3xl font-semibold text-white">
-        Upgrade · <span id="planLabel" class="text-indigo-300">Starter</span>
+        Upgrade · <span id="planLabel" class="text-indigo-300">Pro</span>
       </h1>
       <p class="mt-3 text-base text-slate-400">
         Pay securely with crypto via NOWPayments. Click the button below to create your invoice and open the payment page.
@@ -88,7 +88,7 @@
 
       function planFromQuery() {
         const p = new URLSearchParams(window.location.search).get("plan");
-        if (p === "agency") return "agency";
+        if (p === "agency") return "business";
         if (p === "business") return "business";
         return "pro";
       }
@@ -163,8 +163,7 @@
 
       (async function init() {
         plan = planFromQuery();
-        document.getElementById("planLabel").textContent =
-          plan === "agency" ? "Agency" : plan === "business" ? "Pro" : "Starter";
+        document.getElementById("planLabel").textContent = plan === "business" ? "Business" : "Pro";
 
         document.getElementById("authGate").classList.remove("hidden");
         const ok = await ensureSession();

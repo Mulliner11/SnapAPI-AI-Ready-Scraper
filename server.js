@@ -253,8 +253,8 @@ async function registerRoutes() {
           required: ["email"],
           properties: {
             email: { type: "string", minLength: 3 },
-            planType: { type: "string", enum: ["pro", "business", "agency"] },
-            plan_type: { type: "string", enum: ["pro", "business", "agency"] },
+            planType: { type: "string", enum: ["pro", "business"] },
+            plan_type: { type: "string", enum: ["pro", "business"] },
           },
         },
       },
@@ -270,8 +270,8 @@ async function registerRoutes() {
           type: "object",
           required: ["plan"],
           properties: {
-            plan: { type: "string", enum: ["pro", "business", "agency"] },
-            planType: { type: "string", enum: ["pro", "business", "agency"] },
+            plan: { type: "string", enum: ["pro", "business"] },
+            planType: { type: "string", enum: ["pro", "business"] },
           },
         },
       },
@@ -315,7 +315,7 @@ async function registerRoutes() {
           required: ["redirect", "plan"],
           properties: {
             redirect: { type: "string", minLength: 1 },
-            plan: { type: "string", enum: ["pro", "business", "agency"] },
+            plan: { type: "string", enum: ["pro", "business"] },
           },
         },
       },

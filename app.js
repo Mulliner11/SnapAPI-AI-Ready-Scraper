@@ -159,7 +159,7 @@ if (urlInput) {
   }
 
   async function onSubscribeClick(plan) {
-    const p = plan === "agency" ? "agency" : plan === "business" ? "business" : "pro";
+    const p = plan === "business" ? "business" : "pro";
     async function navigate() {
       if (await isLoggedIn()) {
         window.location.href = "/checkout?plan=" + encodeURIComponent(p);

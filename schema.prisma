@@ -14,7 +14,7 @@ model User {
   id        String    @id @default(uuid())
   email     String    @unique
   apiKey    String    @unique @default(uuid())
-  plan      String    @default("free") // free | pro | business | agency
+  plan      String    @default("free") // free | pro | business (legacy rows may still read agency → treated as business in app)
   expiresAt DateTime?
   createdAt DateTime  @default(now())
 
@@ -33,7 +33,7 @@ model Order {
   paymentId String? // NOWPayments invoice id
   /** Same as `order_id` sent to NOWPayments API */
   orderRef  String?  @map("order_ref")
-  planType  String // pro | business | agency
+  planType  String // pro | business (legacy: agency)
 
   createdAt DateTime @default(now())
 

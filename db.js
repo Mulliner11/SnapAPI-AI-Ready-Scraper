@@ -42,7 +42,7 @@ export async function initDb() {
       plan TEXT NOT NULL DEFAULT 'free',
       status TEXT NOT NULL DEFAULT 'active',
       usage_count INT NOT NULL DEFAULT 0,
-      max_limit INT NOT NULL DEFAULT 100,
+      max_limit INT NOT NULL DEFAULT 200,
       usage_month TEXT NOT NULL DEFAULT (to_char(timezone('utc', now()), 'YYYY-MM'))
     );
 
@@ -94,6 +94,18 @@ export async function initDb() {
   `);
 
     await newPool.query(`
+    ALTER TABLE users ALTER COLUMN max_limit SET DEFAULT 200;
+  `);
+
+    /** Migrate legacy agency tier → business; align free default quota to 200/mo */
+    await newPool.query(`
+    UPDATE users SET plan = 'business', max_limit = 50000 WHERE lower(plan) = 'agency';
+  `);
+    await newPool.query(`
+    UPDATE users SET max_limit = 200 WHERE lower(plan) = 'free' AND max_limit = 100;
+  `);
+
+    await newPool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nowpayments_subscription_id
     ON users (nowpayments_subscription_id) WHERE nowpayments_subscription_id IS NOT NULL;
   `);
@@ -135,7 +147,7 @@ export async function ensureUserByEmail(email) {
   try {
     const ins = await pool.query(
       `INSERT INTO users (email, api_key, plan, status, max_limit)
-       VALUES ($1, $2, 'free', 'active', 100)
+       VALUES ($1, $2, 'free', 'active', 200)
        RETURNING id, email, api_key, plan, status, usage_count, max_limit, usage_month`,
       [normalized, apiKey]
     );
@@ -198,15 +210,15 @@ export async function upsertPaidUserByEmail(email, plan, apiKey, status = "activ
 }
 
 const PLAN_MAX_LIMIT = {
-  free: 100,
-  pro: 2_500,
-  business: 15_000,
-  agency: 100_000,
+  free: 200,
+  pro: 5_000,
+  business: 50_000,
 };
 
 function normalizedPlan(plan) {
   const p = String(plan || "free").toLowerCase();
-  if (p === "agency") return "agency";
+  /** Legacy invoices / sessions may still say `agency` — same tier as Business */
+  if (p === "agency") return "business";
   if (p === "business") return "business";
   if (p === "pro") return "pro";
   return "free";

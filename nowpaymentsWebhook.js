@@ -1,18 +1,13 @@
 /**
  * POST /webhooks/nowpayments and POST /api/webhooks/nowpayments — NOWPayments IPN callback.
- * Verifies `x-nowpayments-sig` (when enabled below). On payment_status === finished, updates Order + Prisma User
- * and syncs legacy `users` (dashboard / scrape quota).
+ * On payment_status === finished, resolves Order (by orderRef / paymentId / optional Prisma id) and updates User + legacy users.
+ *
+ * TODO(re-enable before production): HMAC verification via x-nowpayments-sig (currently fully disabled for debugging).
  */
 import { getPool, upgradeUserSubscriptionByEmail } from "./db.js";
 import { prisma } from "./prismaClient.js";
-import { computeNpIpnSignatureHex, verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
+// import { computeNpIpnSignatureHex, verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
 
-/** Set to false to re-enable HMAC verification before production. */
-const NP_IPN_SKIP_SIGNATURE_VERIFY = true;
-
-function getNpIpnSecret() {
-  return String(process.env.NP_IPN_SECRET ?? process.env.NOWPAYMENTS_IPN_SECRET ?? "").trim();
-}
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
 /** Verified in Resend; fixed address avoids 422 Invalid `from`. */
 const RESEND_FROM = "SnapAPI <support@getsnapapi.uk>";
@@ -25,8 +20,8 @@ function escapeHtmlText(s) {
 }
 
 /**
- * Collect possible ids NOWPayments may send; we store invoice `id` as Order.paymentId.
- * `order_id` is preferred — it matches the `order_id` we send when creating the invoice (`orderRef`).
+ * Collect possible ids NOWPayments may send. We persist invoice `id` as Order.paymentId;
+ * `order_id` in IPN matches the string we sent at invoice creation (stored as Order.orderRef).
  */
 function extractPaymentIdCandidates(payload) {
   const keys = ["order_id", "orderId", "payment_id", "invoice_id", "paymentId", "paymentID"];
@@ -40,9 +35,35 @@ function extractPaymentIdCandidates(payload) {
 
 function normalizePlan(planType) {
   const p = String(planType || "").toLowerCase();
-  if (p === "agency") return "agency";
+  if (p === "agency") return "business";
   if (p === "business") return "business";
   return "pro";
+}
+
+/** Prisma Order.id is a UUID; NOWPayments `order_id` is usually our `snapapi-…` orderRef instead. */
+function looksLikeUuid(s) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(s || "").trim());
+}
+
+function parseWebhookPayload(rawBody) {
+  if (rawBody == null) return { error: "empty", payload: null };
+  if (Buffer.isBuffer(rawBody)) {
+    const s = rawBody.toString("utf8");
+    if (!s.trim()) return { error: "empty", payload: null };
+    try {
+      return { error: null, payload: JSON.parse(s) };
+    } catch {
+      return { error: "invalid_json", payload: null };
+    }
+  }
+  if (typeof rawBody === "object") {
+    return { error: null, payload: rawBody };
+  }
+  try {
+    return { error: null, payload: JSON.parse(String(rawBody)) };
+  } catch {
+    return { error: "invalid_json", payload: null };
+  }
 }
 
 async function sendApiKeyActivatedEmail(to, apiKey) {
@@ -76,156 +97,153 @@ async function sendApiKeyActivatedEmail(to, apiKey) {
 }
 
 /**
- * POST /webhooks/nowpayments — raw JSON body, verify x-nowpayments-sig, Prisma Order/User updates.
+ * POST /webhooks/nowpayments — JSON body (buffer or object), Prisma Order/User updates.
  */
 export async function postNowpaymentsWebhook(request, reply) {
-  console.log("WEBHOOK_HIT", request.body);
+  console.log("Mock Webhook Received:", request.body);
+  console.log("--- WEBHOOK START ---");
+  const parsed = parseWebhookPayload(request.body);
+  if (parsed.error === "invalid_json" && Buffer.isBuffer(request.body)) {
+    console.log("BODY:", JSON.stringify(request.body.toString("utf8").slice(0, 8000), null, 2));
+  } else {
+    console.log("BODY:", JSON.stringify(parsed.payload ?? {}, null, 2));
+  }
 
-  const rawBody = request.body;
-  const buf = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(rawBody ?? "");
-
-  if (!buf.length) {
-    console.log("Incoming Webhook Body:", "{}");
+  const { error: parseErr, payload } = parsed;
+  if (parseErr === "empty") {
     return reply.code(400).send({ error: "Empty body" });
   }
-
-  try {
-    console.log("Incoming Webhook Body:", JSON.stringify(JSON.parse(buf.toString("utf8"))));
-  } catch {
-    console.log("Incoming Webhook Body:", buf.toString("utf8"));
-  }
-
-  const isSandbox = String(process.env.NP_ENV ?? "").trim().toLowerCase() === "sandbox";
-  const ipnSecret = getNpIpnSecret();
-  const rawSig = request.headers["x-nowpayments-sig"];
-  const sig = Array.isArray(rawSig) ? rawSig[0] : rawSig;
-  const sigStr = sig != null ? String(sig).trim() : "";
-
-  if (NP_IPN_SKIP_SIGNATURE_VERIFY) {
-    console.warn("[NP IPN] HMAC signature verification SKIPPED (NP_IPN_SKIP_SIGNATURE_VERIFY=true — re-enable for production)");
-    if (ipnSecret) {
-      const { expectedHex } = computeNpIpnSignatureHex(buf, ipnSecret);
-      console.log("[NP IPN] x-nowpayments-sig (received):", sigStr || "(missing header)");
-      console.log("[NP IPN] x-nowpayments-sig (computed):", expectedHex ?? "(parse failed)");
-    }
-  } else if (!isSandbox) {
-    if (!ipnSecret) {
-      request.log.error("[NP IPN] NP_IPN_SECRET (or NOWPAYMENTS_IPN_SECRET) is not set");
-      return reply.code(503).send({ error: "IPN secret not configured" });
-    }
-    if (!sigStr) {
-      return reply.code(401).send({ error: "Unauthorized" });
-    }
-    const { expectedHex } = computeNpIpnSignatureHex(buf, ipnSecret);
-    console.log("[NP IPN] x-nowpayments-sig (received):", sigStr);
-    console.log("[NP IPN] x-nowpayments-sig (computed):", expectedHex ?? "(parse failed)");
-    if (!verifyNowPaymentsIpnSignature(buf, sigStr, ipnSecret)) {
-      return reply.code(401).send({ error: "Unauthorized" });
-    }
-  } else {
-    console.warn("[NP IPN] SANDBOX: NP_ENV=sandbox — using relaxed path");
-    if (ipnSecret) {
-      const { expectedHex } = computeNpIpnSignatureHex(buf, ipnSecret);
-      console.log("[NP IPN] x-nowpayments-sig (received):", sigStr || "(missing header)");
-      console.log("[NP IPN] x-nowpayments-sig (computed):", expectedHex ?? "(parse failed)");
-    }
-  }
-
-  let payload;
-  try {
-    payload = JSON.parse(buf.toString("utf8"));
-  } catch {
+  if (parseErr === "invalid_json" || !payload || typeof payload !== "object") {
     return reply.code(400).send({ error: "Invalid JSON" });
   }
 
+  // --- HMAC / x-nowpayments-sig verification DISABLED for testing ---
+  // Re-enable before production: import nowpaymentsIpn.js and verify signature on raw body bytes.
+  // const rawSig = request.headers["x-nowpayments-sig"];
+  // const ipnSecret = String(process.env.NP_IPN_SECRET ?? process.env.NOWPAYMENTS_IPN_SECRET ?? "").trim();
+  // const buf = Buffer.isBuffer(request.body) ? request.body : Buffer.from(JSON.stringify(request.body ?? {}));
+  // verifyNowPaymentsIpnSignature(buf, sigStr, ipnSecret)
+
   const paymentStatus = String(payload?.payment_status ?? "").toLowerCase();
   if (paymentStatus !== "finished") {
+    console.log("[NP IPN] skip: payment_status is not finished:", paymentStatus || "(empty)");
     return reply.send({ ok: true });
   }
 
   const ids = extractPaymentIdCandidates(payload);
-  if (ids.length === 0) {
+  const orderIdRaw = payload?.order_id ?? payload?.orderId;
+  const orderIdFromNp = orderIdRaw != null ? String(orderIdRaw).trim() : "";
+
+  console.log("[NP IPN] payment_status=finished | order_id:", orderIdFromNp || "(none)", "| id candidates:", ids);
+
+  if (ids.length === 0 && !orderIdFromNp) {
     request.log.warn({ keys: Object.keys(payload) }, "[NP IPN] finished but no id fields to match Order");
     return reply.send({ ok: true });
   }
 
-  const orderIdRaw = payload?.order_id ?? payload?.orderId;
-  const orderId = orderIdRaw != null ? String(orderIdRaw).trim() : "";
-
-  console.log("[NP IPN] order_id from payload:", orderId || "(none)", "| id candidates:", ids);
-
   let outcome;
   try {
     outcome = await prisma.$transaction(async (tx) => {
-      let pending = null;
-      if (orderId) {
-        pending = await tx.order.findFirst({
-          where: { status: "pending", orderRef: orderId },
+      let match = null;
+
+      // 1) NOWPayments `order_id` === our invoice `order_id` === DB Order.orderRef (NOT Prisma Order.id in normal flow)
+      if (orderIdFromNp) {
+        match = await tx.order.findFirst({
+          where: { orderRef: orderIdFromNp },
           include: { user: true },
         });
         console.log(
-          "[NP IPN] DB lookup by orderRef=",
-          JSON.stringify(orderId),
-          "status=pending →",
-          pending ? `found order id=${pending.id}` : "NO MATCH"
+          "[NP IPN] lookup orderRef=",
+          JSON.stringify(orderIdFromNp),
+          "→",
+          match ? `found order prismaId=${match.id}` : "NO MATCH"
         );
       }
-      if (!pending) {
-        pending = await tx.order.findFirst({
+
+      // 2) If they ever echo our Prisma UUID as order_id, support findUnique
+      if (!match && orderIdFromNp && looksLikeUuid(orderIdFromNp)) {
+        match = await tx.order.findUnique({
+          where: { id: orderIdFromNp },
+          include: { user: true },
+        });
+        console.log(
+          "[NP IPN] lookup Prisma Order.id (uuid)=",
+          orderIdFromNp,
+          "→",
+          match ? `found order prismaId=${match.id}` : "NO MATCH"
+        );
+      }
+
+      // 3) Match stored NOWPayments invoice id (paymentId) or orderRef against any candidate
+      if (!match && ids.length > 0) {
+        match = await tx.order.findFirst({
           where: {
-            status: "pending",
             OR: [{ paymentId: { in: ids } }, { orderRef: { in: ids } }],
           },
           include: { user: true },
         });
         console.log(
-          "[NP IPN] DB fallback lookup paymentId/orderRef in",
+          "[NP IPN] fallback lookup paymentId/orderRef in",
           JSON.stringify(ids),
           "→",
-          pending ? `found order id=${pending.id}` : "NO MATCH"
+          match ? `found order prismaId=${match.id}` : "NO MATCH"
         );
       }
 
-      if (pending) {
-        const plan = normalizePlan(pending.planType);
-        const expiresAt = new Date();
-        expiresAt.setUTCDate(expiresAt.getUTCDate() + 30);
-
-        await tx.order.update({
-          where: { id: pending.id },
-          data: { status: "finished" },
+      if (!match) {
+        const any = await tx.order.findFirst({
+          where: {
+            OR: [
+              ...(orderIdFromNp ? [{ orderRef: orderIdFromNp }] : []),
+              ...(ids.length ? [{ paymentId: { in: ids } }, { orderRef: { in: ids } }] : []),
+            ],
+          },
         });
-
-        await tx.user.update({
-          where: { id: pending.userId },
-          data: { plan, expiresAt },
-        });
-
-        const user = await tx.user.findUnique({ where: { id: pending.userId } });
-        return { type: "activated", user };
+        if (any?.status === "finished") {
+          return { type: "already_done", user: null };
+        }
+        return { type: "not_found", user: null };
       }
 
-      const any = await tx.order.findFirst({
-        where: { OR: [{ paymentId: { in: ids } }, { orderRef: { in: ids } }] },
+      const plan = normalizePlan(match.planType);
+      const expiresAt = new Date();
+      expiresAt.setUTCDate(expiresAt.getUTCDate() + 30);
+
+      await tx.order.update({
+        where: { id: match.id },
+        data: { status: "finished" },
       });
-      if (any?.status === "finished") {
-        return { type: "already_done" };
-      }
-      return { type: "not_found" };
+
+      await tx.user.update({
+        where: { id: match.userId },
+        data: { plan, expiresAt },
+      });
+
+      const user = await tx.user.findUnique({ where: { id: match.userId } });
+      return { type: "activated", user };
     });
   } catch (e) {
     request.log.error(e, "[NP IPN] prisma transaction failed");
+    console.error("[NP IPN] prisma transaction failed:", e);
     return reply.code(500).send({ error: "Database error" });
   }
 
   if (outcome.type === "not_found") {
-    request.log.warn({ ids }, "[NP IPN] no pending order matching payment ids");
+    request.log.warn({ ids, orderIdFromNp }, "[NP IPN] no order matching payment / order_id");
     return reply.send({ ok: true });
   }
 
   if (outcome.type === "already_done") {
+    console.log("[NP IPN] order already finished (idempotent skip)");
     return reply.send({ ok: true });
   }
+
+  if (!outcome.user?.id) {
+    request.log.error("[NP IPN] activated but user missing");
+    return reply.code(500).send({ error: "User missing after update" });
+  }
+
+  console.log("PLAN_UPDATED_SUCCESSFULLY_FOR_USER:", outcome.user.id);
 
   /** Dashboard + /api/scrape quotas read legacy `users`; keep in sync with Prisma app_users.plan */
   try {
@@ -234,6 +252,7 @@ export async function postNowpaymentsWebhook(request, reply) {
     }
   } catch (e) {
     request.log.error(e, "[NP IPN] upgradeUserSubscriptionByEmail (legacy users) failed — Prisma was updated");
+    console.error("[NP IPN] legacy users sync failed:", e);
   }
 
   try {

@@ -187,11 +187,11 @@ export async function getAuthVerify(request, reply) {
     delete request.session.postLoginRedirect;
     delete request.session.postLoginPlan;
 
-    if (
-      pendingPath === "/checkout" &&
-      (pendingPlan === "pro" || pendingPlan === "business" || pendingPlan === "agency")
-    ) {
+    if (pendingPath === "/checkout" && (pendingPlan === "pro" || pendingPlan === "business")) {
       return reply.redirect(`/checkout?plan=${pendingPlan}`);
+    }
+    if (pendingPath === "/checkout" && pendingPlan === "agency") {
+      return reply.redirect("/checkout?plan=business");
     }
 
     return reply.redirect("/dashboard");
@@ -218,7 +218,7 @@ export async function postAuthPendingRedirect(request, reply) {
   const planRaw = String(request.body?.plan ?? "").trim().toLowerCase();
   const plan =
     planRaw === "agency"
-      ? "agency"
+      ? "business"
       : planRaw === "business"
         ? "business"
         : planRaw === "pro"
