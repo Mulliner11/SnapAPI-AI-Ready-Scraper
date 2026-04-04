@@ -536,6 +536,14 @@ async function start() {
 
     const pathname = (request.url || "").split("?")[0];
 
+    /** NOWPayments IPN never sends x-api-key; route is protected by HMAC in postNowpaymentsWebhook */
+    if (
+      request.method === "POST" &&
+      (pathname === "/api/webhooks/nowpayments" || pathname === "/webhooks/nowpayments")
+    ) {
+      return;
+    }
+
     const needsApiKey = request.method === "POST" && pathname === "/api/scrape";
 
     if (needsApiKey) {

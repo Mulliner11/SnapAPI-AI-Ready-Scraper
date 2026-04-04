@@ -1,14 +1,17 @@
 /**
  * POST /webhooks/nowpayments and POST /api/webhooks/nowpayments — NOWPayments IPN callback.
- * On payment_status === finished, resolves Order (by orderRef / paymentId / optional Prisma id) and updates User + legacy users.
- *
- * TODO(re-enable before production): HMAC verification via x-nowpayments-sig (currently fully disabled for debugging).
+ * Verifies x-nowpayments-sig (HMAC-SHA512 over key-sorted JSON). On payment_status === finished,
+ * resolves Order and updates User + legacy users.
  */
 import { getPool, upgradeUserSubscriptionByEmail } from "./db.js";
 import { prisma } from "./prismaClient.js";
-// import { computeNpIpnSignatureHex, verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
+import { computeNpIpnSignatureHex, verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
 
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
+
+function getNpIpnSecret() {
+  return String(process.env.NP_IPN_SECRET ?? process.env.NOWPAYMENTS_IPN_SECRET ?? "").trim();
+}
 /** Verified in Resend; fixed address avoids 422 Invalid `from`. */
 const RESEND_FROM = "SnapAPI <support@getsnapapi.uk>";
 
@@ -100,7 +103,6 @@ async function sendApiKeyActivatedEmail(to, apiKey) {
  * POST /webhooks/nowpayments — JSON body (buffer or object), Prisma Order/User updates.
  */
 export async function postNowpaymentsWebhook(request, reply) {
-  console.log("Mock Webhook Received:", request.body);
   console.log("--- WEBHOOK START ---");
   const parsed = parseWebhookPayload(request.body);
   if (parsed.error === "invalid_json" && Buffer.isBuffer(request.body)) {
@@ -117,12 +119,37 @@ export async function postNowpaymentsWebhook(request, reply) {
     return reply.code(400).send({ error: "Invalid JSON" });
   }
 
-  // --- HMAC / x-nowpayments-sig verification DISABLED for testing ---
-  // Re-enable before production: import nowpaymentsIpn.js and verify signature on raw body bytes.
-  // const rawSig = request.headers["x-nowpayments-sig"];
-  // const ipnSecret = String(process.env.NP_IPN_SECRET ?? process.env.NOWPAYMENTS_IPN_SECRET ?? "").trim();
-  // const buf = Buffer.isBuffer(request.body) ? request.body : Buffer.from(JSON.stringify(request.body ?? {}));
-  // verifyNowPaymentsIpnSignature(buf, sigStr, ipnSecret)
+  /** HMAC: NP signs canonical JSON (keys sorted recursively), not the raw wire bytes order — see nowpaymentsIpn.js */
+  const ipnSecret = getNpIpnSecret();
+  if (!ipnSecret) {
+    request.log.error("[NP IPN] NP_IPN_SECRET is not set");
+    return reply.code(503).send({ error: "IPN secret not configured" });
+  }
+
+  const rawSig = request.headers["x-nowpayments-sig"];
+  const sigHeader = Array.isArray(rawSig) ? rawSig[0] : rawSig;
+  const receivedSignature = sigHeader != null ? String(sigHeader).trim() : "";
+
+  const { expectedHex } = computeNpIpnSignatureHex(payload, ipnSecret);
+
+  if (!receivedSignature) {
+    console.error("[Webhook Error] Missing Signature");
+    request.log.warn("[NP IPN] missing x-nowpayments-sig");
+    return reply.code(401).send({ error: "Unauthorized" });
+  }
+
+  const signatureOk = verifyNowPaymentsIpnSignature(payload, receivedSignature, ipnSecret);
+
+  if (!signatureOk) {
+    console.error("[Webhook Error] Signature mismatch");
+    console.error("Expected Signature:", expectedHex ?? "(could not compute — check body JSON)");
+    console.error("Received Signature:", receivedSignature);
+    request.log.warn(
+      { expectedHex: expectedHex ?? null, received: receivedSignature },
+      "[NP IPN] HMAC verification failed"
+    );
+    return reply.code(401).send({ error: "Unauthorized" });
+  }
 
   const paymentStatus = String(payload?.payment_status ?? "").toLowerCase();
   if (paymentStatus !== "finished") {

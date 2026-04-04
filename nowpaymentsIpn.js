@@ -21,24 +21,33 @@ function timingSafeEqualHex(expectedHex, receivedHex) {
 }
 
 /**
- * Same canonical string NOWPayments uses for signing; returns hex HMAC-SHA512 (for logs / debugging).
+ * Same canonical string NOWPayments uses for IPN signing: JSON with all object keys sorted
+ * recursively (lexicographic), then HMAC-SHA512. Using sorted canonical form avoids depending on
+ * the wire key order of the original body.
+ *
+ * @param {Buffer | string | object} rawBody — raw UTF-8 JSON bytes/string from the request, or an already-parsed object (e.g. if a framework parsed the body).
  * @returns {{ sorted: string | null, expectedHex: string | null }}
  */
 export function computeNpIpnSignatureHex(rawBody, secret) {
   if (!secret) return { sorted: null, expectedHex: null };
-  let payload;
+  let sorted;
   try {
-    payload = JSON.parse(Buffer.isBuffer(rawBody) ? rawBody.toString("utf8") : String(rawBody));
+    if (rawBody != null && typeof rawBody === "object" && !Buffer.isBuffer(rawBody)) {
+      sorted = stableStringify(rawBody);
+    } else {
+      const text = Buffer.isBuffer(rawBody) ? rawBody.toString("utf8") : String(rawBody ?? "");
+      const payload = JSON.parse(text);
+      sorted = stableStringify(payload);
+    }
   } catch {
     return { sorted: null, expectedHex: null };
   }
-  const sorted = stableStringify(payload);
   const expectedHex = crypto.createHmac("sha512", secret).update(sorted, "utf8").digest("hex");
   return { sorted, expectedHex };
 }
 
 /**
- * NOWPayments IPN: parse JSON body → recursively sort keys → stringify → HMAC-SHA512 with IPN secret;
+ * NOWPayments IPN: canonical JSON (sorted keys) → HMAC-SHA512 with IPN secret;
  * compare digest (hex) to `x-nowpayments-sig` using a timing-safe comparison.
  */
 export function verifyNowPaymentsIpnSignature(rawBody, signature, secret) {
