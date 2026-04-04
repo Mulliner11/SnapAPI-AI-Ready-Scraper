@@ -28,13 +28,21 @@ import { postNowpaymentsWebhook } from "./nowpaymentsWebhook.js";
 import { getUserIdFromRequest } from "./authContext.js";
 import { getAuthVerify, postAuthPendingRedirect, postAuthSendMagicLink } from "./authMagicLinkApi.js";
 
+/** HMAC for NOWPayments IPN lives in `nowpaymentsIpn.js` (`import crypto from "node:crypto"`). */
+
 const SESSION_SECRET_RAW = process.env.SESSION_SECRET || "snapapi-development-session-secret-min-32-chars-long!!";
 const SESSION_SECRET =
   SESSION_SECRET_RAW.length >= 32
     ? SESSION_SECRET_RAW
     : SESSION_SECRET_RAW.padEnd(32, "0");
 if (!process.env.SESSION_SECRET) {
-  console.warn("[SnapAPI] SESSION_SECRET not set; using a development default. Set SESSION_SECRET in production.");
+  console.warn(
+    "[SnapAPI] SESSION_SECRET not set in env; using padded development default. Set SESSION_SECRET in production (Railway Variables)."
+  );
+} else if (process.env.NODE_ENV === "production" && String(process.env.SESSION_SECRET).trim().length < 32) {
+  console.error(
+    "[SnapAPI] CONFIG: SESSION_SECRET should be at least 32 characters in production. Current value is short — session signing may be weak."
+  );
 }
 
 const fastify = Fastify({
@@ -466,8 +474,8 @@ async function start() {
 
   if (process.env.NODE_ENV === "production") {
     if (!String(process.env.NP_IPN_SECRET || process.env.NOWPAYMENTS_IPN_SECRET || "").trim()) {
-      console.warn(
-        "[SnapAPI] Set NP_IPN_SECRET (NOWPayments IPN secret) for POST /webhooks/nowpayments and POST /api/webhooks/nowpayments."
+      console.error(
+        "[SnapAPI] CONFIG: NP_IPN_SECRET (or NOWPAYMENTS_IPN_SECRET) is missing. Webhook signature verification will return 503 until set. App still starts."
       );
     }
     if (!String(process.env.NP_API_KEY || "").trim()) {
@@ -494,12 +502,18 @@ async function start() {
     },
   });
 
-  await fastify.register(fastifyRawBody, {
-    field: "rawBody",
-    global: false,
-    encoding: false,
-    runFirst: true,
-  });
+  try {
+    await fastify.register(fastifyRawBody, {
+      field: "rawBody",
+      global: false,
+      encoding: false,
+      /** false: read from Fastify's payload stream; true + request.raw can double-consume body and break JSON routes */
+      runFirst: false,
+    });
+  } catch (e) {
+    console.error("[SnapAPI] FATAL: fastify-raw-body failed to register:", e?.message || e);
+    throw e;
+  }
 
   await fastify.register(rateLimit, rateLimitRegisterOptions);
 
@@ -560,4 +574,8 @@ async function start() {
   }
 }
 
-start();
+start().catch((err) => {
+  console.error("[SnapAPI] FATAL: startup aborted:", err?.message || err);
+  if (err?.stack) console.error(err.stack);
+  process.exit(1);
+});

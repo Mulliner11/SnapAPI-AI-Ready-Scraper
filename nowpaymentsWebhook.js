@@ -4,7 +4,6 @@
  * Verifies x-nowpayments-sig = HMAC-SHA512(NP_IPN_SECRET, raw UTF-8 body bytes), hex.
  * If payment_status === finished, resolves Order by order_id / orderRef and upgrades plan (pro/business) + expiry.
  */
-import crypto from "node:crypto";
 import { getPool, upgradeUserSubscriptionByEmail } from "./db.js";
 import { prisma } from "./prismaClient.js";
 import {
