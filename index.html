@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SnapAPI — AI-ready web scraper (URL → Markdown)</title>
+    <title>SnapAPI — Clean Markdown &amp; JSON from any webpage · MCP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -68,89 +68,208 @@
     </div>
 
     <div class="mx-auto max-w-6xl px-6 py-10">
-      <!-- Hero -->
-      <header class="mb-16">
-        <h1
-          class="mt-2 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl md:leading-[1.12]"
+      <!-- Hero: copy + immediate Clean Markdown preview (above the fold) -->
+      <header class="mb-16 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:items-start lg:gap-12 xl:gap-16">
+        <div class="min-w-0">
+          <p
+            class="inline-flex items-center gap-2 rounded-full border border-emerald-400/45 bg-emerald-500/[0.14] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-100 shadow-sm shadow-emerald-900/20"
+          >
+            <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.7)]" aria-hidden="true"></span>
+            Clean Markdown
+          </p>
+          <h1
+            class="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.65rem] md:leading-[1.1]"
+          >
+            SnapAPI: The Cleanest LLM Input from Any Webpage.
+          </h1>
+          <p class="mt-5 max-w-xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
+            SnapAPI turns messy web pages into the cleanest possible Markdown &amp; JSON — with MCP, SDKs, and zero scraping headaches.
+          </p>
+
+          <div class="mt-8">
+            <a
+              href="/login"
+              class="inline-flex items-center justify-center rounded-xl border border-indigo-300/50 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/35 transition hover:scale-[1.02] hover:shadow-indigo-500/25"
+            >
+              Get 200 Free Requests
+            </a>
+            <p class="mt-2.5 max-w-sm text-xs leading-relaxed text-slate-500">
+              No credit card required. MCP Server included.
+            </p>
+          </div>
+
+          <ul class="mt-8 flex flex-wrap gap-2" aria-label="Product proof points">
+            <li
+              class="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100/95 backdrop-blur"
+            >
+              Clean Markdown + structured JSON
+            </li>
+            <li
+              class="inline-flex items-center rounded-full border border-indigo-400/35 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-100/95 backdrop-blur"
+            >
+              90% Less Noise vs. Raw HTML
+            </li>
+            <li
+              class="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-100/95 backdrop-blur"
+            >
+              MCP · LangChain · LlamaIndex
+            </li>
+          </ul>
+        </div>
+
+        <div
+          class="mt-12 min-w-0 lg:mt-0"
+          aria-label="Example of clean Markdown output for LLMs"
         >
-          SnapAPI: The Production-Grade Web Scraper for AI Agents.
-        </h1>
-        <p class="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
-          Stop feeding noise to your LLMs. We strip nav bars, cookie banners, and ads to deliver pure, structured
-          Markdown with <strong class="font-semibold text-slate-100">99.9% reliability</strong>.
-        </p>
-        <ul
-          class="mt-6 flex flex-wrap gap-2"
-          aria-label="Product proof points"
-        >
-          <li
-            class="inline-flex items-center rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100/95 backdrop-blur"
+          <div
+            class="relative overflow-hidden rounded-2xl border border-emerald-500/35 bg-gradient-to-br from-slate-900/95 to-slate-950 p-1 shadow-2xl shadow-emerald-950/40 ring-1 ring-white/[0.06]"
           >
-            90% Less Noise vs. Raw HTML
-          </li>
-          <li
-            class="inline-flex items-center rounded-full border border-indigo-400/35 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-100/95 backdrop-blur"
-          >
-            Built-in Retry Logic
-          </li>
-          <li
-            class="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-100/95 backdrop-blur"
-          >
-            Ready for LangChain &amp; LlamaIndex
-          </li>
-        </ul>
+            <div class="rounded-xl bg-[#070b14]/90 px-4 pb-4 pt-3">
+              <div class="flex items-center justify-between gap-2 border-b border-white/10 pb-2">
+                <span class="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/90">Clean Markdown</span>
+                <span class="text-[10px] text-slate-500">LLM-ready</span>
+              </div>
+              <div class="mt-4 space-y-4 text-left">
+                <div>
+                  <p class="text-lg font-semibold leading-snug tracking-tight text-white md:text-xl">Quarterly product note</p>
+                  <p class="mt-3 text-sm leading-relaxed text-slate-300">
+                    We shipped the parser rewrite: fewer tokens, clearer headings, and stable links for your RAG pipeline.
+                  </p>
+                </div>
+                <div class="rounded-lg border border-white/[0.07] bg-black/35 p-3">
+                  <p class="text-[10px] font-medium uppercase tracking-wide text-slate-500">JSON excerpt</p>
+                  <pre
+                    class="doc-code mt-2 overflow-x-auto text-[10px] leading-relaxed text-emerald-200/85"
+                  >{
+  "title": "Quarterly product note",
+  "markdown": "# Quarterly product note\n…",
+  "metadata": { "word_count": 42, "language": "eng" }
+}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="mt-3 text-center text-[11px] text-slate-500 lg:text-left">No screenshots—just text your models can use.</p>
+        </div>
       </header>
 
-      <!-- Why Us: Build vs. Buy -->
-      <section class="mb-16 rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur md:p-8" aria-labelledby="why-heading">
-        <h2 id="why-heading" class="text-sm font-semibold uppercase tracking-wider text-indigo-300">Why SnapAPI</h2>
-        <p class="mt-3 text-2xl font-semibold text-white">Build vs. Buy</p>
-        <p class="mt-2 max-w-2xl text-sm text-slate-400">
-          Feeding raw HTML into models wastes tokens and confuses retrieval. SnapAPI gives you article-shaped content
-          instead of nav bars, cookie banners, and script tags.
+      <!-- Core: Web Intelligence -->
+      <section
+        class="mb-10 rounded-3xl border border-indigo-500/25 bg-gradient-to-b from-indigo-500/[0.08] to-white/[0.02] p-6 shadow-xl shadow-indigo-950/20 backdrop-blur md:p-10"
+        aria-labelledby="wi-heading"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-300/90">What we obsess over</p>
+        <h2 id="wi-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Web Intelligence</h2>
+        <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
+          SnapAPI is built for <strong class="font-medium text-slate-200">AI-grade inputs</strong>: we turn live web pages into
+          signal—not chrome. That is our core mission; everything else is optional surface area.
         </p>
-        <div class="mt-8 grid gap-6 md:grid-cols-2">
-          <div class="rounded-2xl border border-rose-500/25 bg-rose-500/[0.06] p-5">
-            <h3 class="text-sm font-medium text-rose-200">Build it yourself</h3>
-            <ul class="mt-4 space-y-3 text-sm text-slate-300">
-              <li class="flex gap-2">
-                <span class="shrink-0 text-rose-400/90">—</span>
-                <span
-                  ><strong class="text-slate-100">Playwright + Cheerio + Turndown</strong> wiring, upgrades, and edge
-                  cases</span
-                >
-              </li>
-              <li class="flex gap-2">
-                <span class="shrink-0 text-rose-400/90">—</span>
-                <span>Bot detection, timeouts, and memory on long pages</span>
-              </li>
-              <li class="flex gap-2">
-                <span class="shrink-0 text-rose-400/90">—</span>
-                <span>Maintaining quotas, keys, and observability for a scraper fleet</span>
-              </li>
-            </ul>
-          </div>
-          <div class="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] p-5">
-            <h3 class="text-sm font-medium text-emerald-200">Use SnapAPI</h3>
-            <ul class="mt-4 space-y-3 text-sm text-slate-300">
-              <li class="flex gap-2">
-                <span class="shrink-0 text-emerald-400">✓</span>
-                <span
-                  ><strong class="text-slate-100">One POST</strong> — JSON with <code class="text-indigo-200/90">title</code>,
-                  <code class="text-indigo-200/90">markdown</code>, <code class="text-indigo-200/90">text_content</code></span
-                >
-              </li>
-              <li class="flex gap-2">
-                <span class="shrink-0 text-emerald-400">✓</span>
-                <span>Metered API keys and usage in your dashboard</span>
-              </li>
-              <li class="flex gap-2">
-                <span class="shrink-0 text-emerald-400">✓</span>
-                <span>Optimized for RAG, summarization, and agent toolchains</span>
-              </li>
-            </ul>
-          </div>
+
+        <div class="mt-10 grid gap-5 lg:grid-cols-3">
+          <article
+            class="flex flex-col rounded-2xl border border-emerald-500/30 bg-slate-950/50 p-5 ring-1 ring-inset ring-white/[0.04]"
+          >
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-400/35 bg-emerald-500/15 text-emerald-300"
+              aria-hidden="true"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+            </div>
+            <h3 class="mt-4 text-base font-semibold text-white">Markdown conversion</h3>
+            <p class="mt-2 flex-1 text-sm leading-relaxed text-slate-400">
+              Headless browser load, noise stripped, <code class="text-emerald-200/90">Turndown</code>-quality Markdown—headings,
+              lists, and links your models can parse without drowning in HTML.
+            </p>
+          </article>
+
+          <article
+            class="flex flex-col rounded-2xl border border-cyan-500/30 bg-slate-950/50 p-5 ring-1 ring-inset ring-white/[0.04]"
+          >
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/35 bg-cyan-500/15 text-cyan-300"
+              aria-hidden="true"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 class="mt-4 text-base font-semibold text-white">Structured JSON extraction</h3>
+            <p class="mt-2 flex-1 text-sm leading-relaxed text-slate-400">
+              One <code class="text-cyan-200/90">POST /api/scrape</code> returns <code class="text-cyan-200/90">title</code>,
+              <code class="text-cyan-200/90">markdown</code>, <code class="text-cyan-200/90">text_content</code>, plus
+              <code class="text-cyan-200/90">metadata</code>—ready for tools, evals, and pipelines.
+            </p>
+          </article>
+
+          <article
+            class="flex flex-col rounded-2xl border border-violet-500/30 bg-slate-950/50 p-5 ring-1 ring-inset ring-white/[0.04]"
+          >
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-400/35 bg-violet-500/15 text-violet-300"
+              aria-hidden="true"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </div>
+            <h3 class="mt-4 text-base font-semibold text-white">MCP integration</h3>
+            <p class="mt-2 flex-1 text-sm leading-relaxed text-slate-400">
+              Ship <code class="text-violet-200/90">snapapi_scrape</code> to Claude Desktop or Cursor via our MCP server—no glue code
+              in your repo. Dashboard → <strong class="font-medium text-slate-300">Enable MCP</strong> for copy-paste config.
+            </p>
+          </article>
         </div>
+      </section>
+
+      <!-- Secondary: broader platform (de-emphasized) -->
+      <section
+        class="mb-16 rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6 md:flex md:items-start md:justify-between md:gap-8 md:px-8 md:py-7"
+        aria-labelledby="more-heading"
+      >
+        <div class="max-w-md">
+          <h2 id="more-heading" class="text-base font-semibold text-white md:text-lg">More than just data</h2>
+          <p class="mt-1 text-xs leading-relaxed text-slate-500">
+            We run serious browser infrastructure. These capabilities exist for teams that need pixels and files—but
+            <strong class="font-medium text-slate-400">clean LLM input stays the mission.</strong>
+          </p>
+        </div>
+        <ul class="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap md:mt-0 md:justify-end" role="list">
+          <li class="flex items-center gap-3 text-sm text-slate-300">
+            <span
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-600/50 bg-slate-800/80 text-slate-400"
+              aria-hidden="true"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5v13.5H3.75V5.25zM6 8.25h12v7.5H6v-7.5zM9 3.75h6v1.5H9v-1.5z" />
+              </svg>
+            </span>
+            <span>Screenshot API</span>
+          </li>
+          <li class="flex items-center gap-3 text-sm text-slate-300">
+            <span
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-600/50 bg-slate-800/80 text-slate-400"
+              aria-hidden="true"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V12.75a9 9 0 00-9-9z" />
+              </svg>
+            </span>
+            <span>PDF Generation</span>
+          </li>
+          <li class="flex items-center gap-3 text-sm text-slate-300">
+            <span
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-600/50 bg-slate-800/80 text-slate-400"
+              aria-hidden="true"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+            </span>
+            <span>Video Recording</span>
+          </li>
+        </ul>
       </section>
 
       <!-- Demo: Raw HTML vs SnapAPI output -->
@@ -160,55 +279,106 @@
       >
         <div class="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id="demo-heading" class="text-xl font-semibold text-white md:text-2xl">See the clean-up in 3 seconds</h2>
+            <h2 id="demo-heading" class="text-xl font-semibold text-white md:text-2xl">Before vs After</h2>
             <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-              Same story lives inside the noise. SnapAPI strips chrome, ads, and boilerplate so your agents get
-              <strong class="font-medium text-slate-300">structured Markdown</strong>—not a wall of tags.
+              Same article, two payloads: messy DOM in the browser vs
+              <strong class="font-medium text-slate-300">SnapAPI Clean Markdown</strong> your LLM can actually use.
             </p>
           </div>
         </div>
 
         <div class="mt-8 grid gap-4 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-white/10">
-          <!-- Raw HTML -->
-          <div class="flex min-h-[320px] flex-col rounded-2xl border border-rose-500/25 bg-slate-950/70 lg:rounded-r-none lg:border-r-0">
+          <!-- Before: messy page mock (not a real screenshot — illustrative UI) -->
+          <div class="flex min-h-[400px] flex-col rounded-2xl border border-rose-500/25 bg-slate-950/70 lg:rounded-r-none lg:border-r-0">
             <div
               class="flex flex-wrap items-center justify-between gap-2 border-b border-rose-500/20 bg-rose-950/30 px-4 py-3"
             >
-              <span class="text-xs font-semibold uppercase tracking-wider text-rose-200/95">Raw HTML</span>
-              <span class="text-[10px] font-medium uppercase tracking-wide text-rose-400/70">Noise + ads + junk</span>
+              <span class="text-xs font-semibold uppercase tracking-wider text-rose-200/95">Messy, Token-Wasting HTML</span>
+              <span class="text-[10px] font-medium uppercase tracking-wide text-rose-400/70">Ads · sidebars · cookie wall</span>
             </div>
-            <pre
-              class="doc-code m-0 flex-1 overflow-auto rounded-b-2xl p-4 text-[10px] leading-relaxed text-slate-500 lg:rounded-br-none"
-            >&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;
-&lt;script&gt;gtag('event','promo',{id:'X7q'});&lt;/script&gt;
-&lt;style&gt;.adslot{position:fixed!important}&lt;/style&gt;
-&lt;/head&gt;&lt;body&gt;
+            <div
+              class="relative m-3 flex min-h-[340px] flex-1 flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-900/80 shadow-inner lg:m-4"
+            >
+              <div class="pointer-events-none absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.06%22/%3E%3C/svg%3E')] opacity-40"></div>
+              <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-rose-600/25 via-slate-900/80 to-violet-900/20 backdrop-blur-[2px]"></div>
 
-&lt;nav class="mega-menu"&gt;&lt;a href="/"&gt;Home&lt;/a&gt; · &lt;a href="/deals"&gt;Deals&lt;/a&gt; · … 47 links …&lt;/nav&gt;
+              <div class="relative z-10 flex items-center gap-2 border-b border-white/10 bg-slate-800/90 px-3 py-2">
+                <div class="flex gap-1.5">
+                  <span class="h-2.5 w-2.5 rounded-full bg-red-500/90"></span>
+                  <span class="h-2.5 w-2.5 rounded-full bg-amber-400/90"></span>
+                  <span class="h-2.5 w-2.5 rounded-full bg-emerald-500/80"></span>
+                </div>
+                <div class="ml-2 flex-1 truncate rounded-md bg-slate-950/80 px-2 py-0.5 text-[9px] text-slate-500">
+                  https://noisy-news.example/article?ads=1&amp;track=…
+                </div>
+              </div>
 
-&lt;div id="cookie-hell" class="cookie-banner"&gt;
-  We use 200 cookies. Ã¯Â¿Â½ Accept all Â» &lt;button&gt;OK&lt;/button&gt;
-&lt;/div&gt;
+              <div class="relative z-10 flex min-h-0 flex-1">
+                <aside
+                  class="flex w-[4.5rem] shrink-0 flex-col gap-1 border-r border-white/10 bg-slate-800/60 p-1.5 backdrop-blur-sm"
+                  aria-hidden="true"
+                >
+                  <div class="h-8 rounded bg-gradient-to-r from-pink-600/50 to-orange-500/40 text-center text-[7px] font-bold leading-8 text-white/90">AD</div>
+                  <div class="h-6 rounded bg-slate-700/80 text-[6px] leading-6 text-slate-500">Spon</div>
+                  <div class="h-8 rounded bg-indigo-600/40 text-[7px] font-bold leading-8 text-center text-indigo-100">VIP</div>
+                  <div class="mt-auto space-y-0.5 text-[6px] text-slate-600">
+                    <div class="truncate">Trending</div>
+                    <div class="truncate">Gossip</div>
+                    <div class="truncate">Shop</div>
+                  </div>
+                </aside>
 
-&lt;aside class="sponsored"&gt;
-  &lt;div class="ad"&gt;BUY CRYPTO NOW!!! 🔥🔥&lt;/div&gt;
-  &lt;iframe src="tracker.php?u=…"&gt;&lt;/iframe&gt;
-&lt;/aside&gt;
+                <div class="relative min-w-0 flex-1">
+                  <div class="pointer-events-none absolute inset-0 overflow-hidden p-2 blur-[1.5px]">
+                    <div class="mb-1 flex flex-wrap gap-1 text-[8px] text-slate-600">
+                      <span class="rounded bg-slate-700/80 px-1 py-0.5">Home</span>
+                      <span class="rounded bg-slate-700/80 px-1 py-0.5">Video</span>
+                      <span class="rounded bg-slate-700/80 px-1 py-0.5">Politics</span>
+                      <span class="rounded bg-slate-700/80 px-1 py-0.5">…</span>
+                    </div>
+                    <div class="mb-2 h-10 rounded border border-dashed border-amber-500/40 bg-amber-500/15 text-center text-[8px] font-bold leading-10 text-amber-200">
+                      SPONSORED: CLICK HERE!!!
+                    </div>
+                    <p class="text-[9px] leading-snug text-slate-500">
+                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et
+                      dolore magna aliqua. Ut enim ad minim veniam…
+                    </p>
+                    <p class="mt-1 text-[9px] font-semibold text-slate-400 blur-[0.5px]">Why battery density stalled in 2024</p>
+                    <p class="mt-1 text-[8px] text-slate-600 blur-[0.5px]">
+                      Solid-state prototypes finally left the lab… (buried under chrome)
+                    </p>
+                  </div>
 
-&lt;div class="sidebar"&gt;Trending: … unrelated …&lt;/div&gt;
+                  <div
+                    class="absolute right-1.5 top-2 z-20 w-16 rounded-md border border-white/20 bg-gradient-to-b from-fuchsia-600/90 to-violet-700/90 p-1.5 text-center shadow-lg shadow-black/40"
+                    aria-hidden="true"
+                  >
+                    <p class="text-[6px] font-bold uppercase leading-tight text-white">Mega</p>
+                    <p class="text-[6px] font-bold uppercase leading-tight text-white">Sale</p>
+                    <p class="mt-1 text-[7px] text-fuchsia-100">−70%</p>
+                  </div>
 
-&lt;article class="post"&gt;
-  &lt;h1&gt;Why battery density stalled in 2024&lt;/h1&gt;
-  &lt;p&gt;Solid-state prototypes finally left the lab, but manufacturing yield is still the bottleneck.&lt;/p&gt;
-  &lt;p&gt;Teams that control dry-room humidity are seeing 2× fewer defects—here is what we measured.&lt;/p&gt;
-&lt;/article&gt;
-
-&lt;footer&gt;© 2024 … legal … newsletter …&lt;/footer&gt;
-&lt;/body&gt;&lt;/html&gt;</pre>
+                  <div
+                    class="absolute bottom-2 left-2 right-2 z-30 rounded-lg border border-white/20 bg-slate-900/95 p-2.5 shadow-2xl shadow-black/60 ring-1 ring-amber-400/30 backdrop-blur-md"
+                    role="img"
+                    aria-label="Cookie consent popup"
+                  >
+                    <p class="text-[9px] font-semibold text-white">🍪 We value your privacy</p>
+                    <p class="mt-1 text-[7px] leading-relaxed text-slate-400">
+                      We and 847 partners use cookies, pixels, and shoe size data. Ã¯Â¿Â½ Accept everything to continue.
+                    </p>
+                    <div class="mt-2 flex gap-1.5">
+                      <span class="rounded bg-amber-500 px-2 py-0.5 text-[7px] font-bold text-black">Accept all</span>
+                      <span class="rounded border border-white/20 px-2 py-0.5 text-[7px] text-slate-500">Reject</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- SnapAPI Clean Markdown -->
-          <div class="flex min-h-[320px] flex-col rounded-2xl border border-emerald-500/30 bg-slate-950/70 lg:rounded-l-none lg:border-l-0">
+          <!-- After: syntax-highlighted Markdown (live scrape replaces #compareAfter body) -->
+          <div class="flex min-h-[400px] flex-col rounded-2xl border border-emerald-500/30 bg-slate-950/70 lg:rounded-l-none lg:border-l-0">
             <div
               class="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-500/25 bg-emerald-950/25 px-4 py-3"
             >
@@ -221,21 +391,53 @@
             </div>
             <div
               id="compareAfter"
-              class="compare-after-panel flex-1 overflow-auto rounded-b-2xl border-t border-transparent px-4 py-4 text-sm leading-relaxed lg:rounded-bl-none"
+              class="compare-after-panel flex-1 overflow-auto rounded-b-2xl border-t border-emerald-500/10 bg-[#060a12]/90 px-4 py-4 lg:rounded-bl-none"
             >
-              <h3 class="text-lg font-semibold tracking-tight text-white md:text-xl">Why battery density stalled in 2024</h3>
-              <p class="mt-4 text-slate-300">
-                Solid-state prototypes finally left the lab, but manufacturing yield is still the bottleneck.
-              </p>
-              <p class="mt-3 text-slate-400">
-                Teams that control dry-room humidity are seeing 2× fewer defects—here is what we measured.
-              </p>
-              <p class="mt-5 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                Ready for prompts · RAG · tool calls
-              </p>
+              <pre
+                class="doc-code m-0 text-[11px] leading-relaxed text-slate-300"
+              ><code class="block whitespace-pre-wrap"><span class="text-fuchsia-400">#</span><span class="text-slate-100"> Why battery density stalled in 2024</span>
+
+<span class="text-slate-400">Solid-state prototypes finally left the lab, but manufacturing yield is still the bottleneck. Teams that control dry-room humidity are seeing </span><span class="text-emerald-300">2×</span><span class="text-slate-400"> fewer defects.</span>
+
+<span class="text-fuchsia-400">##</span><span class="text-slate-200"> Key metric</span>
+
+<span class="text-cyan-500">-</span><span class="text-slate-500"> </span><span class="text-amber-200">**Yield:**</span><span class="text-slate-300"> up 12% QoQ in pilot lines</span>
+<span class="text-cyan-500">-</span><span class="text-slate-500"> </span><span class="text-sky-400 underline decoration-sky-400/50">[Methodology](/research/methodology)</span><span class="text-slate-500"> — how we counted defects</span>
+
+<span class="text-fuchsia-400">###</span><span class="text-slate-300"> Takeaway</span>
+
+<span class="text-slate-400">Ship smaller batches, measure humidity hourly, and treat short-term noise as </span><span class="text-violet-300">*</span><span class="text-slate-300">not</span><span class="text-violet-300">*</span><span class="text-slate-400"> structural signal.</span></code></pre>
             </div>
           </div>
         </div>
+
+        <!-- Token comparison -->
+        <div
+          class="mt-6 grid gap-3 sm:grid-cols-2"
+          aria-label="Illustrative token savings — actual results vary by page"
+        >
+          <div
+            class="flex flex-col justify-center rounded-2xl border border-rose-500/30 bg-rose-950/20 px-5 py-4 text-center sm:text-left"
+          >
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-rose-300/80">Original page</p>
+            <p class="mt-1 text-lg font-semibold tabular-nums text-rose-100 sm:text-xl">15,400 <span class="text-sm font-normal text-rose-200/70">tokens</span></p>
+            <p class="mt-1 text-xs text-slate-500">Nav, ads, scripts, cookie UI — all billed to your context window.</p>
+          </div>
+          <div
+            class="flex flex-col justify-center rounded-2xl border border-emerald-500/40 bg-emerald-950/25 px-5 py-4 text-center shadow-lg shadow-emerald-950/20 sm:text-left"
+          >
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/90">SnapAPI output</p>
+            <p class="mt-1 text-lg font-semibold tabular-nums text-emerald-100 sm:text-xl">
+              850 <span class="text-sm font-normal text-emerald-200/80">tokens</span>
+              <span class="ml-2 inline-block rounded-full bg-emerald-500/25 px-2 py-0.5 text-xs font-bold text-emerald-300"
+                >94% saved</span>
+            </p>
+            <p class="mt-1 text-xs text-slate-500">Clean Markdown only — tuned for LLMs, agents, and RAG.</p>
+          </div>
+        </div>
+        <p class="mt-2 text-center text-[10px] text-slate-600 sm:text-left">
+          Illustrative comparison; real savings depend on page size and content.
+        </p>
 
         <!-- Try your own URL -->
         <div class="mt-8 rounded-2xl border border-indigo-500/25 bg-slate-950/50 p-5 ring-1 ring-inset ring-white/[0.04]">
