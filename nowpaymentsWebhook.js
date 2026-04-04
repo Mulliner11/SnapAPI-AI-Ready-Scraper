@@ -5,7 +5,7 @@
  * On payment_status === finished, marks Order finished and upgrades Prisma User plan + expiresAt.
  */
 import { prisma } from "./prismaClient.js";
-import { verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
+import { computeNpIpnSignatureHex, verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
 
 function getNpIpnSecret() {
   return String(process.env.NP_IPN_SECRET ?? process.env.NOWPAYMENTS_IPN_SECRET ?? "").trim();
@@ -76,26 +76,51 @@ async function sendApiKeyActivatedEmail(to, apiKey) {
  * POST /webhooks/nowpayments — raw JSON body, verify x-nowpayments-sig, Prisma Order/User updates.
  */
 export async function postNowpaymentsWebhook(request, reply) {
-  const ipnSecret = getNpIpnSecret();
-  if (!ipnSecret) {
-    request.log.error("[NP IPN] NP_IPN_SECRET (or NOWPAYMENTS_IPN_SECRET) is not set");
-    return reply.code(503).send({ error: "IPN secret not configured" });
-  }
-
-  const rawSig = request.headers["x-nowpayments-sig"];
-  const sig = Array.isArray(rawSig) ? rawSig[0] : rawSig;
-  if (!sig || !String(sig).trim()) {
-    return reply.code(401).send({ error: "Unauthorized" });
-  }
-
   const rawBody = request.body;
   const buf = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(rawBody ?? "");
+
   if (!buf.length) {
+    console.log("Incoming Webhook Body:", "{}");
     return reply.code(400).send({ error: "Empty body" });
   }
 
-  if (!verifyNowPaymentsIpnSignature(buf, sig, ipnSecret)) {
-    return reply.code(401).send({ error: "Unauthorized" });
+  try {
+    console.log("Incoming Webhook Body:", JSON.stringify(JSON.parse(buf.toString("utf8"))));
+  } catch {
+    console.log("Incoming Webhook Body:", buf.toString("utf8"));
+  }
+
+  const isSandbox = String(process.env.NP_ENV ?? "").trim().toLowerCase() === "sandbox";
+  const ipnSecret = getNpIpnSecret();
+
+  const rawSig = request.headers["x-nowpayments-sig"];
+  const sig = Array.isArray(rawSig) ? rawSig[0] : rawSig;
+  const sigStr = sig != null ? String(sig).trim() : "";
+
+  if (!isSandbox) {
+    if (!ipnSecret) {
+      request.log.error("[NP IPN] NP_IPN_SECRET (or NOWPAYMENTS_IPN_SECRET) is not set");
+      return reply.code(503).send({ error: "IPN secret not configured" });
+    }
+    if (!sigStr) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    const { expectedHex } = computeNpIpnSignatureHex(buf, ipnSecret);
+    console.log("[NP IPN] x-nowpayments-sig (received):", sigStr);
+    console.log("[NP IPN] x-nowpayments-sig (computed):", expectedHex ?? "(parse failed)");
+    if (!verifyNowPaymentsIpnSignature(buf, sigStr, ipnSecret)) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+  } else {
+    console.warn("[NP IPN] SANDBOX: signature verification SKIPPED (NP_ENV=sandbox)");
+    if (ipnSecret) {
+      const { expectedHex } = computeNpIpnSignatureHex(buf, ipnSecret);
+      console.log("[NP IPN] x-nowpayments-sig (received):", sigStr || "(missing header)");
+      console.log("[NP IPN] x-nowpayments-sig (computed):", expectedHex ?? "(parse failed)");
+    } else {
+      console.log("[NP IPN] x-nowpayments-sig (received):", sigStr || "(missing header)");
+      console.log("[NP IPN] x-nowpayments-sig (computed): (NP_IPN_SECRET not set — cannot compute)");
+    }
   }
 
   let payload;
@@ -119,6 +144,8 @@ export async function postNowpaymentsWebhook(request, reply) {
   const orderIdRaw = payload?.order_id ?? payload?.orderId;
   const orderId = orderIdRaw != null ? String(orderIdRaw).trim() : "";
 
+  console.log("[NP IPN] order_id from payload:", orderId || "(none)", "| id candidates:", ids);
+
   let outcome;
   try {
     outcome = await prisma.$transaction(async (tx) => {
@@ -128,6 +155,12 @@ export async function postNowpaymentsWebhook(request, reply) {
           where: { status: "pending", orderRef: orderId },
           include: { user: true },
         });
+        console.log(
+          "[NP IPN] DB lookup by orderRef=",
+          JSON.stringify(orderId),
+          "status=pending →",
+          pending ? `found order id=${pending.id}` : "NO MATCH"
+        );
       }
       if (!pending) {
         pending = await tx.order.findFirst({
@@ -137,6 +170,12 @@ export async function postNowpaymentsWebhook(request, reply) {
           },
           include: { user: true },
         });
+        console.log(
+          "[NP IPN] DB fallback lookup paymentId/orderRef in",
+          JSON.stringify(ids),
+          "→",
+          pending ? `found order id=${pending.id}` : "NO MATCH"
+        );
       }
 
       if (pending) {

@@ -21,18 +21,29 @@ function timingSafeEqualHex(expectedHex, receivedHex) {
 }
 
 /**
+ * Same canonical string NOWPayments uses for signing; returns hex HMAC-SHA512 (for logs / debugging).
+ * @returns {{ sorted: string | null, expectedHex: string | null }}
+ */
+export function computeNpIpnSignatureHex(rawBody, secret) {
+  if (!secret) return { sorted: null, expectedHex: null };
+  let payload;
+  try {
+    payload = JSON.parse(Buffer.isBuffer(rawBody) ? rawBody.toString("utf8") : String(rawBody));
+  } catch {
+    return { sorted: null, expectedHex: null };
+  }
+  const sorted = stableStringify(payload);
+  const expectedHex = crypto.createHmac("sha512", secret).update(sorted, "utf8").digest("hex");
+  return { sorted, expectedHex };
+}
+
+/**
  * NOWPayments IPN: parse JSON body → recursively sort keys → stringify → HMAC-SHA512 with IPN secret;
  * compare digest (hex) to `x-nowpayments-sig` using a timing-safe comparison.
  */
 export function verifyNowPaymentsIpnSignature(rawBody, signature, secret) {
   if (!secret || !signature) return false;
-  let payload;
-  try {
-    payload = JSON.parse(Buffer.isBuffer(rawBody) ? rawBody.toString("utf8") : String(rawBody));
-  } catch {
-    return false;
-  }
-  const sorted = stableStringify(payload);
-  const expectedHex = crypto.createHmac("sha512", secret).update(sorted, "utf8").digest("hex");
+  const { expectedHex } = computeNpIpnSignatureHex(rawBody, secret);
+  if (!expectedHex) return false;
   return timingSafeEqualHex(expectedHex, signature);
 }
