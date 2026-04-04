@@ -8,6 +8,7 @@ import rateLimit from "@fastify/rate-limit";
 import { rateLimitRegisterOptions } from "./rateLimitOptions.js";
 import session from "@fastify/session";
 import Fastify from "fastify";
+import fastifyRawBody from "fastify-raw-body";
 import {
   findUserForApiKey,
   getPool,
@@ -287,16 +288,9 @@ async function registerRoutes() {
     postPaymentCreateInvoice
   );
 
-  fastify.register(async (instance) => {
-    instance.addContentTypeParser(
-      "application/json",
-      { parseAs: "buffer" },
-      (req, body, done) => done(null, body)
-    );
-
-    instance.post("/webhooks/nowpayments", postNowpaymentsWebhook);
-    instance.post("/api/webhooks/nowpayments", postNowpaymentsWebhook);
-  });
+  const nowpaymentsIpnOpts = { config: { rawBody: true } };
+  fastify.post("/webhooks/nowpayments", nowpaymentsIpnOpts, postNowpaymentsWebhook);
+  fastify.post("/api/webhooks/nowpayments", nowpaymentsIpnOpts, postNowpaymentsWebhook);
 
   fastify.post(
     "/api/auth/send-magic-link",
@@ -535,8 +529,16 @@ async function start() {
     },
   });
 
+  await fastify.register(fastifyRawBody, {
+    field: "rawBody",
+    global: false,
+    encoding: false,
+    runFirst: true,
+  });
+
   await fastify.register(rateLimit, rateLimitRegisterOptions);
 
+  /** Global onRequest: x-api-key only for POST /api/scrape. POST /api/webhooks/nowpayments skips — HMAC only. */
   fastify.addHook("onRequest", async (request, reply) => {
     if (request.method === "GET") {
       return;
@@ -545,7 +547,6 @@ async function start() {
     const rawUrl = String(request.url || "");
     const pathname = rawUrl.split("?")[0].split("#")[0];
 
-    /** NOWPayments IPN never sends x-api-key; route is protected by HMAC in postNowpaymentsWebhook */
     if (request.method === "POST" && rawUrl.includes("/webhooks/nowpayments")) {
       return;
     }

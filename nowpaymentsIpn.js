@@ -7,6 +7,19 @@ export function stableStringify(value) {
   return `{${keys.map((k) => JSON.stringify(k) + ":" + stableStringify(value[k])).join(",")}}`;
 }
 
+/** HMAC-SHA512 over exact request bytes (what you get from fastify-raw-body with encoding: false). */
+export function computeRawIpnBodyHmacSha512Hex(buffer, secret) {
+  if (!secret || !Buffer.isBuffer(buffer) || buffer.length === 0) return null;
+  return crypto.createHmac("sha512", secret).update(buffer).digest("hex");
+}
+
+export function verifyNowPaymentsIpnRawBody(buffer, signature, secret) {
+  if (!secret || !signature) return false;
+  const expectedHex = computeRawIpnBodyHmacSha512Hex(buffer, secret);
+  if (!expectedHex) return false;
+  return timingSafeEqualHex(expectedHex, signature);
+}
+
 function timingSafeEqualHex(expectedHex, receivedHex) {
   const a = String(expectedHex).trim().toLowerCase().replace(/^0x/u, "");
   const b = String(receivedHex).trim().toLowerCase().replace(/^0x/u, "");

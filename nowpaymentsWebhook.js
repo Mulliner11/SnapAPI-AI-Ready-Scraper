@@ -1,11 +1,18 @@
 /**
- * POST /webhooks/nowpayments and POST /api/webhooks/nowpayments — NOWPayments IPN callback.
- * Verifies x-nowpayments-sig (HMAC-SHA512 over key-sorted JSON). On payment_status === finished,
- * resolves Order and updates User + legacy users.
+ * POST /webhooks/nowpayments and POST /api/webhooks/nowpayments — NOWPayments IPN.
+ * Requires fastify-raw-body on these routes (request.rawBody = Buffer).
+ * Verifies x-nowpayments-sig = HMAC-SHA512(NP_IPN_SECRET, raw UTF-8 body bytes), hex.
+ * If payment_status === finished, resolves Order by order_id / orderRef and upgrades plan (pro/business) + expiry.
  */
+import crypto from "node:crypto";
 import { getPool, upgradeUserSubscriptionByEmail } from "./db.js";
 import { prisma } from "./prismaClient.js";
-import { computeNpIpnSignatureHex, verifyNowPaymentsIpnSignature } from "./nowpaymentsIpn.js";
+import {
+  computeNpIpnSignatureHex,
+  computeRawIpnBodyHmacSha512Hex,
+  verifyNowPaymentsIpnRawBody,
+  verifyNowPaymentsIpnSignature,
+} from "./nowpaymentsIpn.js";
 
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
 
@@ -22,10 +29,6 @@ function escapeHtmlText(s) {
     .replace(/"/g, "&quot;");
 }
 
-/**
- * Collect possible ids NOWPayments may send. We persist invoice `id` as Order.paymentId;
- * `order_id` in IPN matches the string we sent at invoice creation (stored as Order.orderRef).
- */
 function extractPaymentIdCandidates(payload) {
   const keys = ["order_id", "orderId", "payment_id", "invoice_id", "paymentId", "paymentID"];
   const out = [];
@@ -43,30 +46,18 @@ function normalizePlan(planType) {
   return "pro";
 }
 
-/** Prisma Order.id is a UUID; NOWPayments `order_id` is usually our `snapapi-…` orderRef instead. */
 function looksLikeUuid(s) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(s || "").trim());
 }
 
-function parseWebhookPayload(rawBody) {
-  if (rawBody == null) return { error: "empty", payload: null };
-  if (Buffer.isBuffer(rawBody)) {
-    const s = rawBody.toString("utf8");
-    if (!s.trim()) return { error: "empty", payload: null };
-    try {
-      return { error: null, payload: JSON.parse(s) };
-    } catch {
-      return { error: "invalid_json", payload: null };
-    }
+function getWebhookBuffer(request) {
+  if (Buffer.isBuffer(request.rawBody) && request.rawBody.length > 0) {
+    return request.rawBody;
   }
-  if (typeof rawBody === "object") {
-    return { error: null, payload: rawBody };
+  if (Buffer.isBuffer(request.body) && request.body.length > 0) {
+    return request.body;
   }
-  try {
-    return { error: null, payload: JSON.parse(String(rawBody)) };
-  } catch {
-    return { error: "invalid_json", payload: null };
-  }
+  return null;
 }
 
 async function sendApiKeyActivatedEmail(to, apiKey) {
@@ -99,27 +90,27 @@ async function sendApiKeyActivatedEmail(to, apiKey) {
   }
 }
 
-/**
- * POST /webhooks/nowpayments — JSON body (buffer or object), Prisma Order/User updates.
- */
 export async function postNowpaymentsWebhook(request, reply) {
   console.log("--- WEBHOOK START ---");
-  const parsed = parseWebhookPayload(request.body);
-  if (parsed.error === "invalid_json" && Buffer.isBuffer(request.body)) {
-    console.log("BODY:", JSON.stringify(request.body.toString("utf8").slice(0, 8000), null, 2));
-  } else {
-    console.log("BODY:", JSON.stringify(parsed.payload ?? {}, null, 2));
+
+  const buf = getWebhookBuffer(request);
+  if (!buf) {
+    request.log.warn("[NP IPN] missing raw body (enable fastify-raw-body with encoding:false on this route)");
+    return reply.code(400).send({ error: "Empty or unreadable body" });
   }
 
-  const { error: parseErr, payload } = parsed;
-  if (parseErr === "empty") {
-    return reply.code(400).send({ error: "Empty body" });
+  let payload;
+  try {
+    payload = JSON.parse(buf.toString("utf8"));
+  } catch {
+    return reply.code(400).send({ error: "Invalid JSON" });
   }
-  if (parseErr === "invalid_json" || !payload || typeof payload !== "object") {
+  if (!payload || typeof payload !== "object") {
     return reply.code(400).send({ error: "Invalid JSON" });
   }
 
-  /** HMAC: NP signs canonical JSON (keys sorted recursively), not the raw wire bytes order — see nowpaymentsIpn.js */
+  console.log("BODY:", JSON.stringify(payload, null, 2));
+
   const ipnSecret = getNpIpnSecret();
   if (!ipnSecret) {
     request.log.error("[NP IPN] NP_IPN_SECRET is not set");
@@ -130,24 +121,27 @@ export async function postNowpaymentsWebhook(request, reply) {
   const sigHeader = Array.isArray(rawSig) ? rawSig[0] : rawSig;
   const receivedSignature = sigHeader != null ? String(sigHeader).trim() : "";
 
-  const { expectedHex } = computeNpIpnSignatureHex(payload, ipnSecret);
-
   if (!receivedSignature) {
     console.error("[Webhook Error] Missing Signature");
     request.log.warn("[NP IPN] missing x-nowpayments-sig");
     return reply.code(401).send({ error: "Unauthorized" });
   }
 
-  const signatureOk = verifyNowPaymentsIpnSignature(payload, receivedSignature, ipnSecret);
+  /** Primary: HMAC-SHA512 over exact raw bytes. Fallback: key-sorted JSON (NP docs vary). */
+  let signatureOk = verifyNowPaymentsIpnRawBody(buf, receivedSignature, ipnSecret);
+  if (!signatureOk) {
+    signatureOk = verifyNowPaymentsIpnSignature(payload, receivedSignature, ipnSecret);
+    if (signatureOk) {
+      request.log.info("[NP IPN] signature OK (sorted-JSON canonical fallback)");
+    }
+  }
 
   if (!signatureOk) {
     console.error("[Webhook Error] Signature mismatch");
-    console.error("Expected Signature:", expectedHex ?? "(could not compute — check body JSON)");
+    console.error("Expected Signature (raw-body HMAC):", computeRawIpnBodyHmacSha512Hex(buf, ipnSecret) ?? "(n/a)");
+    console.error("Expected Signature (sorted-JSON HMAC):", computeNpIpnSignatureHex(payload, ipnSecret).expectedHex ?? "(n/a)");
     console.error("Received Signature:", receivedSignature);
-    request.log.warn(
-      { expectedHex: expectedHex ?? null, received: receivedSignature },
-      "[NP IPN] HMAC verification failed"
-    );
+    request.log.warn({ received: receivedSignature }, "[NP IPN] HMAC verification failed");
     return reply.code(401).send({ error: "Unauthorized" });
   }
 
@@ -173,7 +167,6 @@ export async function postNowpaymentsWebhook(request, reply) {
     outcome = await prisma.$transaction(async (tx) => {
       let match = null;
 
-      // 1) NOWPayments `order_id` === our invoice `order_id` === DB Order.orderRef (NOT Prisma Order.id in normal flow)
       if (orderIdFromNp) {
         match = await tx.order.findFirst({
           where: { orderRef: orderIdFromNp },
@@ -187,7 +180,6 @@ export async function postNowpaymentsWebhook(request, reply) {
         );
       }
 
-      // 2) If they ever echo our Prisma UUID as order_id, support findUnique
       if (!match && orderIdFromNp && looksLikeUuid(orderIdFromNp)) {
         match = await tx.order.findUnique({
           where: { id: orderIdFromNp },
@@ -201,7 +193,6 @@ export async function postNowpaymentsWebhook(request, reply) {
         );
       }
 
-      // 3) Match stored NOWPayments invoice id (paymentId) or orderRef against any candidate
       if (!match && ids.length > 0) {
         match = await tx.order.findFirst({
           where: {
@@ -272,7 +263,6 @@ export async function postNowpaymentsWebhook(request, reply) {
 
   console.log("PLAN_UPDATED_SUCCESSFULLY_FOR_USER:", outcome.user.id);
 
-  /** Dashboard + /api/scrape quotas read legacy `users`; keep in sync with Prisma app_users.plan */
   try {
     if (getPool()) {
       await upgradeUserSubscriptionByEmail(outcome.user.email, outcome.user.plan);
