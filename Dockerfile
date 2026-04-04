@@ -18,5 +18,5 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
-# 5. 启动时使用 Railway 注入的真实 DATABASE_URL；用 migrate deploy 应用已提交的迁移（勿用 db push --accept-data-loss）
-CMD ["sh", "-c", "npx prisma migrate deploy && exec node index.js"]
+# 5. 启动：db push 与当前 Railway 库状态最稳妥（避免 P3005 等迁移历史问题）
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && exec node index.js"]
