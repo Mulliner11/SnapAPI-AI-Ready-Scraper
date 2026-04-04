@@ -13,6 +13,10 @@
               panel: "#09090b",
               panelElevated: "#0c0c0f",
             },
+            fontSize: {
+              /** Slightly larger root for 1440p+ readability */
+              base: ["1.0625rem", { lineHeight: "1.65" }],
+            },
             boxShadow: {
               console: "0 1px 0 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.06)",
             },
@@ -28,12 +32,12 @@
       }
       .doc-code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        font-size: 0.75rem;
+        font-size: 0.875rem;
         line-height: 1.65;
       }
     </style>
   </head>
-  <body class="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
+  <body class="min-h-screen bg-zinc-950 text-base text-zinc-100 antialiased leading-relaxed">
     <div class="pointer-events-none fixed inset-0 -z-10">
       <div
         class="absolute left-1/2 top-[-200px] h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-violet-600/12 blur-[120px]"
@@ -45,69 +49,69 @@
 
     <!-- Mobile bar -->
     <header
-      class="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-white/15 bg-zinc-950/95 px-4 py-3 backdrop-blur-xl md:hidden"
+      class="sticky top-0 z-30 flex min-h-[4.25rem] items-center justify-between gap-4 border-b border-white/15 bg-zinc-950/95 px-5 py-4 backdrop-blur-xl md:hidden"
     >
-      <a href="/" class="text-lg font-bold tracking-tight text-white">SnapAPI</a>
-      <div class="flex items-center gap-2">
+      <a href="/" class="text-2xl font-bold tracking-tight text-white">SnapAPI</a>
+      <div class="flex items-center gap-3">
         <a
           href="/dashboard/mcp"
-          class="rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-zinc-200"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-zinc-200"
           >MCP</a
         >
         <button
           type="button"
-          class="snap-logout rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-zinc-200"
+          class="snap-logout rounded-xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-zinc-200"
         >
           Log out
         </button>
       </div>
     </header>
 
-    <div class="flex min-h-[calc(100vh-52px)] md:min-h-screen">
+    <div class="flex min-h-[calc(100vh-4.25rem)] md:min-h-screen">
       <!-- Sidebar -->
       <aside
-        class="relative z-20 hidden w-60 shrink-0 flex-col border-r border-white/15 bg-zinc-950/80 backdrop-blur-xl md:flex lg:w-64"
+        class="relative z-20 hidden w-64 shrink-0 flex-col border-r border-white/15 bg-zinc-950/80 backdrop-blur-xl md:flex lg:w-72"
         aria-label="Main navigation"
       >
-        <div class="flex flex-1 flex-col px-4 pb-6 pt-8 lg:px-5 lg:pt-10">
-          <a href="/" class="text-2xl font-bold tracking-tight text-white lg:text-[1.65rem]">SnapAPI</a>
-          <p class="mt-1 text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-500">Production console</p>
+        <div class="flex flex-1 flex-col px-5 pb-8 pt-10 lg:px-6 lg:pt-12">
+          <a href="/" class="text-3xl font-bold tracking-tight text-white lg:text-4xl">SnapAPI</a>
+          <p class="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Production console</p>
 
-          <nav class="mt-10 flex flex-col gap-1">
+          <nav class="mt-12 flex flex-col gap-2">
             <a
               href="/dashboard"
-              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-4 py-3 text-sm font-semibold text-white shadow-sm"
+              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-5 py-4 text-base font-semibold text-white shadow-sm"
               >Dashboard</a
             >
             <a
               href="/dashboard/mcp"
-              class="rounded-xl border border-white/10 bg-transparent px-4 py-3 text-sm font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              class="rounded-xl border border-white/10 bg-transparent px-5 py-4 text-base font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
               >Enable MCP</a
             >
             <a
               href="/"
-              class="rounded-xl border border-transparent px-4 py-3 text-sm font-semibold text-zinc-500 transition hover:text-zinc-300"
+              class="rounded-xl border border-transparent px-5 py-4 text-base font-semibold text-zinc-500 transition hover:text-zinc-300"
               >Marketing site</a
             >
           </nav>
 
-          <div class="mt-auto border-t border-white/10 pt-6">
-            <div class="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.03] p-3 shadow-console">
+          <div class="mt-auto border-t border-white/10 pt-8">
+            <div class="flex items-center gap-4 rounded-xl border border-white/12 bg-white/[0.03] p-4 shadow-console">
               <div
                 id="userAvatar"
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-sm font-bold text-white shadow-lg shadow-indigo-950/50"
+                class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-base font-bold text-white shadow-lg shadow-indigo-950/50"
                 aria-hidden="true"
               >
                 —
               </div>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-xs font-medium text-zinc-400">Signed in</p>
-                <p id="userEmailSide" class="truncate text-sm font-semibold text-zinc-100"></p>
+                <p class="truncate text-sm font-medium text-zinc-400">Signed in</p>
+                <p id="userEmailSide" class="truncate text-base font-semibold text-zinc-100"></p>
               </div>
             </div>
             <button
               type="button"
-              class="snap-logout mt-3 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
+              class="snap-logout mt-4 w-full rounded-xl border border-white/12 bg-white/[0.04] px-5 py-3.5 text-base font-semibold text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
             >
               Log out
             </button>
@@ -118,68 +122,75 @@
       <!-- Main -->
       <div class="min-w-0 flex-1">
         <header
-          class="sticky top-0 z-10 hidden border-b border-white/15 bg-zinc-950/90 px-6 py-5 backdrop-blur-xl md:block lg:px-10"
+          class="sticky top-0 z-10 hidden min-h-[5rem] border-b border-white/15 bg-zinc-950/90 px-6 py-6 backdrop-blur-xl md:flex md:items-center md:px-10 lg:px-12"
         >
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex w-full items-center justify-between gap-4">
             <div>
-              <h1 class="text-sm font-semibold uppercase tracking-widest text-zinc-500">Console</h1>
-              <p class="mt-0.5 text-lg font-semibold text-white">Overview</p>
+              <h1 class="text-base font-semibold uppercase tracking-widest text-zinc-500">Console</h1>
+              <p class="mt-1 text-xl font-semibold text-white lg:text-2xl">Overview</p>
             </div>
-            <p id="userEmailTop" class="max-w-xs truncate text-sm text-zinc-500"></p>
+            <p id="userEmailTop" class="max-w-md truncate text-base text-zinc-500"></p>
           </div>
         </header>
 
-        <main class="mx-auto max-w-5xl px-4 py-8 lg:px-10 lg:py-12">
-          <p id="loadErr" class="mb-8 hidden rounded-xl border border-red-500/35 bg-red-500/10 px-5 py-4 text-sm text-red-200"></p>
+        <main class="mx-auto max-w-7xl px-5 py-10 lg:px-12 lg:py-14">
+          <p id="loadErr" class="mb-8 hidden rounded-xl border border-red-500/35 bg-red-500/10 px-6 py-4 text-base text-red-200"></p>
+          <p
+            id="paymentSuccessBanner"
+            class="mb-8 hidden rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-6 py-4 text-base text-emerald-100"
+          >
+            Payment received — your plan updates within a few minutes once the webhook runs. Refresh if quota still
+            shows the old tier.
+          </p>
 
-          <div id="mainContent" class="space-y-10 opacity-0 transition-opacity duration-300">
+          <div id="mainContent" class="space-y-12 opacity-0 transition-opacity duration-300">
             <!-- Insights -->
             <section aria-labelledby="insights-heading">
-              <h2 id="insights-heading" class="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Data insights</h2>
-              <div class="mt-4 grid gap-4 sm:grid-cols-3">
+              <h2 id="insights-heading" class="text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">Data insights</h2>
+              <div class="mt-6 grid gap-5 sm:grid-cols-3 lg:gap-6">
                 <div
-                  class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm"
+                  class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-9"
                 >
-                  <p class="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Success rate</p>
-                  <p id="insightSuccess" class="mt-3 font-mono text-3xl font-semibold tabular-nums text-white">—</p>
-                  <p id="insightSuccessSub" class="mt-2 text-xs leading-relaxed text-zinc-500">Last 100 scrape calls</p>
+                  <p class="text-xs font-bold uppercase tracking-wider text-zinc-500 lg:text-sm">Success rate</p>
+                  <p id="insightSuccess" class="mt-4 font-mono text-4xl font-semibold tabular-nums text-white lg:text-5xl">—</p>
+                  <p id="insightSuccessSub" class="mt-3 text-sm leading-relaxed text-zinc-500">Last 100 scrape calls</p>
                 </div>
                 <div
-                  class="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-6 shadow-console backdrop-blur-sm ring-1 ring-emerald-500/10"
+                  class="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-8 shadow-console backdrop-blur-sm ring-1 ring-emerald-500/10 lg:p-9"
                 >
-                  <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-400/90">Tokens saved</p>
-                  <p id="insightTokens" class="mt-3 font-mono text-3xl font-semibold tabular-nums text-emerald-100">—</p>
-                  <p class="mt-2 text-xs leading-relaxed text-zinc-500">
+                  <p class="text-xs font-bold uppercase tracking-wider text-emerald-400/90 lg:text-sm">Tokens saved</p>
+                  <p id="insightTokens" class="mt-4 font-mono text-4xl font-semibold tabular-nums text-emerald-100 lg:text-5xl">—</p>
+                  <p class="mt-3 text-sm leading-relaxed text-zinc-500">
                     vs. raw HTML (est., last 100 successful scrapes)
                   </p>
                 </div>
                 <div
-                  class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm"
+                  class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-9"
                 >
-                  <p class="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Usage</p>
-                  <p id="usageHeadline" class="mt-3 font-mono text-lg font-semibold tabular-nums text-white"></p>
-                  <div class="mt-4 h-4 overflow-hidden rounded-full bg-zinc-900 ring-1 ring-white/10">
+                  <p class="text-xs font-bold uppercase tracking-wider text-zinc-500 lg:text-sm">Usage</p>
+                  <p id="usageHeadline" class="mt-4 font-mono text-2xl font-semibold tabular-nums text-white lg:text-3xl"></p>
+                  <div class="mt-5 h-5 overflow-hidden rounded-full bg-zinc-900 ring-1 ring-white/10 lg:h-6">
                     <div
                       id="usageBar"
                       class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all duration-500"
                       style="width: 0%"
                     ></div>
                   </div>
-                  <p id="usageRemain" class="mt-3 text-sm font-medium text-zinc-400"></p>
-                  <p class="mt-1 text-xs text-zinc-600">Plan: <span id="planName" class="text-zinc-400"></span></p>
+                  <p id="usageRemain" class="mt-4 text-base font-medium text-zinc-400"></p>
+                  <p class="mt-2 text-sm text-zinc-600">Plan: <span id="planName" class="text-zinc-400"></span></p>
                 </div>
               </div>
             </section>
 
             <!-- API Key -->
             <section
-              class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm lg:p-8"
+              class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-10"
               aria-labelledby="apikey-heading"
             >
               <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 id="apikey-heading" class="text-sm font-bold text-white">API key</h2>
-                  <p class="mt-2 max-w-xl text-sm leading-relaxed text-zinc-500">
+                  <h2 id="apikey-heading" class="text-lg font-bold text-white">API key</h2>
+                  <p class="mt-2 max-w-xl text-base leading-relaxed text-zinc-500">
                     Send as <code class="text-indigo-300/90">x-api-key</code> on
                     <code class="text-indigo-300/90">POST /api/scrape</code>.
                   </p>
@@ -188,31 +199,31 @@
                   <button
                     type="button"
                     id="copyKey"
-                    class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-5 py-2.5 text-sm font-semibold text-indigo-100 transition hover:border-indigo-400/50 hover:bg-indigo-500/25"
+                    class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-6 py-3 text-base font-semibold text-indigo-100 transition hover:border-indigo-400/50 hover:bg-indigo-500/25"
                   >
                     Copy
                   </button>
                   <button
                     type="button"
                     id="rotateKey"
-                    class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-5 py-2.5 text-sm font-semibold text-amber-100 transition hover:border-amber-400/40 hover:bg-amber-500/15 disabled:opacity-40"
+                    class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-6 py-3 text-base font-semibold text-amber-100 transition hover:border-amber-400/40 hover:bg-amber-500/15 disabled:opacity-40"
                   >
                     Rotate
                   </button>
                 </div>
               </div>
-              <div class="mt-5 rounded-xl border border-white/10 bg-zinc-950/80 p-4 ring-1 ring-white/5">
-                <code id="apiKeyDisplay" class="block break-all font-mono text-sm text-indigo-200/95"></code>
+              <div class="mt-6 rounded-xl border border-white/10 bg-zinc-950/80 p-5 ring-1 ring-white/5">
+                <code id="apiKeyDisplay" class="block break-all font-mono text-base text-indigo-200/95"></code>
               </div>
-              <p id="copyToast" class="mt-3 hidden text-sm font-medium text-emerald-400">Copied.</p>
-              <p id="rotateToast" class="mt-2 hidden text-sm font-medium text-amber-300">New key is active.</p>
+              <p id="copyToast" class="mt-3 hidden text-base font-medium text-emerald-400">Copied.</p>
+              <p id="rotateToast" class="mt-2 hidden text-base font-medium text-amber-300">New key is active.</p>
 
-              <div class="mt-6 rounded-xl border border-violet-500/25 bg-violet-950/25 p-5 ring-1 ring-violet-500/10">
-                <p class="text-sm font-semibold text-violet-200">Claude Desktop &amp; Cursor</p>
-                <p class="mt-1 text-sm text-zinc-500">MCP tool <code class="text-violet-200/90">snapapi_scrape</code></p>
+              <div class="mt-8 rounded-xl border border-violet-500/25 bg-violet-950/25 p-6 ring-1 ring-violet-500/10">
+                <p class="text-base font-semibold text-violet-200">Claude Desktop &amp; Cursor</p>
+                <p class="mt-2 text-base text-zinc-500">MCP tool <code class="text-violet-200/90">snapapi_scrape</code></p>
                 <a
                   href="/dashboard/mcp"
-                  class="mt-4 inline-flex rounded-xl border border-violet-400/40 bg-violet-600/20 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-600/30"
+                  class="mt-5 inline-flex rounded-xl border border-violet-400/40 bg-violet-600/20 px-5 py-3 text-base font-semibold text-white transition hover:bg-violet-600/30"
                   >Configure MCP</a
                 >
               </div>
@@ -220,32 +231,32 @@
 
             <!-- Quick integrations -->
             <section
-              class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm lg:p-8"
+              class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-10"
               aria-labelledby="quick-int-heading"
             >
               <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 id="quick-int-heading" class="text-sm font-bold text-white">Quick integrations</h2>
-                  <p class="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
+                  <h2 id="quick-int-heading" class="text-lg font-bold text-white">Quick integrations</h2>
+                  <p class="mt-2 max-w-2xl text-base leading-relaxed text-zinc-500">
                     Paste-ready snippets — swap the sample URL and you&rsquo;re done. Each stack is ~5 lines of real logic.
                   </p>
                 </div>
               </div>
 
-              <div class="mt-8 space-y-10">
+              <div class="mt-10 space-y-10">
                 <!-- LangChain -->
-                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-5 ring-1 ring-white/5 lg:p-6">
+                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-6 ring-1 ring-white/5 lg:p-8">
                   <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3 class="text-sm font-bold text-indigo-200">LangChain</h3>
-                      <p class="mt-1 text-xs text-zinc-500">
+                      <h3 class="text-base font-bold text-indigo-200">LangChain</h3>
+                      <p class="mt-2 text-sm text-zinc-500">
                         Use SnapAPI instead of <code class="text-zinc-400">WebBaseLoader</code> — one POST, then a
                         <code class="text-zinc-400">Document</code> for your chain.
                       </p>
                     </div>
                     <button
                       type="button"
-                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-zinc-200 hover:border-indigo-400/30"
+                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-zinc-200 hover:border-indigo-400/30"
                       data-copy-integration="codeLc"
                     >
                       Copy
@@ -253,23 +264,23 @@
                   </div>
                   <pre
                     id="codeLc"
-                    class="doc-code mt-4 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-white/10 bg-black/50 p-4 text-zinc-300"
+                    class="doc-code mt-5 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-white/10 bg-black/50 p-5 text-zinc-300"
                   ></pre>
                 </div>
 
                 <!-- LlamaIndex -->
-                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-5 ring-1 ring-white/5 lg:p-6">
+                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-6 ring-1 ring-white/5 lg:p-8">
                   <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3 class="text-sm font-bold text-emerald-200/95">LlamaIndex</h3>
-                      <p class="mt-1 text-xs text-zinc-500">
+                      <h3 class="text-base font-bold text-emerald-200/95">LlamaIndex</h3>
+                      <p class="mt-2 text-sm text-zinc-500">
                         Feed clean Markdown from SnapAPI straight into
                         <code class="text-zinc-400">VectorStoreIndex.from_documents</code>.
                       </p>
                     </div>
                     <button
                       type="button"
-                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-zinc-200 hover:border-emerald-400/25"
+                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-zinc-200 hover:border-emerald-400/25"
                       data-copy-integration="codeLlamaindex"
                     >
                       Copy
@@ -277,26 +288,26 @@
                   </div>
                   <pre
                     id="codeLlamaindex"
-                    class="doc-code mt-4 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-white/10 bg-black/50 p-4 text-zinc-300"
+                    class="doc-code mt-5 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-white/10 bg-black/50 p-5 text-zinc-300"
                   ></pre>
                 </div>
 
                 <!-- n8n -->
-                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-5 ring-1 ring-white/5 lg:p-6">
+                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-6 ring-1 ring-white/5 lg:p-8">
                   <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3 class="text-sm font-bold text-amber-200/95">n8n</h3>
-                      <p class="mt-1 text-xs text-zinc-500">HTTP Request node — no custom node required.</p>
+                      <h3 class="text-base font-bold text-amber-200/95">n8n</h3>
+                      <p class="mt-2 text-sm text-zinc-500">HTTP Request node — no custom node required.</p>
                     </div>
                     <button
                       type="button"
-                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-zinc-200 hover:border-amber-400/25"
+                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-zinc-200 hover:border-amber-400/25"
                       data-copy-integration="codeN8n"
                     >
                       Copy checklist
                     </button>
                   </div>
-                  <ol class="mt-4 list-decimal space-y-2 pl-5 text-sm text-zinc-400">
+                  <ol class="mt-5 list-decimal space-y-2 pl-5 text-base text-zinc-400">
                     <li>Add an <strong class="text-zinc-200">HTTP Request</strong> node.</li>
                     <li>Method <code class="text-zinc-300">POST</code> · URL <code id="n8nUrlDisplay" class="break-all text-amber-200/90"></code></li>
                     <li>
@@ -307,9 +318,9 @@
                   </ol>
                   <pre
                     id="codeN8n"
-                    class="doc-code mt-3 overflow-x-auto rounded-lg border border-white/10 bg-black/50 p-4 text-zinc-300"
+                    class="doc-code mt-4 overflow-x-auto rounded-lg border border-white/10 bg-black/50 p-5 text-zinc-300"
                   ></pre>
-                  <p class="mt-3 text-xs text-zinc-500">
+                  <p class="mt-4 text-sm text-zinc-500">
                     Map <code class="text-zinc-400">json.markdown</code> (or <code class="text-zinc-400">text_content</code>) into the next
                     node — e.g. embeddings, OpenAI, or storage.
                   </p>
@@ -319,18 +330,18 @@
 
             <!-- Playground -->
             <section
-              class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm lg:p-8"
+              class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-10"
               aria-labelledby="play-heading"
             >
               <div class="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <h2 id="play-heading" class="text-sm font-bold text-white">Playground</h2>
-                  <p class="mt-2 max-w-2xl text-sm text-zinc-500">Live <code class="text-zinc-400">POST /api/scrape</code> against your key.</p>
+                  <h2 id="play-heading" class="text-lg font-bold text-white">Playground</h2>
+                  <p class="mt-2 max-w-2xl text-base text-zinc-500">Live <code class="text-zinc-400">POST /api/scrape</code> against your key.</p>
                 </div>
                 <button
                   type="button"
                   id="copyLangChain"
-                  class="rounded-xl border border-white/12 bg-white/[0.05] px-4 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-indigo-400/35 hover:bg-white/[0.08]"
+                  class="rounded-xl border border-white/12 bg-white/[0.05] px-5 py-3 text-base font-semibold text-zinc-200 transition hover:border-indigo-400/35 hover:bg-white/[0.08]"
                 >
                   Copy as LangChain (Python)
                 </button>
@@ -338,11 +349,11 @@
 
               <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div class="min-w-0 flex-1">
-                  <label for="playgroundUrl" class="text-xs font-semibold uppercase tracking-wider text-zinc-500">Target URL</label>
+                  <label for="playgroundUrl" class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Target URL</label>
                   <input
                     id="playgroundUrl"
                     type="url"
-                    class="mt-2 w-full rounded-xl border border-white/12 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 outline-none ring-0 placeholder:text-zinc-600 focus:border-indigo-500/40"
+                    class="mt-2 w-full rounded-xl border border-white/12 bg-zinc-950/80 px-4 py-3.5 text-base text-zinc-100 outline-none ring-0 placeholder:text-zinc-600 focus:border-indigo-500/40"
                     placeholder="https://example.com"
                     autocomplete="url"
                   />
@@ -350,13 +361,13 @@
                 <button
                   type="button"
                   id="testApi"
-                  class="shrink-0 rounded-xl border border-cyan-500/35 bg-cyan-500/10 px-8 py-3 text-sm font-semibold text-cyan-100 transition hover:border-cyan-400/50 hover:bg-cyan-500/15 disabled:opacity-40"
+                  class="shrink-0 rounded-xl border border-cyan-500/35 bg-cyan-500/10 px-8 py-3.5 text-base font-semibold text-cyan-100 transition hover:border-cyan-400/50 hover:bg-cyan-500/15 disabled:opacity-40"
                 >
                   Run request
                 </button>
               </div>
 
-              <p id="testApiErr" class="mt-4 hidden rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-red-200"></p>
+              <p id="testApiErr" class="mt-4 hidden rounded-xl border border-red-500/35 bg-red-500/10 px-5 py-4 text-base text-red-200"></p>
 
               <div id="playgroundResult" class="mt-6 hidden">
                 <div
@@ -364,26 +375,26 @@
                   role="tablist"
                   aria-label="Response format"
                 >
-                  <button type="button" class="play-tab tab-active rounded-lg border px-4 py-2 text-sm font-semibold" data-tab="md">
+                  <button type="button" class="play-tab tab-active rounded-lg border px-5 py-2.5 text-base font-semibold" data-tab="md">
                     Markdown
                   </button>
                   <button
                     type="button"
-                    class="play-tab rounded-lg border border-transparent px-4 py-2 text-sm font-semibold text-zinc-500"
+                    class="play-tab rounded-lg border border-transparent px-5 py-2.5 text-base font-semibold text-zinc-500"
                     data-tab="json"
                   >
                     JSON
                   </button>
                   <button
                     type="button"
-                    class="play-tab rounded-lg border border-transparent px-4 py-2 text-sm font-semibold text-zinc-500"
+                    class="play-tab rounded-lg border border-transparent px-5 py-2.5 text-base font-semibold text-zinc-500"
                     data-tab="meta"
                   >
                     Metadata
                   </button>
                 </div>
-                <div class="mt-4 rounded-xl border border-white/10 bg-zinc-950/90 p-4 ring-1 ring-white/5">
-                  <p id="testApiTitle" class="mb-3 text-xs font-semibold text-cyan-300/90"></p>
+                <div class="mt-5 rounded-xl border border-white/10 bg-zinc-950/90 p-5 ring-1 ring-white/5">
+                  <p id="testApiTitle" class="mb-3 text-sm font-semibold text-cyan-300/90"></p>
                   <div id="panelMd" class="play-panel max-h-[min(420px,55vh)] overflow-auto">
                     <pre id="tabMd" class="doc-code whitespace-pre-wrap break-words text-zinc-300"></pre>
                   </div>
@@ -399,18 +410,18 @@
 
             <!-- Recent logs -->
             <section
-              class="rounded-2xl border border-white/12 bg-white/[0.02] p-6 shadow-console backdrop-blur-sm lg:p-8"
+              class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-10"
               aria-labelledby="logs-heading"
             >
-              <h2 id="logs-heading" class="text-sm font-bold text-white">Recent logs</h2>
-              <p class="mt-1 text-sm text-zinc-500">Last 5 <code class="text-zinc-400">/api/scrape</code> calls from this account.</p>
-              <div class="mt-5 overflow-x-auto rounded-xl border border-white/10">
-                <table class="w-full min-w-[520px] border-collapse text-left text-sm">
+              <h2 id="logs-heading" class="text-lg font-bold text-white">Recent logs</h2>
+              <p class="mt-2 text-base text-zinc-500">Last 5 <code class="text-zinc-400">/api/scrape</code> calls from this account.</p>
+              <div class="mt-6 overflow-x-auto rounded-xl border border-white/10">
+                <table class="w-full min-w-[520px] border-collapse text-left text-base">
                   <thead>
                     <tr class="border-b border-white/10 bg-zinc-950/80">
-                      <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-500">Time</th>
-                      <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-500">URL</th>
-                      <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-500">Status</th>
+                      <th class="px-5 py-4 text-sm font-bold uppercase tracking-wider text-zinc-500">Time</th>
+                      <th class="px-5 py-4 text-sm font-bold uppercase tracking-wider text-zinc-500">URL</th>
+                      <th class="px-5 py-4 text-sm font-bold uppercase tracking-wider text-zinc-500">Status</th>
                     </tr>
                   </thead>
                   <tbody id="logsBody" class="divide-y divide-white/10 text-zinc-300"></tbody>
@@ -423,11 +434,11 @@
               <a
                 id="upgradeCheckoutLink"
                 href="/checkout?plan=pro"
-                class="inline-flex items-center justify-center rounded-xl border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-600/25 via-violet-600/20 to-indigo-600/25 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-fuchsia-950/20 transition hover:border-fuchsia-400/55 hover:brightness-110"
+                class="inline-flex items-center justify-center rounded-xl border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-600/25 via-violet-600/20 to-indigo-600/25 px-10 py-4 text-base font-semibold text-white shadow-lg shadow-fuchsia-950/20 transition hover:border-fuchsia-400/55 hover:brightness-110"
               >
                 Upgrade (Starter)
               </a>
-              <p class="mt-3 text-sm text-zinc-500">Higher quotas — see pricing on the home page.</p>
+              <p class="mt-3 text-base text-zinc-500">Higher quotas — see pricing on the home page.</p>
             </section>
           </div>
         </main>
@@ -445,6 +456,19 @@
         if (t) h.Authorization = "Bearer " + t;
         return h;
       }
+
+      (function showPaymentReturnBanner() {
+        try {
+          var q = new URLSearchParams(window.location.search);
+          if (q.get("payment") === "success") {
+            var b = document.getElementById("paymentSuccessBanner");
+            if (b) b.classList.remove("hidden");
+            q.delete("payment");
+            var path = window.location.pathname + (q.toString() ? "?" + q.toString() : "") + window.location.hash;
+            window.history.replaceState({}, "", path);
+          }
+        } catch (_) {}
+      })();
 
       function showError(msg) {
         const el = document.getElementById("loadErr");
@@ -493,7 +517,7 @@
           const tr = document.createElement("tr");
           const td = document.createElement("td");
           td.colSpan = 3;
-          td.className = "px-4 py-8 text-center text-sm text-zinc-500";
+          td.className = "px-5 py-8 text-center text-base text-zinc-500";
           td.textContent = "No scrape activity logged yet. Run a request in the playground.";
           tr.appendChild(td);
           tb.appendChild(tr);
@@ -503,19 +527,19 @@
           const tr = document.createElement("tr");
           tr.className = "bg-zinc-950/40";
           const tdT = document.createElement("td");
-          tdT.className = "whitespace-nowrap px-4 py-3 text-xs text-zinc-500";
+          tdT.className = "whitespace-nowrap px-5 py-4 text-sm text-zinc-500";
           const d = row.created_at ? new Date(row.created_at) : null;
           tdT.textContent = d && !isNaN(d.getTime()) ? d.toLocaleString() : "—";
           const tdU = document.createElement("td");
-          tdU.className = "max-w-[280px] truncate px-4 py-3 font-mono text-xs text-zinc-400";
+          tdU.className = "max-w-[280px] truncate px-5 py-4 font-mono text-sm text-zinc-400";
           tdU.textContent = row.target_url || "—";
           tdU.title = row.target_url || "";
           const tdS = document.createElement("td");
-          tdS.className = "px-4 py-3";
+          tdS.className = "px-5 py-4";
           const span = document.createElement("span");
           const code = row.http_status != null ? row.http_status : "—";
           span.className =
-            "inline-flex min-w-[2.5rem] items-center justify-center rounded-lg px-2.5 py-1 font-mono text-xs font-semibold ring-1 " +
+            "inline-flex min-w-[2.5rem] items-center justify-center rounded-lg px-2.5 py-1 font-mono text-sm font-semibold ring-1 " +
             statusBadgeClass(code);
           span.textContent = String(code);
           tdS.appendChild(span);
@@ -597,7 +621,11 @@
       }
 
       async function refreshSummary() {
-        const r = await fetch("/api/dashboard/summary", { headers: authHeaders(), credentials: "include" });
+        const r = await fetch("/api/dashboard/summary", {
+          headers: authHeaders(),
+          credentials: "include",
+          cache: "no-store",
+        });
         if (r.status === 401) {
           window.location.href = "/login";
           return null;
@@ -609,14 +637,22 @@
       async function load() {
         let data = null;
         let hasDb = true;
-        const r = await fetch("/api/dashboard/summary", { headers: authHeaders(), credentials: "include" });
+        const r = await fetch("/api/dashboard/summary", {
+          headers: authHeaders(),
+          credentials: "include",
+          cache: "no-store",
+        });
         if (r.status === 401) {
           window.location.href = "/login";
           return;
         }
         if (r.status === 503) {
           hasDb = false;
-          const r2 = await fetch("/api/user/me", { headers: authHeaders(), credentials: "include" });
+          const r2 = await fetch("/api/user/me", {
+            headers: authHeaders(),
+            credentials: "include",
+            cache: "no-store",
+          });
           if (r2.status === 401) {
             window.location.href = "/login";
             return;

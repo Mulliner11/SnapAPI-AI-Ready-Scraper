@@ -320,6 +320,8 @@ async function registerRoutes() {
 
   /** Current user: session cookie or Bearer JWT (same pg user as dashboard). */
   fastify.get("/api/user/me", async (request, reply) => {
+    reply.header("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    reply.header("Pragma", "no-cache");
     const pool = getPool();
     const uid = await getUserIdFromRequest(request);
     if (!uid || !pool) {
@@ -371,6 +373,8 @@ async function registerRoutes() {
   });
 
   fastify.get("/api/dashboard/summary", async (request, reply) => {
+    reply.header("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    reply.header("Pragma", "no-cache");
     const pool = getPool();
     if (!pool) {
       return reply.code(503).send({ error: "Database not configured" });

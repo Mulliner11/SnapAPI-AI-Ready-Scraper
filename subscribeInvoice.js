@@ -80,8 +80,11 @@ export async function createNowpaymentsInvoiceAndOrder({ prismaUser, email, plan
   }
 
   const baseUrl = (process.env.PUBLIC_APP_URL || "").replace(/\/$/, "");
-  const successUrl = process.env.NP_SUCCESS_URL || (baseUrl ? `${baseUrl}/success` : undefined);
-  const cancelUrl = process.env.NP_CANCEL_URL || (baseUrl ? `${baseUrl}/` : undefined);
+  /** After crypto checkout, send users back to the console (override with NP_SUCCESS_URL). */
+  const successUrl =
+    String(process.env.NP_SUCCESS_URL ?? "").trim() || "https://getsnapapi.uk/dashboard?payment=success";
+  const cancelUrl =
+    String(process.env.NP_CANCEL_URL ?? "").trim() || (baseUrl ? `${baseUrl}/` : undefined);
   const ipnUrl = process.env.NP_IPN_CALLBACK_URL || process.env.NOWPAYMENTS_IPN_CALLBACK_URL;
 
   const orderRef = `snapapi-${prismaUser.id}-${Date.now()}`;
@@ -91,7 +94,7 @@ export async function createNowpaymentsInvoiceAndOrder({ prismaUser, email, plan
     order_id: orderRef,
     order_description: `SnapAPI ${planType} — ${email}`,
   };
-  if (successUrl) invoiceBody.success_url = successUrl;
+  invoiceBody.success_url = successUrl;
   if (cancelUrl) invoiceBody.cancel_url = cancelUrl;
   if (ipnUrl) invoiceBody.ipn_callback_url = ipnUrl;
   const payCurrency = String(process.env.NP_PAY_CURRENCY || "").trim();
