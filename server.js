@@ -255,7 +255,6 @@ async function registerRoutes() {
 
   for (const [path, file, contentType] of [
     ["/globals.css", "globals.css", "text/css; charset=utf-8"],
-    ["/design-system.css", "design-system.css", "text/css; charset=utf-8"],
     ["/ds-tailwind-config.js", "ds-tailwind-config.js", "application/javascript; charset=utf-8"],
     ["/ds-marketing-header-boot.js", "ds-marketing-header-boot.js", "application/javascript; charset=utf-8"],
     ["/partials/marketing-header.html", "partials/marketing-header.html", "text/html; charset=utf-8"],

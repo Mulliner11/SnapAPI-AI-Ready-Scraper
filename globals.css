@@ -1,6 +1,5 @@
 /**
- * SnapAPI global reset + design tokens (Vercel / Linear style).
- * Load on every page before Tailwind. High contrast: default text is gray-900 on white.
+ * SnapAPI global base styles — pairs with Tailwind CDN (no PostCSS build).
  */
 
 *,
@@ -10,108 +9,24 @@
 }
 
 html.ds-root {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
-/* Light: strict white page, near-black type */
-html.ds-root,
-html.ds-root body {
-  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-  color: #111827;
-  background-color: #ffffff;
-}
-
-/* Dark: keep readable contrast */
-html.dark.ds-root,
-html.dark.ds-root body {
-  color: #fafafa;
-  background-color: #000000;
-}
-
-:root {
-  --ds-bg-page: #ffffff;
-  --ds-bg-surface: #ffffff;
-  --ds-border: rgba(0, 0, 0, 0.08);
-  --ds-border-strong: rgba(0, 0, 0, 0.12);
-  --ds-text: #111827;
-  --ds-text-secondary: #4b5563;
-  --ds-text-muted: #6b7280;
-  --ds-radius-sm: 6px;
-  --ds-radius-md: 8px;
-  --ds-radius-lg: 12px;
-  --ds-font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --ds-section-y: 4rem;
-  --ds-section-y-lg: 5rem;
-  --ds-gutter-x: 1.5rem;
-  --ds-gutter-x-sm: 2rem;
-  --ds-max: 80rem;
-}
-
-html.dark {
-  --ds-bg-page: #000000;
-  --ds-bg-surface: #0a0a0a;
-  --ds-border: rgba(255, 255, 255, 0.1);
-  --ds-border-strong: rgba(255, 255, 255, 0.14);
-  --ds-text: #fafafa;
-  --ds-text-secondary: #d1d5db;
-  --ds-text-muted: #9ca3af;
+body {
+  margin: 0;
 }
 
 .ds-body-marketing,
 .ds-body-app {
-  background-color: var(--ds-bg-page);
-  color: var(--ds-text);
-  min-height: 100vh;
+  text-rendering: optimizeLegibility;
 }
 
-.ds-section {
-  padding-left: var(--ds-gutter-x);
-  padding-right: var(--ds-gutter-x);
-  padding-top: var(--ds-section-y);
-  padding-bottom: var(--ds-section-y);
+::selection {
+  background: rgba(99, 102, 241, 0.22);
 }
 
-@media (min-width: 640px) {
-  .ds-section {
-    padding-left: var(--ds-gutter-x-sm);
-    padding-right: var(--ds-gutter-x-sm);
-    padding-top: var(--ds-section-y-lg);
-    padding-bottom: var(--ds-section-y-lg);
-  }
-}
-
-.ds-section-inner {
-  max-width: var(--ds-max);
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.ds-prose-marketing h1 {
-  font-size: 1.875rem;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  color: var(--ds-text);
-}
-
-.ds-prose-marketing h2 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--ds-text);
-}
-
-.ds-prose-marketing p,
-.ds-prose-marketing li {
-  color: var(--ds-text-secondary);
-  line-height: 1.65;
-}
-
-/* Utility: secondary copy (explicit gray-600 equivalent) */
-.ds-text-secondary {
-  color: var(--ds-text-secondary);
-}
-
-.ds-text-muted {
-  color: var(--ds-text-muted);
+.dark ::selection {
+  background: rgba(165, 180, 252, 0.35);
 }
