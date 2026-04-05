@@ -1,34 +1,38 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="ds-root">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Console · SnapAPI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/design-system.css" />
+    <script src="/ds-tailwind-config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
-          extend: {
+          extend: Object.assign({}, window.snapapiDsTailwindExtend || {}, {
             colors: {
               panel: "#09090b",
               panelElevated: "#0c0c0f",
             },
-            fontSize: {
-              /** Slightly larger root for 1440p+ readability */
-              base: ["1.0625rem", { lineHeight: "1.65" }],
-            },
             boxShadow: {
-              console: "0 1px 0 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.06)",
+              console: "0 1px 0 0 rgba(0,0,0,0.04) inset, 0 0 0 1px rgba(0,0,0,0.06)",
             },
-          },
+          }),
         },
       };
     </script>
     <style>
       .tab-active {
-        color: rgb(250 250 250);
-        border-color: rgba(129, 140, 248, 0.55);
-        background: rgba(99, 102, 241, 0.12);
+        color: rgb(23 23 23);
+        border-color: rgba(99, 102, 241, 0.45);
+        background: rgba(99, 102, 241, 0.08);
       }
       .doc-code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -37,45 +41,36 @@
       }
     </style>
   </head>
-  <body class="min-h-screen bg-zinc-950 text-base text-zinc-100 antialiased leading-relaxed">
-    <div class="pointer-events-none fixed inset-0 -z-10">
-      <div
-        class="absolute left-1/2 top-[-200px] h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-violet-600/12 blur-[120px]"
-      ></div>
-      <div
-        class="absolute bottom-[-120px] right-[-80px] h-[360px] w-[360px] rounded-full bg-indigo-600/10 blur-[100px]"
-      ></div>
-    </div>
-
-    <!-- Mobile bar — tall “heavy console” chrome -->
+  <body class="ds-body-app min-h-screen bg-neutral-50 text-base text-neutral-800 antialiased leading-relaxed">
+        <!-- Mobile bar — tall “heavy console” chrome -->
     <header
-      class="sticky top-0 z-30 flex min-h-[8.5rem] items-center justify-between gap-4 border-b border-white/15 bg-zinc-950/95 px-6 py-6 backdrop-blur-xl md:hidden"
+      class="sticky top-0 z-30 flex min-h-[8.5rem] items-center justify-between gap-4 border-b border-neutral-200 bg-white/95 px-6 py-6 backdrop-blur-xl md:hidden"
     >
-      <a href="/" class="text-5xl font-bold tracking-tight text-white">SnapAPI</a>
+      <a href="/" class="text-5xl font-bold tracking-tight text-neutral-900">SnapAPI</a>
       <div class="flex flex-wrap items-center justify-end gap-2">
         <a
           href="/dashboard/billing"
-          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          class="rounded-xl border border-neutral-200 bg-neutral-100 px-5 py-5 text-sm font-semibold text-neutral-800"
           >Billing</a
         >
         <a
           href="/dashboard/logs"
-          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          class="rounded-xl border border-neutral-200 bg-neutral-100 px-5 py-5 text-sm font-semibold text-neutral-800"
           >Logs</a
         >
         <a
           href="/dashboard/settings"
-          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          class="rounded-xl border border-neutral-200 bg-neutral-100 px-5 py-5 text-sm font-semibold text-neutral-800"
           >Settings</a
         >
         <a
           href="/dashboard/mcp"
-          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          class="rounded-xl border border-neutral-200 bg-neutral-100 px-5 py-5 text-sm font-semibold text-neutral-800"
           >MCP</a
         >
         <button
           type="button"
-          class="snap-logout rounded-xl border border-white/15 bg-white/[0.04] px-8 py-5 text-base font-semibold text-zinc-200"
+          class="snap-logout rounded-xl border border-neutral-200 bg-neutral-100 px-8 py-5 text-base font-semibold text-neutral-800"
         >
           Log out
         </button>
@@ -85,48 +80,48 @@
     <div class="flex min-h-[calc(100vh-8.5rem)] md:min-h-screen">
       <!-- Sidebar -->
       <aside
-        class="relative z-20 hidden w-72 shrink-0 flex-col border-r border-white/15 bg-zinc-950/80 backdrop-blur-xl md:flex lg:w-80"
+        class="relative z-20 hidden w-72 shrink-0 flex-col border-r border-neutral-200 bg-white backdrop-blur-xl md:flex lg:w-80"
         aria-label="Main navigation"
       >
         <div class="flex flex-1 flex-col px-6 pb-10 pt-12 lg:px-8 lg:pt-14">
-          <a href="/" class="text-5xl font-bold tracking-tight text-white">SnapAPI</a>
-          <p class="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Production console</p>
+          <a href="/" class="text-5xl font-bold tracking-tight text-neutral-900">SnapAPI</a>
+          <p class="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-neutral-500">Production console</p>
 
           <nav class="mt-14 flex flex-col gap-3">
             <a
               href="/dashboard"
-              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-8 py-6 text-xl font-semibold text-white shadow-sm"
+              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-8 py-6 text-xl font-semibold text-neutral-900 shadow-sm"
               >Dashboard</a
             >
             <a
               href="/dashboard/logs"
-              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              class="rounded-xl border border-neutral-200 bg-transparent px-8 py-6 text-xl font-semibold text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-100 hover:text-neutral-900"
               >Request log</a
             >
             <a
               href="/dashboard/billing"
-              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              class="rounded-xl border border-neutral-200 bg-transparent px-8 py-6 text-xl font-semibold text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-100 hover:text-neutral-900"
               >Billing</a
             >
             <a
               href="/dashboard/settings"
-              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              class="rounded-xl border border-neutral-200 bg-transparent px-8 py-6 text-xl font-semibold text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-100 hover:text-neutral-900"
               >Settings</a
             >
             <a
               href="/dashboard/mcp"
-              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              class="rounded-xl border border-neutral-200 bg-transparent px-8 py-6 text-xl font-semibold text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-100 hover:text-neutral-900"
               >Enable MCP</a
             >
             <a
               href="/"
-              class="rounded-xl border border-transparent px-8 py-6 text-xl font-semibold text-zinc-500 transition hover:text-zinc-300"
+              class="rounded-xl border border-transparent px-8 py-6 text-xl font-semibold text-neutral-500 transition hover:text-neutral-700"
               >Marketing site</a
             >
           </nav>
 
-          <div class="mt-auto border-t border-white/10 pt-8">
-            <div class="flex items-center gap-4 rounded-xl border border-white/12 bg-white/[0.03] p-4 shadow-console">
+          <div class="mt-auto border-t border-neutral-200 pt-8">
+            <div class="flex items-center gap-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4 shadow-sm">
               <div
                 id="userAvatar"
                 class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-base font-bold text-white shadow-lg shadow-indigo-950/50"
@@ -135,13 +130,13 @@
                 —
               </div>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-medium text-zinc-400">Signed in</p>
-                <p id="userEmailSide" class="truncate text-base font-semibold text-zinc-100"></p>
+                <p class="truncate text-sm font-medium text-neutral-600">Signed in</p>
+                <p id="userEmailSide" class="truncate text-base font-semibold text-neutral-900"></p>
               </div>
             </div>
             <button
               type="button"
-              class="snap-logout mt-6 w-full rounded-xl border border-white/12 bg-white/[0.04] px-8 py-6 text-xl font-semibold text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
+              class="snap-logout mt-6 w-full rounded-xl border border-neutral-200 bg-neutral-100 px-8 py-6 text-xl font-semibold text-neutral-800 transition hover:border-neutral-300 hover:bg-neutral-200"
             >
               Log out
             </button>
@@ -152,14 +147,14 @@
       <!-- Main -->
       <div class="min-w-0 flex-1">
         <header
-          class="sticky top-0 z-10 hidden min-h-[10rem] border-b border-white/15 bg-zinc-950/90 px-8 py-8 backdrop-blur-xl md:flex md:items-center md:px-12 lg:px-16"
+          class="sticky top-0 z-10 hidden min-h-[10rem] border-b border-neutral-200 bg-white/95 px-8 py-8 backdrop-blur-xl md:flex md:items-center md:px-12 lg:px-16"
         >
           <div class="flex w-full items-center justify-between gap-4">
             <div>
-              <h1 class="text-lg font-semibold uppercase tracking-widest text-zinc-500">Console</h1>
-              <p class="mt-2 text-2xl font-semibold text-white lg:text-3xl">Overview</p>
+              <h1 class="text-lg font-semibold uppercase tracking-widest text-neutral-500">Console</h1>
+              <p class="mt-2 text-2xl font-semibold text-neutral-900 lg:text-3xl">Overview</p>
             </div>
-            <p id="userEmailTop" class="max-w-md truncate text-lg text-zinc-500"></p>
+            <p id="userEmailTop" class="max-w-md truncate text-lg text-neutral-500"></p>
           </div>
         </header>
 
@@ -176,51 +171,51 @@
           <div id="mainContent" class="space-y-12 opacity-0 transition-opacity duration-300">
             <!-- Insights -->
             <section aria-labelledby="insights-heading">
-              <h2 id="insights-heading" class="text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">Data insights</h2>
+              <h2 id="insights-heading" class="text-sm font-bold uppercase tracking-[0.2em] text-neutral-500">Data insights</h2>
               <div class="mt-6 grid gap-5 sm:grid-cols-3 lg:gap-6">
                 <div
-                  class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-9"
+                  class="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm backdrop-blur-sm lg:p-9"
                 >
-                  <p class="text-xs font-bold uppercase tracking-wider text-zinc-500 lg:text-sm">Success rate</p>
-                  <p id="insightSuccess" class="mt-4 font-mono text-4xl font-semibold tabular-nums text-white lg:text-5xl">—</p>
-                  <p id="insightSuccessSub" class="mt-3 text-sm leading-relaxed text-zinc-500">Last 100 scrape calls</p>
+                  <p class="text-xs font-bold uppercase tracking-wider text-neutral-500 lg:text-sm">Success rate</p>
+                  <p id="insightSuccess" class="mt-4 font-mono text-4xl font-semibold tabular-nums text-neutral-900 lg:text-5xl">—</p>
+                  <p id="insightSuccessSub" class="mt-3 text-sm leading-relaxed text-neutral-500">Last 100 scrape calls</p>
                 </div>
                 <div
-                  class="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-8 shadow-console backdrop-blur-sm ring-1 ring-emerald-500/10 lg:p-9"
+                  class="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-8 shadow-sm backdrop-blur-sm ring-1 ring-emerald-500/10 lg:p-9"
                 >
                   <p class="text-xs font-bold uppercase tracking-wider text-emerald-400/90 lg:text-sm">Tokens saved</p>
                   <p id="insightTokens" class="mt-4 font-mono text-4xl font-semibold tabular-nums text-emerald-100 lg:text-5xl">—</p>
-                  <p class="mt-3 text-sm leading-relaxed text-zinc-500">
+                  <p class="mt-3 text-sm leading-relaxed text-neutral-500">
                     vs. raw HTML (est., last 100 successful scrapes)
                   </p>
                 </div>
                 <div
-                  class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-9"
+                  class="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm backdrop-blur-sm lg:p-9"
                 >
-                  <p class="text-xs font-bold uppercase tracking-wider text-zinc-500 lg:text-sm">Usage</p>
-                  <p id="usageHeadline" class="mt-4 font-mono text-2xl font-semibold tabular-nums text-white lg:text-3xl"></p>
-                  <div class="mt-5 h-5 overflow-hidden rounded-full bg-zinc-900 ring-1 ring-white/10 lg:h-6">
+                  <p class="text-xs font-bold uppercase tracking-wider text-neutral-500 lg:text-sm">Usage</p>
+                  <p id="usageHeadline" class="mt-4 font-mono text-2xl font-semibold tabular-nums text-neutral-900 lg:text-3xl"></p>
+                  <div class="mt-5 h-5 overflow-hidden rounded-full bg-neutral-200 ring-1 ring-neutral-200 lg:h-6">
                     <div
                       id="usageBar"
                       class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all duration-500"
                       style="width: 0%"
                     ></div>
                   </div>
-                  <p id="usageRemain" class="mt-4 text-base font-medium text-zinc-400"></p>
-                  <p class="mt-2 text-sm text-zinc-600">Plan: <span id="planName" class="text-zinc-400"></span></p>
+                  <p id="usageRemain" class="mt-4 text-base font-medium text-neutral-600"></p>
+                  <p class="mt-2 text-sm text-neutral-600">Plan: <span id="planName" class="text-neutral-600"></span></p>
                 </div>
               </div>
             </section>
 
             <!-- API Key -->
             <section
-              class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-10"
+              class="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm backdrop-blur-sm lg:p-10"
               aria-labelledby="apikey-heading"
             >
               <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 id="apikey-heading" class="text-lg font-bold text-white">API key</h2>
-                  <p class="mt-2 max-w-xl text-base leading-relaxed text-zinc-500">
+                  <h2 id="apikey-heading" class="text-lg font-bold text-neutral-900">API key</h2>
+                  <p class="mt-2 max-w-xl text-base leading-relaxed text-neutral-500">
                     Send as <code class="text-indigo-300/90">x-api-key</code> on
                     <code class="text-indigo-300/90">POST /api/scrape</code>.
                   </p>
@@ -242,7 +237,7 @@
                   </button>
                 </div>
               </div>
-              <div class="mt-6 rounded-xl border border-white/10 bg-zinc-950/80 p-5 ring-1 ring-white/5">
+              <div class="mt-6 rounded-xl border border-neutral-200 bg-neutral-100 p-5 ring-1 ring-neutral-200">
                 <code id="apiKeyDisplay" class="block break-all font-mono text-base text-indigo-200/95"></code>
               </div>
               <p id="copyToast" class="mt-3 hidden text-base font-medium text-emerald-400">Copied.</p>
@@ -250,7 +245,7 @@
 
               <div class="mt-8 rounded-xl border border-violet-500/25 bg-violet-950/25 p-6 ring-1 ring-violet-500/10">
                 <p class="text-base font-semibold text-violet-200">Claude Desktop &amp; Cursor</p>
-                <p class="mt-2 text-base text-zinc-500">MCP tool <code class="text-violet-200/90">snapapi_scrape</code></p>
+                <p class="mt-2 text-base text-neutral-500">MCP tool <code class="text-violet-200/90">snapapi_scrape</code></p>
                 <a
                   href="/dashboard/mcp"
                   class="mt-5 inline-flex rounded-xl border border-violet-400/40 bg-violet-600/20 px-5 py-3 text-base font-semibold text-white transition hover:bg-violet-600/30"
@@ -261,13 +256,13 @@
 
             <!-- Quick integrations -->
             <section
-              class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-10"
+              class="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm backdrop-blur-sm lg:p-10"
               aria-labelledby="quick-int-heading"
             >
               <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 id="quick-int-heading" class="text-lg font-bold text-white">Quick integrations</h2>
-                  <p class="mt-2 max-w-2xl text-base leading-relaxed text-zinc-500">
+                  <h2 id="quick-int-heading" class="text-lg font-bold text-neutral-900">Quick integrations</h2>
+                  <p class="mt-2 max-w-2xl text-base leading-relaxed text-neutral-500">
                     Paste-ready snippets — swap the sample URL and you&rsquo;re done. Each stack is ~5 lines of real logic.
                   </p>
                 </div>
@@ -275,18 +270,18 @@
 
               <div class="mt-10 space-y-10">
                 <!-- LangChain -->
-                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-6 ring-1 ring-white/5 lg:p-8">
+                <div class="rounded-xl border border-neutral-200 bg-neutral-50/50 p-6 ring-1 ring-neutral-200 lg:p-8">
                   <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h3 class="text-base font-bold text-indigo-200">LangChain</h3>
-                      <p class="mt-2 text-sm text-zinc-500">
-                        Use SnapAPI instead of <code class="text-zinc-400">WebBaseLoader</code> — one POST, then a
-                        <code class="text-zinc-400">Document</code> for your chain.
+                      <p class="mt-2 text-sm text-neutral-500">
+                        Use SnapAPI instead of <code class="text-neutral-600">WebBaseLoader</code> — one POST, then a
+                        <code class="text-neutral-600">Document</code> for your chain.
                       </p>
                     </div>
                     <button
                       type="button"
-                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-zinc-200 hover:border-indigo-400/30"
+                      class="copy-integration rounded-lg border border-neutral-200 bg-neutral-100 px-4 py-2.5 text-sm font-semibold text-neutral-800 hover:border-indigo-400/30"
                       data-copy-integration="codeLc"
                     >
                       Copy
@@ -294,23 +289,23 @@
                   </div>
                   <pre
                     id="codeLc"
-                    class="doc-code mt-5 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-white/10 bg-black/50 p-5 text-zinc-300"
+                    class="doc-code mt-5 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-neutral-200 bg-neutral-900 p-5 text-neutral-700"
                   ></pre>
                 </div>
 
                 <!-- LlamaIndex -->
-                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-6 ring-1 ring-white/5 lg:p-8">
+                <div class="rounded-xl border border-neutral-200 bg-neutral-50/50 p-6 ring-1 ring-neutral-200 lg:p-8">
                   <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h3 class="text-base font-bold text-emerald-200/95">LlamaIndex</h3>
-                      <p class="mt-2 text-sm text-zinc-500">
+                      <p class="mt-2 text-sm text-neutral-500">
                         Feed clean Markdown from SnapAPI straight into
-                        <code class="text-zinc-400">VectorStoreIndex.from_documents</code>.
+                        <code class="text-neutral-600">VectorStoreIndex.from_documents</code>.
                       </p>
                     </div>
                     <button
                       type="button"
-                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-zinc-200 hover:border-emerald-400/25"
+                      class="copy-integration rounded-lg border border-neutral-200 bg-neutral-100 px-4 py-2.5 text-sm font-semibold text-neutral-800 hover:border-emerald-400/25"
                       data-copy-integration="codeLlamaindex"
                     >
                       Copy
@@ -318,40 +313,40 @@
                   </div>
                   <pre
                     id="codeLlamaindex"
-                    class="doc-code mt-5 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-white/10 bg-black/50 p-5 text-zinc-300"
+                    class="doc-code mt-5 max-h-[min(320px,45vh)] overflow-auto rounded-lg border border-neutral-200 bg-neutral-900 p-5 text-neutral-700"
                   ></pre>
                 </div>
 
                 <!-- n8n -->
-                <div class="rounded-xl border border-white/10 bg-zinc-950/50 p-6 ring-1 ring-white/5 lg:p-8">
+                <div class="rounded-xl border border-neutral-200 bg-neutral-50/50 p-6 ring-1 ring-neutral-200 lg:p-8">
                   <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h3 class="text-base font-bold text-amber-200/95">n8n</h3>
-                      <p class="mt-2 text-sm text-zinc-500">HTTP Request node — no custom node required.</p>
+                      <p class="mt-2 text-sm text-neutral-500">HTTP Request node — no custom node required.</p>
                     </div>
                     <button
                       type="button"
-                      class="copy-integration rounded-lg border border-white/12 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-zinc-200 hover:border-amber-400/25"
+                      class="copy-integration rounded-lg border border-neutral-200 bg-neutral-100 px-4 py-2.5 text-sm font-semibold text-neutral-800 hover:border-amber-400/25"
                       data-copy-integration="codeN8n"
                     >
                       Copy checklist
                     </button>
                   </div>
-                  <ol class="mt-5 list-decimal space-y-2 pl-5 text-base text-zinc-400">
-                    <li>Add an <strong class="text-zinc-200">HTTP Request</strong> node.</li>
-                    <li>Method <code class="text-zinc-300">POST</code> · URL <code id="n8nUrlDisplay" class="break-all text-amber-200/90"></code></li>
+                  <ol class="mt-5 list-decimal space-y-2 pl-5 text-base text-neutral-600">
+                    <li>Add an <strong class="text-neutral-800">HTTP Request</strong> node.</li>
+                    <li>Method <code class="text-neutral-700">POST</code> · URL <code id="n8nUrlDisplay" class="break-all text-amber-200/90"></code></li>
                     <li>
-                      Headers: <code class="text-zinc-300">Content-Type</code> = <code class="text-zinc-300">application/json</code> ·
-                      <code class="text-zinc-300">x-api-key</code> = your dashboard key
+                      Headers: <code class="text-neutral-700">Content-Type</code> = <code class="text-neutral-700">application/json</code> ·
+                      <code class="text-neutral-700">x-api-key</code> = your dashboard key
                     </li>
                     <li>Body → JSON — minimal body (change the URL to any page you need):</li>
                   </ol>
                   <pre
                     id="codeN8n"
-                    class="doc-code mt-4 overflow-x-auto rounded-lg border border-white/10 bg-black/50 p-5 text-zinc-300"
+                    class="doc-code mt-4 overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-900 p-5 text-neutral-700"
                   ></pre>
-                  <p class="mt-4 text-sm text-zinc-500">
-                    Map <code class="text-zinc-400">json.markdown</code> (or <code class="text-zinc-400">text_content</code>) into the next
+                  <p class="mt-4 text-sm text-neutral-500">
+                    Map <code class="text-neutral-600">json.markdown</code> (or <code class="text-neutral-600">text_content</code>) into the next
                     node — e.g. embeddings, OpenAI, or storage.
                   </p>
                 </div>
@@ -360,18 +355,18 @@
 
             <!-- Playground -->
             <section
-              class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-10"
+              class="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm backdrop-blur-sm lg:p-10"
               aria-labelledby="play-heading"
             >
               <div class="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <h2 id="play-heading" class="text-lg font-bold text-white">Playground</h2>
-                  <p class="mt-2 max-w-2xl text-base text-zinc-500">Live <code class="text-zinc-400">POST /api/scrape</code> against your key.</p>
+                  <h2 id="play-heading" class="text-lg font-bold text-neutral-900">Playground</h2>
+                  <p class="mt-2 max-w-2xl text-base text-neutral-500">Live <code class="text-neutral-600">POST /api/scrape</code> against your key.</p>
                 </div>
                 <button
                   type="button"
                   id="copyLangChain"
-                  class="rounded-xl border border-white/12 bg-white/[0.05] px-5 py-3 text-base font-semibold text-zinc-200 transition hover:border-indigo-400/35 hover:bg-white/[0.08]"
+                  class="rounded-xl border border-neutral-200 bg-neutral-50 px-5 py-3 text-base font-semibold text-neutral-800 transition hover:border-indigo-400/35 hover:bg-neutral-100"
                 >
                   Copy as LangChain (Python)
                 </button>
@@ -379,11 +374,11 @@
 
               <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div class="min-w-0 flex-1">
-                  <label for="playgroundUrl" class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Target URL</label>
+                  <label for="playgroundUrl" class="text-sm font-semibold uppercase tracking-wider text-neutral-500">Target URL</label>
                   <input
                     id="playgroundUrl"
                     type="url"
-                    class="mt-2 w-full rounded-xl border border-white/12 bg-zinc-950/80 px-4 py-3.5 text-base text-zinc-100 outline-none ring-0 placeholder:text-zinc-600 focus:border-indigo-500/40"
+                    class="mt-2 w-full rounded-xl border border-neutral-200 bg-neutral-100 px-4 py-3.5 text-base text-neutral-900 outline-none ring-0 placeholder:text-neutral-500 focus:border-indigo-500/40"
                     placeholder="https://example.com"
                     autocomplete="url"
                   />
@@ -401,7 +396,7 @@
 
               <div id="playgroundResult" class="mt-6 hidden">
                 <div
-                  class="flex flex-wrap gap-2 border-b border-white/10 pb-3"
+                  class="flex flex-wrap gap-2 border-b border-neutral-200 pb-3"
                   role="tablist"
                   aria-label="Response format"
                 >
@@ -410,29 +405,29 @@
                   </button>
                   <button
                     type="button"
-                    class="play-tab rounded-lg border border-transparent px-5 py-2.5 text-base font-semibold text-zinc-500"
+                    class="play-tab rounded-lg border border-transparent px-5 py-2.5 text-base font-semibold text-neutral-500"
                     data-tab="json"
                   >
                     JSON
                   </button>
                   <button
                     type="button"
-                    class="play-tab rounded-lg border border-transparent px-5 py-2.5 text-base font-semibold text-zinc-500"
+                    class="play-tab rounded-lg border border-transparent px-5 py-2.5 text-base font-semibold text-neutral-500"
                     data-tab="meta"
                   >
                     Metadata
                   </button>
                 </div>
-                <div class="mt-5 rounded-xl border border-white/10 bg-zinc-950/90 p-5 ring-1 ring-white/5">
+                <div class="mt-5 rounded-xl border border-neutral-200 bg-white/95 p-5 ring-1 ring-neutral-200">
                   <p id="testApiTitle" class="mb-3 text-sm font-semibold text-cyan-300/90"></p>
                   <div id="panelMd" class="play-panel max-h-[min(420px,55vh)] overflow-auto">
-                    <pre id="tabMd" class="doc-code whitespace-pre-wrap break-words text-zinc-300"></pre>
+                    <pre id="tabMd" class="doc-code whitespace-pre-wrap break-words text-neutral-700"></pre>
                   </div>
                   <div id="panelJson" class="play-panel hidden max-h-[min(420px,55vh)] overflow-auto">
-                    <pre id="tabJson" class="doc-code text-zinc-300"></pre>
+                    <pre id="tabJson" class="doc-code text-neutral-700"></pre>
                   </div>
                   <div id="panelMeta" class="play-panel hidden max-h-[min(420px,55vh)] overflow-auto">
-                    <pre id="tabMeta" class="doc-code text-zinc-300"></pre>
+                    <pre id="tabMeta" class="doc-code text-neutral-700"></pre>
                   </div>
                 </div>
               </div>
@@ -440,21 +435,21 @@
 
             <!-- Recent logs -->
             <section
-              class="rounded-2xl border border-white/12 bg-white/[0.02] p-8 shadow-console backdrop-blur-sm lg:p-10"
+              class="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm backdrop-blur-sm lg:p-10"
               aria-labelledby="logs-heading"
             >
-              <h2 id="logs-heading" class="text-lg font-bold text-white">Recent logs</h2>
-              <p class="mt-2 text-base text-zinc-500">Last 5 <code class="text-zinc-400">/api/scrape</code> calls from this account.</p>
-              <div class="mt-6 overflow-x-auto rounded-xl border border-white/10">
+              <h2 id="logs-heading" class="text-lg font-bold text-neutral-900">Recent logs</h2>
+              <p class="mt-2 text-base text-neutral-500">Last 5 <code class="text-neutral-600">/api/scrape</code> calls from this account.</p>
+              <div class="mt-6 overflow-x-auto rounded-xl border border-neutral-200">
                 <table class="w-full min-w-[520px] border-collapse text-left text-base">
                   <thead>
-                    <tr class="border-b border-white/10 bg-zinc-950/80">
-                      <th class="px-5 py-4 text-sm font-bold uppercase tracking-wider text-zinc-500">Time</th>
-                      <th class="px-5 py-4 text-sm font-bold uppercase tracking-wider text-zinc-500">URL</th>
-                      <th class="px-5 py-4 text-sm font-bold uppercase tracking-wider text-zinc-500">Status</th>
+                    <tr class="border-b border-neutral-200 bg-neutral-100">
+                      <th class="px-5 py-4 text-sm font-bold uppercase tracking-wider text-neutral-500">Time</th>
+                      <th class="px-5 py-4 text-sm font-bold uppercase tracking-wider text-neutral-500">URL</th>
+                      <th class="px-5 py-4 text-sm font-bold uppercase tracking-wider text-neutral-500">Status</th>
                     </tr>
                   </thead>
-                  <tbody id="logsBody" class="divide-y divide-white/10 text-zinc-300"></tbody>
+                  <tbody id="logsBody" class="divide-y divide-white/10 text-neutral-700"></tbody>
                 </table>
               </div>
             </section>
@@ -468,7 +463,7 @@
               >
                 Upgrade to Pro
               </a>
-              <p class="mt-3 text-base text-zinc-500">Higher quotas — see pricing on the home page.</p>
+              <p class="mt-3 text-base text-neutral-500">Higher quotas — see pricing on the home page.</p>
             </section>
           </div>
         </main>
@@ -536,7 +531,7 @@
         if (c === 404) return "bg-amber-500/15 text-amber-200 ring-amber-500/25";
         if (c >= 400 && c < 500) return "bg-orange-500/15 text-orange-200 ring-orange-500/20";
         if (c >= 500) return "bg-red-500/15 text-red-300 ring-red-500/25";
-        return "bg-zinc-500/15 text-zinc-300 ring-zinc-500/20";
+        return "bg-neutral-200 text-neutral-700 ring-neutral-300";
       }
 
       function renderLogs(rows) {
@@ -547,7 +542,7 @@
           const tr = document.createElement("tr");
           const td = document.createElement("td");
           td.colSpan = 3;
-          td.className = "px-5 py-8 text-center text-base text-zinc-500";
+          td.className = "px-5 py-8 text-center text-base text-neutral-500";
           td.textContent = "No scrape activity logged yet. Run a request in the playground.";
           tr.appendChild(td);
           tb.appendChild(tr);
@@ -555,13 +550,13 @@
         }
         for (const row of list) {
           const tr = document.createElement("tr");
-          tr.className = "bg-zinc-950/40";
+          tr.className = "bg-neutral-50/40";
           const tdT = document.createElement("td");
-          tdT.className = "whitespace-nowrap px-5 py-4 text-sm text-zinc-500";
+          tdT.className = "whitespace-nowrap px-5 py-4 text-sm text-neutral-500";
           const d = row.created_at ? new Date(row.created_at) : null;
           tdT.textContent = d && !isNaN(d.getTime()) ? d.toLocaleString() : "—";
           const tdU = document.createElement("td");
-          tdU.className = "max-w-[280px] truncate px-5 py-4 font-mono text-sm text-zinc-400";
+          tdU.className = "max-w-[280px] truncate px-5 py-4 font-mono text-sm text-neutral-600";
           tdU.textContent = row.target_url || "—";
           tdU.title = row.target_url || "";
           const tdS = document.createElement("td");
@@ -626,8 +621,8 @@
           const on = b.getAttribute("data-tab") === name;
           b.classList.toggle("tab-active", on);
           b.classList.toggle("border-transparent", !on);
-          b.classList.toggle("text-zinc-500", !on);
-          if (on) b.classList.remove("text-zinc-500");
+          b.classList.toggle("text-neutral-500", !on);
+          if (on) b.classList.remove("text-neutral-500");
         });
         document.getElementById("panelMd").classList.toggle("hidden", name !== "md");
         document.getElementById("panelJson").classList.toggle("hidden", name !== "json");

@@ -204,17 +204,23 @@ function sendBrandFile(reply, filename) {
   if (!existsSync(full)) {
     return reply.code(404).type("text/plain; charset=utf-8").send("Not found");
   }
+  const buf = readFileSync(full);
   const ext = filename.split(".").pop()?.toLowerCase();
-  const ct =
-    ext === "png"
-      ? "image/png"
-      : ext === "svg"
-        ? "image/svg+xml"
-        : ext === "webp"
-          ? "image/webp"
-          : "application/octet-stream";
+  const ct = imageContentTypeFromBytes(buf, ext);
   reply.header("Cache-Control", "public, max-age=86400");
-  return reply.type(ct).send(readFileSync(full));
+  return reply.type(ct).send(buf);
+}
+
+function imageContentTypeFromBytes(buf, ext) {
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return "image/png";
+  if (buf.length >= 6 && buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) return "image/gif";
+  if (buf.length >= 12 && buf.toString("ascii", 8, 12) === "WEBP") return "image/webp";
+  if (ext === "svg") return "image/svg+xml; charset=utf-8";
+  if (ext === "png") return "image/png";
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "webp") return "image/webp";
+  return "application/octet-stream";
 }
 
 const NOWPAYMENTS_IPN_OPTS = { config: { rawBody: true } };
@@ -231,6 +237,19 @@ async function registerRoutes() {
   fastify.get("/assets/brand/:filename", async (request, reply) => {
     return sendBrandFile(reply, request.params.filename);
   });
+
+  fastify.get("/logo.svg", async (request, reply) => {
+    return sendCwdFile(reply, "logo.svg", "image/svg+xml; charset=utf-8");
+  });
+
+  for (const [path, file, contentType] of [
+    ["/design-system.css", "design-system.css", "text/css; charset=utf-8"],
+    ["/ds-tailwind-config.js", "ds-tailwind-config.js", "application/javascript; charset=utf-8"],
+    ["/ds-marketing-header-boot.js", "ds-marketing-header-boot.js", "application/javascript; charset=utf-8"],
+    ["/partials/marketing-header.html", "partials/marketing-header.html", "text/html; charset=utf-8"],
+  ]) {
+    fastify.get(path, async (_request, reply) => sendCwdFile(reply, file, contentType));
+  }
 
   fastify.get("/", async (request, reply) => {
     return sendCwdFile(reply, "index.html", "text/html; charset=utf-8");

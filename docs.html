@@ -1,150 +1,148 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="ds-root scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>API Reference · SnapAPI</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("snapapi-theme");
+          var r = document.documentElement;
+          if (t === "light") r.classList.remove("dark");
+          else if (t === "dark") r.classList.add("dark");
+          else {
+            r.classList.remove("dark");
+            if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) r.classList.add("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/design-system.css" />
+    <script src="/ds-tailwind-config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              panel: "#0b1020",
-              panelSoft: "#111a31",
-              accent: "#7c3aed"
-            },
-            boxShadow: {
-              glow: "0 0 80px rgba(124, 58, 237, 0.28)"
-            }
-          }
-        }
+        darkMode: "class",
+        theme: { extend: window.snapapiDsTailwindExtend || {} },
       };
     </script>
+    <script src="/landing-theme.js" defer></script>
+    <script src="/ds-marketing-header-boot.js" defer></script>
     <style>
       .doc-code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         font-size: 0.8125rem;
         line-height: 1.65;
       }
-      .doc-code::-webkit-scrollbar {
-        height: 6px;
-      }
+      .doc-code::-webkit-scrollbar { height: 6px; }
       .doc-code::-webkit-scrollbar-thumb {
         background: rgba(124, 58, 237, 0.35);
         border-radius: 3px;
       }
       .nav-link.active {
-        border-color: rgba(129, 140, 248, 0.45);
-        background: rgba(99, 102, 241, 0.12);
-        color: rgb(224, 231, 255);
+        border-color: rgba(0, 0, 0, 0.12);
+        background: rgba(0, 0, 0, 0.04);
+        color: rgb(23, 23, 23);
+      }
+      html.dark .nav-link.active {
+        border-color: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgb(250, 250, 250);
       }
     </style>
   </head>
-  <body class="bg-slate-950 text-slate-100 antialiased">
-    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div class="absolute left-1/2 top-[-220px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/30 blur-[130px]"></div>
-      <div class="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-indigo-500/25 blur-[120px]"></div>
-      <div class="absolute bottom-[-140px] left-[-120px] h-[320px] w-[320px] rounded-full bg-cyan-400/20 blur-[110px]"></div>
-    </div>
-
-    <header class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur-md">
-      <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-        <a href="/" class="text-sm font-semibold tracking-tight text-white transition hover:text-indigo-200">SnapAPI</a>
-        <div class="flex items-center gap-3 text-xs">
-          <span class="hidden text-slate-500 sm:inline">API Reference</span>
-          <a
-            href="/"
-            class="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-slate-300 transition hover:border-indigo-400/40 hover:bg-white/10"
-            >Home</a
-          >
-        </div>
-      </div>
-    </header>
-
+  <body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
+    <div id="ds-marketing-header-root"></div>
     <div class="mx-auto flex max-w-6xl flex-col gap-0 lg:flex-row">
       <!-- Sidebar -->
       <aside
-        class="border-b border-white/10 lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:w-52 lg:shrink-0 lg:border-b-0 lg:border-r lg:border-white/10 lg:overflow-y-auto"
+        class="border-b border-neutral-200 bg-white dark:border-white/10 dark:bg-neutral-950 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:w-52 lg:shrink-0 lg:border-b-0 lg:border-r lg:border-neutral-200 lg:dark:border-white/10 lg:overflow-y-auto"
       >
         <nav class="flex gap-1 overflow-x-auto px-4 py-4 lg:flex-col lg:gap-0.5 lg:px-5 lg:py-8" id="docNav" aria-label="Documentation">
           <a
             href="#authentication"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Authentication</a
           >
           <a
             href="#endpoints"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Endpoints</a
           >
           <a
             href="#parameters"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Parameters</a
           >
           <a
             href="#errors"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Errors</a
           >
           <a
             href="#limits"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Limits</a
           >
           <a
             href="#sdk"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >SDK</a
           >
         </nav>
       </aside>
 
       <!-- Main -->
-      <main class="min-w-0 flex-1 px-6 py-10 lg:max-w-none lg:pl-10 lg:pr-12">
-        <p class="text-xs font-medium uppercase tracking-widest text-indigo-300/80">Reference</p>
-        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">SnapAPI HTTP API</h1>
-        <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-          The scrape endpoint uses <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">POST</code> with
-          <code class="rounded bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">Content-Type: application/json</code>.
+      <main class="min-w-0 flex-1 bg-neutral-50 px-6 py-10 dark:bg-neutral-950 lg:max-w-none lg:pl-10 lg:pr-12">
+        <p class="text-xs font-medium uppercase tracking-widest text-violet-600 dark:text-violet-400/90">Reference</p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-neutral-900 dark:text-white">SnapAPI HTTP API</h1>
+        <p class="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+          The scrape endpoint uses <code class="rounded bg-neutral-100 dark:bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">POST</code> with
+          <code class="rounded bg-neutral-100 dark:bg-slate-900/90 px-1.5 py-0.5 text-indigo-200/90">Content-Type: application/json</code>.
           Pages are loaded in headless Chromium; HTML is parsed with Cheerio (ESM), noise is stripped, then content is converted to Markdown (Turndown).
         </p>
 
         <!-- Authentication -->
-        <section id="authentication" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">Authentication</h2>
-          <p class="mt-3 text-sm leading-relaxed text-slate-400">
+        <section id="authentication" class="scroll-mt-24 border-t border-neutral-200 dark:border-white/10 pt-12">
+          <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">Authentication</h2>
+          <p class="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
             <code class="text-indigo-200/90">POST /api/scrape</code> requires
-            <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-fuchsia-200/90">x-api-key</code> (same value as in the Dashboard).
+            <code class="rounded bg-neutral-100 dark:bg-slate-900/80 px-1.5 py-0.5 text-fuchsia-200/90">x-api-key</code> (same value as in the Dashboard).
           </p>
-          <div class="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Header</p>
-            <pre class="doc-code mt-2 overflow-x-auto text-slate-200"><code>x-api-key: &lt;YOUR_API_KEY&gt;</code></pre>
+          <div class="mt-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-100 dark:bg-white/[0.03] p-4">
+            <p class="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-500">Header</p>
+            <pre class="doc-code mt-2 overflow-x-auto text-neutral-800 dark:text-neutral-200"><code>x-api-key: &lt;YOUR_API_KEY&gt;</code></pre>
           </div>
-          <p class="mt-3 text-xs text-slate-500">
+          <p class="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
             Never commit keys to public repositories; inject them from environment variables or a secrets manager in production.
           </p>
         </section>
 
         <!-- Endpoints -->
-        <section id="endpoints" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">Endpoints</h2>
+        <section id="endpoints" class="scroll-mt-24 border-t border-neutral-200 dark:border-white/10 pt-12">
+          <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">Endpoints</h2>
 
           <article class="mt-8">
             <div class="flex flex-wrap items-center gap-2">
               <span class="rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-xs font-medium text-emerald-300">POST</span>
               <code class="text-base text-indigo-200">/api/scrape</code>
             </div>
-            <p class="mt-3 text-sm leading-relaxed text-slate-400">
+            <p class="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
               Returns structured text for the main article (or a plain-text fallback): <code class="text-indigo-200/80">title</code>,
               <code class="text-indigo-200/80">markdown</code>, <code class="text-indigo-200/80">text_content</code>. No object-storage upload.
             </p>
           </article>
 
-          <div class="mt-8 rounded-xl border border-white/10 bg-[#060a12] p-4 ring-1 ring-inset ring-indigo-500/10">
-            <p class="text-xs font-medium text-slate-500">Successful JSON response</p>
-            <pre class="doc-code mt-2 overflow-x-auto text-slate-200"><code>{
+          <div class="mt-8 rounded-xl border border-neutral-200 dark:border-white/10 bg-[#060a12] p-4 ring-1 ring-inset ring-indigo-500/10">
+            <p class="text-xs font-medium text-neutral-500 dark:text-neutral-500">Successful JSON response</p>
+            <pre class="doc-code mt-2 overflow-x-auto text-neutral-800 dark:text-neutral-200"><code>{
   <span class="text-fuchsia-300/90">"title"</span>: <span class="text-emerald-300/90">"…"</span>,
   <span class="text-fuchsia-300/90">"markdown"</span>: <span class="text-emerald-300/90">"# …"</span>,
   <span class="text-fuchsia-300/90">"text_content"</span>: <span class="text-emerald-300/90">"…"</span>
@@ -153,26 +151,26 @@
         </section>
 
         <!-- Parameters -->
-        <section id="parameters" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">Request body parameters</h2>
-          <p class="mt-3 text-sm text-slate-400">JSON body for <code class="text-indigo-200/80">/api/scrape</code>:</p>
+        <section id="parameters" class="scroll-mt-24 border-t border-neutral-200 dark:border-white/10 pt-12">
+          <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">Request body parameters</h2>
+          <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">JSON body for <code class="text-indigo-200/80">/api/scrape</code>:</p>
 
-          <div class="mt-6 overflow-x-auto rounded-xl border border-white/10 bg-slate-950/50">
+          <div class="mt-6 overflow-x-auto rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-950">
             <table class="w-full min-w-[480px] border-collapse text-left text-sm">
               <thead>
-                <tr class="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-slate-500">
+                <tr class="border-b border-neutral-200 dark:border-white/10 bg-neutral-100 dark:bg-white/[0.03] text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-500">
                   <th class="px-4 py-3 font-medium">Field</th>
                   <th class="px-4 py-3 font-medium">Type</th>
                   <th class="px-4 py-3 font-medium">Default</th>
                   <th class="px-4 py-3 font-medium">Description</th>
                 </tr>
               </thead>
-              <tbody class="text-slate-300">
+              <tbody class="text-neutral-700 dark:text-neutral-300">
                 <tr>
                   <td class="px-4 py-3 font-mono text-xs text-indigo-200">url</td>
-                  <td class="px-4 py-3 text-slate-400">string</td>
+                  <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">string</td>
                   <td class="px-4 py-3 text-rose-300/90">— (required)</td>
-                  <td class="px-4 py-3 text-slate-400">HTTP(S) page to load.</td>
+                  <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">HTTP(S) page to load.</td>
                 </tr>
               </tbody>
             </table>
@@ -180,56 +178,56 @@
         </section>
 
         <!-- Errors -->
-        <section id="errors" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">Error responses</h2>
-          <p class="mt-3 text-sm text-slate-400">Errors usually return JSON: <code class="text-indigo-200/80">{ "error": "..." }</code>.</p>
+        <section id="errors" class="scroll-mt-24 border-t border-neutral-200 dark:border-white/10 pt-12">
+          <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">Error responses</h2>
+          <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Errors usually return JSON: <code class="text-indigo-200/80">{ "error": "..." }</code>.</p>
 
           <div class="mt-6 space-y-3">
-            <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="font-mono text-lg font-semibold text-amber-200">400</span>
-                <span class="text-sm text-slate-300">Bad Request</span>
+                <span class="text-sm text-neutral-700 dark:text-neutral-300">Bad Request</span>
               </div>
-              <p class="mt-2 text-sm text-slate-400">Body failed validation (e.g. missing <code class="text-indigo-200/80">url</code>, wrong types, or numeric out of range).</p>
+              <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Body failed validation (e.g. missing <code class="text-indigo-200/80">url</code>, wrong types, or numeric out of range).</p>
             </div>
-            <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="font-mono text-lg font-semibold text-amber-200">401</span>
-                <span class="text-sm text-slate-300">Unauthorized</span>
+                <span class="text-sm text-neutral-700 dark:text-neutral-300">Unauthorized</span>
               </div>
-              <p class="mt-2 text-sm text-slate-400">Missing <code class="text-indigo-200/80">x-api-key</code>, or the key is not in the database.</p>
+              <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Missing <code class="text-indigo-200/80">x-api-key</code>, or the key is not in the database.</p>
             </div>
-            <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="font-mono text-lg font-semibold text-amber-200">429</span>
-                <span class="text-sm text-slate-300">Too Many Requests</span>
+                <span class="text-sm text-neutral-700 dark:text-neutral-300">Too Many Requests</span>
               </div>
-              <p class="mt-2 text-sm text-slate-400">
+              <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
                 Global rate limit (below) or monthly usage over <code class="text-indigo-200/80">max_limit</code> (message similar to
-                <code class="text-slate-500">Quota exceeded for current period</code>).
+                <code class="text-neutral-500 dark:text-neutral-500">Quota exceeded for current period</code>).
               </p>
             </div>
-            <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="font-mono text-lg font-semibold text-amber-200">500</span>
-                <span class="text-sm text-slate-300">Internal Server Error</span>
+                <span class="text-sm text-neutral-700 dark:text-neutral-300">Internal Server Error</span>
               </div>
-              <p class="mt-2 text-sm text-slate-400">Unhandled failure during fetch or extraction. Check server logs.</p>
+              <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Unhandled failure during fetch or extraction. Check server logs.</p>
             </div>
           </div>
-          <p class="mt-4 text-xs text-slate-500">
+          <p class="mt-4 text-xs text-neutral-500 dark:text-neutral-500">
             If the database is not configured, only the demo key may work; real keys need <code class="text-indigo-200/60">DATABASE_URL</code>.
           </p>
         </section>
 
         <!-- Limits -->
-        <section id="limits" class="scroll-mt-24 border-t border-white/10 pt-12">
-          <h2 class="text-xl font-semibold text-white">Limits</h2>
-          <ul class="mt-4 space-y-3 text-sm text-slate-400">
+        <section id="limits" class="scroll-mt-24 border-t border-neutral-200 dark:border-white/10 pt-12">
+          <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">Limits</h2>
+          <ul class="mt-4 space-y-3 text-sm text-neutral-600 dark:text-neutral-400">
             <li class="flex gap-2">
               <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400"></span>
               <span
-                ><strong class="text-slate-200">Global rate limit</strong>: about <code class="text-indigo-200/80">5</code> requests per IP per
+                ><strong class="text-neutral-800 dark:text-neutral-200">Global rate limit</strong>: about <code class="text-indigo-200/80">5</code> requests per IP per
                 <code class="text-indigo-200/80">1 minute</code> (<code class="text-indigo-200/80">/health</code> is excluded). Returns
                 <code class="text-indigo-200/80">429</code> when exceeded.</span
               >
@@ -237,14 +235,14 @@
             <li class="flex gap-2">
               <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-fuchsia-400"></span>
               <span
-                ><strong class="text-slate-200">Monthly quota</strong>: per-user <code class="text-indigo-200/80">usage_count</code> vs.
+                ><strong class="text-neutral-800 dark:text-neutral-200">Monthly quota</strong>: per-user <code class="text-indigo-200/80">usage_count</code> vs.
                 <code class="text-indigo-200/80">max_limit</code>; overages return <code class="text-indigo-200/80">429</code>.</span
               >
             </li>
             <li class="flex gap-2">
               <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400"></span>
               <span
-                ><strong class="text-slate-200">Page load timeout</strong>: default <code class="text-indigo-200/80">60s</code> (override with
+                ><strong class="text-neutral-800 dark:text-neutral-200">Page load timeout</strong>: default <code class="text-indigo-200/80">60s</code> (override with
                 <code class="text-indigo-200/80">SCRAPE_GOTO_TIMEOUT_MS</code> or
                 <code class="text-indigo-200/80">SCREENSHOT_GOTO_TIMEOUT_MS</code>). Timeouts may surface as <code class="text-indigo-200/80">500</code>.</span
               >
@@ -253,20 +251,20 @@
         </section>
 
         <!-- SDK -->
-        <section id="sdk" class="scroll-mt-24 border-t border-white/10 pb-16 pt-12">
-          <h2 class="text-xl font-semibold text-white">SDK examples</h2>
-          <p class="mt-3 text-sm text-slate-400">Minimal runnable examples — substitute your base URL and API key.</p>
+        <section id="sdk" class="scroll-mt-24 border-t border-neutral-200 dark:border-white/10 pb-16 pt-12">
+          <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">SDK examples</h2>
+          <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Minimal runnable examples — substitute your base URL and API key.</p>
 
           <h3 class="mt-8 text-sm font-medium text-indigo-200">Node.js (axios)</h3>
           <pre
-            class="doc-code mt-3 overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-slate-200 shadow-inner ring-1 ring-inset ring-indigo-500/10"
+            class="doc-code mt-3 overflow-x-auto rounded-xl border border-neutral-200 dark:border-white/10 bg-[#060a12] p-4 text-neutral-800 dark:text-neutral-200 shadow-inner ring-1 ring-inset ring-indigo-500/10"
           ><code><span class="text-violet-300">import</span> axios <span class="text-violet-300">from</span> <span class="text-emerald-300">"axios"</span>;
 
-<span class="text-slate-500">const</span> base = <span class="text-emerald-300">"https://snapapi.up.railway.app"</span>;
-<span class="text-slate-500">const</span> apiKey = process.env.<span class="text-amber-200">SNAPAPI_KEY</span>;
+<span class="text-neutral-500 dark:text-neutral-500">const</span> base = <span class="text-emerald-300">"https://snapapi.up.railway.app"</span>;
+<span class="text-neutral-500 dark:text-neutral-500">const</span> apiKey = process.env.<span class="text-amber-200">SNAPAPI_KEY</span>;
 
-<span class="text-slate-500">async function</span> <span class="text-cyan-300">scrape</span>() {
-  <span class="text-slate-500">const</span> { data } = <span class="text-slate-500">await</span> axios.<span class="text-cyan-300">post</span>(
+<span class="text-neutral-500 dark:text-neutral-500">async function</span> <span class="text-cyan-300">scrape</span>() {
+  <span class="text-neutral-500 dark:text-neutral-500">const</span> { data } = <span class="text-neutral-500 dark:text-neutral-500">await</span> axios.<span class="text-cyan-300">post</span>(
     <span class="text-emerald-300">`${base}/api/scrape`</span>,
     { url: <span class="text-emerald-300">"https://example.com"</span> },
     { headers: { <span class="text-emerald-300">"Content-Type"</span>: <span class="text-emerald-300">"application/json"</span>, <span class="text-emerald-300">"x-api-key"</span>: apiKey } }
@@ -278,14 +276,14 @@
 
           <h3 class="mt-10 text-sm font-medium text-indigo-200">Python (requests)</h3>
           <pre
-            class="doc-code mt-3 overflow-x-auto rounded-xl border border-white/10 bg-[#060a12] p-4 text-slate-200 shadow-inner ring-1 ring-inset ring-fuchsia-500/10"
-          ><code><span class="text-slate-500">import</span> os
-<span class="text-slate-500">import</span> requests
+            class="doc-code mt-3 overflow-x-auto rounded-xl border border-neutral-200 dark:border-white/10 bg-[#060a12] p-4 text-neutral-800 dark:text-neutral-200 shadow-inner ring-1 ring-inset ring-fuchsia-500/10"
+          ><code><span class="text-neutral-500 dark:text-neutral-500">import</span> os
+<span class="text-neutral-500 dark:text-neutral-500">import</span> requests
 
 BASE = <span class="text-emerald-300">"https://snapapi.up.railway.app"</span>
 API_KEY = os.environ[<span class="text-emerald-300">"SNAPAPI_KEY"</span>]
 
-<span class="text-slate-500">def</span> <span class="text-cyan-300">scrape</span>():
+<span class="text-neutral-500 dark:text-neutral-500">def</span> <span class="text-cyan-300">scrape</span>():
     r = requests.post(
         <span class="text-emerald-300">f"{BASE}/api/scrape"</span>,
         json={<span class="text-emerald-300">"url"</span>: <span class="text-emerald-300">"https://example.com"</span>},
@@ -294,9 +292,9 @@ API_KEY = os.environ[<span class="text-emerald-300">"SNAPAPI_KEY"</span>]
     )
     r.raise_for_status()
     data = r.json()
-    <span class="text-slate-500">print</span>(data[<span class="text-emerald-300">"title"</span>], data[<span class="text-emerald-300">"markdown"</span>][:<span class="text-amber-200">200</span>])
+    <span class="text-neutral-500 dark:text-neutral-500">print</span>(data[<span class="text-emerald-300">"title"</span>], data[<span class="text-emerald-300">"markdown"</span>][:<span class="text-amber-200">200</span>])
 
-<span class="text-slate-500">if</span> __name__ == <span class="text-emerald-300">"__main__"</span>:
+<span class="text-neutral-500 dark:text-neutral-500">if</span> __name__ == <span class="text-emerald-300">"__main__"</span>:
     scrape()</code></pre>
         </section>
       </main>

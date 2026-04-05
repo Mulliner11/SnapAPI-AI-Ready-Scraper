@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="h-full">
+<html lang="en" class="ds-root h-full">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -24,29 +24,13 @@
       href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/design-system.css" />
+    <script src="/ds-tailwind-config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         darkMode: "class",
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-            },
-            colors: {
-              panel: "#0b1020",
-              panelSoft: "#111a31",
-              accent: "#7c3aed",
-            },
-            fontSize: {
-              base: ["1.0625rem", { lineHeight: "1.65" }],
-            },
-            boxShadow: {
-              glow: "0 0 80px rgba(124, 58, 237, 0.28)",
-              landing: "0 24px 48px -12px rgba(15, 23, 42, 0.12)",
-            },
-          },
-        },
+        theme: { extend: window.snapapiDsTailwindExtend || {} },
       };
     </script>
     <script src="/landing-theme.js" defer></script>
@@ -98,20 +82,77 @@
       }
     </style>
   </head>
-  <body class="h-full bg-white text-base font-sans text-gray-900 antialiased leading-relaxed dark:bg-black dark:text-slate-100">
+  <body class="ds-body-marketing h-full bg-neutral-50 text-base font-sans text-gray-900 antialiased leading-relaxed dark:bg-black dark:text-slate-100">
     <header
       class="sticky top-0 z-50 border-b border-gray-200/80 bg-white/90 backdrop-blur-md dark:border-white/10 dark:bg-black/80"
     >
       <div class="mx-auto max-w-7xl px-6 sm:px-8">
         <div class="relative flex h-14 items-center justify-between gap-4">
-          <a href="/" class="flex shrink-0 items-center" aria-label="SnapAPI home">
-            <img
-              src="/assets/brand/snapapi-logo-marketing.png"
-              alt="SnapAPI"
-              width="132"
-              height="28"
-              class="h-7 w-auto max-w-[9.5rem] object-contain object-left dark:brightness-0 dark:invert"
-            />
+          <a href="/" class="flex shrink-0 items-center gap-2.5" aria-label="SnapAPI home">
+            <svg
+              class="h-7 w-auto shrink-0"
+              viewBox="0 0 138 32"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <style>
+                .snap-mark-bg {
+                  fill: #1a1a1a;
+                }
+                .snap-sq-tl {
+                  fill: #ffffff;
+                  fill-opacity: 1;
+                }
+                .snap-sq-tr {
+                  fill: #ffffff;
+                  fill-opacity: 0.6;
+                }
+                .snap-sq-bl {
+                  fill: #ffffff;
+                  fill-opacity: 0.4;
+                }
+                .snap-sq-br {
+                  fill: #ffffff;
+                  fill-opacity: 0.2;
+                }
+                .snap-word {
+                  fill: #1a1a1a;
+                  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+                  font-size: 17px;
+                  font-weight: 500;
+                  letter-spacing: -0.02em;
+                }
+                html.dark .snap-mark-bg {
+                  fill: #fafaf8;
+                }
+                html.dark .snap-sq-tl {
+                  fill: #1a1a1a;
+                  fill-opacity: 1;
+                }
+                html.dark .snap-sq-tr {
+                  fill: #1a1a1a;
+                  fill-opacity: 0.6;
+                }
+                html.dark .snap-sq-bl {
+                  fill: #1a1a1a;
+                  fill-opacity: 0.4;
+                }
+                html.dark .snap-sq-br {
+                  fill: #1a1a1a;
+                  fill-opacity: 0.2;
+                }
+                html.dark .snap-word {
+                  fill: #fafaf8;
+                }
+              </style>
+              <rect class="snap-mark-bg" x="0" y="0" width="32" height="32" rx="6" ry="6" />
+              <rect class="snap-sq-tl" x="7" y="7" width="8" height="8" />
+              <rect class="snap-sq-tr" x="17" y="7" width="8" height="8" />
+              <rect class="snap-sq-bl" x="7" y="17" width="8" height="8" />
+              <rect class="snap-sq-br" x="17" y="17" width="8" height="8" />
+              <text class="snap-word" x="40" y="16" dominant-baseline="central">SnapAPI</text>
+            </svg>
           </a>
           <nav
             class="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-400 md:flex"

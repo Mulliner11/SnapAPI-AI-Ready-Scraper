@@ -1,8 +1,10 @@
 /**
  * SnapAPI landing: theme only — Light / Dark / System (class on <html>).
+ * Theme controls use document-level delegation so markup can be injected after load.
  */
 (function () {
   var THEME_KEY = "snapapi-theme";
+  var themeUiBound = false;
 
   function getTheme() {
     try {
@@ -39,19 +41,44 @@
     });
   }
 
-  function wireDropdown(btnId, panelId) {
-    var btn = document.getElementById(btnId);
-    var panel = document.getElementById(panelId);
-    if (!btn || !panel) return;
-    btn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      var open = panel.classList.contains("hidden");
-      closeMenus();
-      if (open) {
-        panel.classList.remove("hidden");
-        panel.setAttribute("aria-hidden", "false");
-        btn.setAttribute("aria-expanded", "true");
+  function bindThemeUi() {
+    if (themeUiBound) return;
+    themeUiBound = true;
+
+    document.addEventListener("click", function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+
+      var pick = t.closest("[data-theme-pick]");
+      if (pick) {
+        var m = pick.getAttribute("data-theme-pick");
+        if (m) setTheme(m);
+        closeMenus();
+        return;
       }
+
+      if (t.closest("[data-dropdown]")) return;
+
+      var trigger = t.closest("#theme-trigger");
+      if (trigger) {
+        e.stopPropagation();
+        var panel = document.getElementById("theme-panel");
+        if (!panel) return;
+        var wasHidden = panel.classList.contains("hidden");
+        closeMenus();
+        if (wasHidden) {
+          panel.classList.remove("hidden");
+          panel.setAttribute("aria-hidden", "false");
+          trigger.setAttribute("aria-expanded", "true");
+        }
+        return;
+      }
+
+      closeMenus();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeMenus();
     });
   }
 
@@ -64,26 +91,7 @@
       });
     }
 
-    wireDropdown("theme-trigger", "theme-panel");
-
-    document.addEventListener("click", closeMenus);
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") closeMenus();
-    });
-
-    document.querySelectorAll("[data-theme-pick]").forEach(function (el) {
-      el.addEventListener("click", function () {
-        var m = el.getAttribute("data-theme-pick");
-        if (m) setTheme(m);
-        closeMenus();
-      });
-    });
-
-    document.querySelectorAll("[data-dropdown]").forEach(function (panel) {
-      panel.addEventListener("click", function (e) {
-        e.stopPropagation();
-      });
-    });
+    bindThemeUi();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

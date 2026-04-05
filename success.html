@@ -1,51 +1,64 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="ds-root">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Payment Successful · SnapAPI</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("snapapi-theme");
+          var r = document.documentElement;
+          if (t === "light") r.classList.remove("dark");
+          else if (t === "dark") r.classList.add("dark");
+          else {
+            r.classList.remove("dark");
+            if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) r.classList.add("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/design-system.css" />
+    <script src="/ds-tailwind-config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        theme: {
-          extend: {
-            colors: { panel: "#0b1020", panelSoft: "#111a31", accent: "#7c3aed" },
-            boxShadow: { glow: "0 0 80px rgba(124, 58, 237, 0.28)" },
-          },
-        },
+        darkMode: "class",
+        theme: { extend: window.snapapiDsTailwindExtend || {} },
       };
     </script>
+    <script src="/landing-theme.js" defer></script>
+    <script src="/ds-marketing-header-boot.js" defer></script>
   </head>
-  <body class="bg-slate-950 text-slate-100 antialiased">
-    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div
-        class="absolute left-1/2 top-[-220px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/30 blur-[130px]"
-      ></div>
-      <div class="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-indigo-500/25 blur-[120px]"></div>
-      <div class="absolute bottom-[-140px] left-[-120px] h-[320px] w-[320px] rounded-full bg-cyan-400/20 blur-[110px]"></div>
-    </div>
-
-    <main class="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center px-6 py-12">
-      <div class="w-full rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-black/40 backdrop-blur">
+  <body class="ds-body-marketing min-h-screen bg-neutral-50 font-sans text-neutral-900 antialiased dark:bg-black dark:text-neutral-100">
+    <div id="ds-marketing-header-root"></div>
+    <main class="ds-section-inner mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-2xl flex-col items-center justify-center px-6 py-12 sm:px-8 sm:py-16">
+      <div class="w-full rounded-xl border border-neutral-200 bg-white p-8 shadow-sm dark:border-white/10 dark:bg-zinc-900">
         <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
-            <span class="text-xl">✓</span>
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+            <span class="text-xl" aria-hidden="true">✓</span>
           </div>
           <div>
-            <h1 class="text-2xl font-semibold text-white">Payment successful</h1>
-            <p class="mt-1 text-sm text-slate-400">Thank you for your purchase.</p>
+            <h1 class="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white">Payment successful</h1>
+            <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Thank you for your purchase.</p>
           </div>
         </div>
 
-        <p class="mt-6 text-sm leading-relaxed text-slate-300">
+        <p class="mt-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
           We&rsquo;re enabling your plan now. This usually finishes within one to two minutes.
         </p>
 
-        <div class="mt-6 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-          <p class="text-xs text-slate-500">Next steps</p>
-          <ul class="mt-2 list-inside list-disc space-y-1 text-sm text-slate-300">
+        <div class="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-white/10 dark:bg-black/40">
+          <p class="text-xs font-medium text-neutral-500 dark:text-neutral-500">Next steps</p>
+          <ul class="mt-2 list-inside list-disc space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
             <li>
-              Sign in at the <a class="text-indigo-300 hover:underline" href="/login">Dashboard</a> using the same email you
+              Sign in at the <a class="text-violet-600 hover:underline dark:text-violet-400" href="/login">Dashboard</a> using the same email you
               paid with.
             </li>
             <li>Copy your API key from the Dashboard and start calling the API.</li>
@@ -55,18 +68,17 @@
         <div class="mt-8 flex flex-wrap gap-3">
           <a
             href="/"
-            class="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-slate-200 transition hover:bg-white/10"
+            class="rounded-lg border border-neutral-200 bg-white px-5 py-2.5 text-sm text-neutral-800 transition hover:bg-neutral-50 dark:border-white/15 dark:bg-transparent dark:text-neutral-200 dark:hover:bg-white/5"
             >Back to home</a
           >
           <a
             href="/docs"
-            class="rounded-xl border border-indigo-300/40 bg-gradient-to-r from-indigo-500/80 to-fuchsia-500/80 px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-95"
+            class="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
             >API reference</a
           >
         </div>
       </div>
-      <p class="mt-8 text-xs text-slate-600">Powered by SnapAPI</p>
+      <p class="mt-8 text-xs text-neutral-500 dark:text-neutral-600">Powered by SnapAPI</p>
     </main>
   </body>
 </html>
-
