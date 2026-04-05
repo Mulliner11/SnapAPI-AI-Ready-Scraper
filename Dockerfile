@@ -1,20 +1,14 @@
-# Playwright + Chromium (align npm `playwright` with image major when possible)
-FROM mcr.microsoft.com/playwright:v1.49.0-jammy
-
+FROM mcr.microsoft.com/playwright:v1.42.0-jammy
 WORKDIR /app
-
-COPY package.json package-lock.json ./
-
-# 安装依赖：跳过所有 lifecycle 脚本，避免任何包在安装阶段触发 prisma generate
+# 先复制 package 文件
+COPY package*.json ./
+# 安装依赖，跳过脚本，防止构建时报错
 RUN npm ci --ignore-scripts
-
+# 复制所有代码（包括刚刚移入 prisma 文件夹的 schema）
 COPY . .
-
-# 构建期仅此层需要占位 URL；不写入 ENV，避免覆盖 Railway 运行时注入的 DATABASE_URL
-RUN DATABASE_URL="postgresql://noop:noop@localhost:5432/noop" npx prisma generate
-
-ENV NODE_ENV=production
-
+# 在构建阶段生成 Client (使用占位变量)
+RUN DATABASE_URL='postgresql://noop:noop@localhost:5432/noop' npx prisma generate
+# 暴露端口
 EXPOSE 3000
-
+# 启动命令：强制同步数据库并启动
 CMD ["sh", "-c", "npx prisma db push --accept-data-loss && exec node index.js"]

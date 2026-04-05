@@ -59,11 +59,15 @@ const fastify = Fastify({
 
 fastify.decorateRequest("snapUser", null);
 
-/** NOWPayments IPN: single high-signal log when a POST hits a nowpayments path. */
-fastify.addHook("onRequest", async (request) => {
-  const rawUrl = String(request.url || "").toLowerCase();
-  if (request.method === "POST" && rawUrl.includes("nowpayments")) {
-    console.log("!!! WEBHOOK HIT !!!", request.method, request.url);
+/** Earliest onRequest: capture any request whose URL mentions nowpayments (any method / casing / proxy path). */
+fastify.addHook("onRequest", async (request, _reply) => {
+  const url = String(request.url || "");
+  if (url.toLowerCase().includes("nowpayments")) {
+    console.log("!!! WEBHOOK SIGNAL DETECTED !!!", {
+      method: request.method,
+      url: request.url,
+      headers: request.headers,
+    });
   }
 });
 
@@ -191,6 +195,16 @@ function sendCwdFile(reply, filename, contentType) {
   return reply.type(contentType).send(buf);
 }
 
+const NOWPAYMENTS_IPN_OPTS = { config: { rawBody: true } };
+
+/** Must run after `fastify-raw-body` is registered; before global rate-limit and API-key onRequest hooks. */
+function registerNowpaymentsWebhookRoutes(instance) {
+  instance.post("/webhooks/nowpayments", NOWPAYMENTS_IPN_OPTS, postNowpaymentsWebhook);
+  instance.post("/webhooks/nowpayments/", NOWPAYMENTS_IPN_OPTS, postNowpaymentsWebhook);
+  instance.post("/api/webhooks/nowpayments", NOWPAYMENTS_IPN_OPTS, postNowpaymentsWebhook);
+  instance.post("/api/webhooks/nowpayments/", NOWPAYMENTS_IPN_OPTS, postNowpaymentsWebhook);
+}
+
 async function registerRoutes() {
   fastify.get("/", async (request, reply) => {
     return sendCwdFile(reply, "index.html", "text/html; charset=utf-8");
@@ -302,12 +316,6 @@ async function registerRoutes() {
     },
     postPaymentCreateInvoice
   );
-
-  const nowpaymentsIpnOpts = { config: { rawBody: true } };
-  fastify.post("/webhooks/nowpayments", nowpaymentsIpnOpts, postNowpaymentsWebhook);
-  fastify.post("/webhooks/nowpayments/", nowpaymentsIpnOpts, postNowpaymentsWebhook);
-  fastify.post("/api/webhooks/nowpayments", nowpaymentsIpnOpts, postNowpaymentsWebhook);
-  fastify.post("/api/webhooks/nowpayments/", nowpaymentsIpnOpts, postNowpaymentsWebhook);
 
   fastify.post(
     "/api/auth/send-magic-link",
@@ -553,6 +561,8 @@ async function start() {
     console.error("[SnapAPI] FATAL: fastify-raw-body failed to register:", e?.message || e);
     throw e;
   }
+
+  registerNowpaymentsWebhookRoutes(fastify);
 
   await fastify.register(rateLimit, rateLimitRegisterOptions);
 

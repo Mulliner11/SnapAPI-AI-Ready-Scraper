@@ -1,5 +1,5 @@
 // SnapAPI — Prisma models (separate tables from legacy pg `users` via @@map)
-// Import client from ./prismaClient.js at repo root.
+// Single source of truth: this file under prisma/. Client: ./prismaClient.js at repo root.
 
 generator client {
   provider = "prisma-client-js"
