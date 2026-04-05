@@ -92,6 +92,8 @@ async function sendApiKeyActivatedEmail(to, apiKey) {
 }
 
 export async function postNowpaymentsWebhook(request, reply) {
+  console.log("--- WEBHOOK RECEIVED ---", JSON.stringify(request.body, null, 2));
+
   // HMAC-SHA512 verification
   const signature = request.headers["x-nowpayments-sig"];
   const secret = String(process.env.NP_IPN_SECRET || process.env.NOWPAYMENTS_IPN_SECRET || "").trim();
