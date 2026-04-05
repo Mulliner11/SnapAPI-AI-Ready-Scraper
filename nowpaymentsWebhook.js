@@ -97,8 +97,6 @@ export async function postNowpaymentsWebhook(request, reply) {
     return reply.code(400).send({ error: "Invalid or empty JSON body" });
   }
 
-  console.log("WEBHOOK_RECEIVED", payload);
-
   const paymentStatus = String(payload?.payment_status ?? "").toLowerCase();
   if (paymentStatus !== "finished") {
     return reply.send({ ok: true, skipped: "payment_status not finished" });

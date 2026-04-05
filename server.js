@@ -30,20 +30,27 @@ import { getAuthVerify, postAuthPendingRedirect, postAuthSendMagicLink } from ".
 
 /** HMAC for NOWPayments IPN: `nowpaymentsIpn.js` uses `import crypto from "node:crypto"`. */
 
-const SESSION_SECRET_RAW = process.env.SESSION_SECRET || "snapapi-development-session-secret-min-32-chars-long!!";
-const SESSION_SECRET =
-  SESSION_SECRET_RAW.length >= 32
-    ? SESSION_SECRET_RAW
-    : SESSION_SECRET_RAW.padEnd(32, "0");
-if (!process.env.SESSION_SECRET) {
-  console.warn(
-    "[SnapAPI] SESSION_SECRET not set in env; using padded development default. Set SESSION_SECRET in production (Railway Variables)."
-  );
-} else if (process.env.NODE_ENV === "production" && String(process.env.SESSION_SECRET).trim().length < 32) {
-  console.error(
-    "[SnapAPI] CONFIG: SESSION_SECRET should be at least 32 characters in production. Current value is short — session signing may be weak."
-  );
+const MIN_SECRET_LEN = 32;
+
+function requireSecretEnv(name) {
+  const v = String(process.env[name] ?? "").trim();
+  if (!v) {
+    console.error(
+      `[SnapAPI] FATAL: ${name} is not set. Set a strong secret (at least ${MIN_SECRET_LEN} characters) in your environment (e.g. Railway Variables). Refusing to start.`
+    );
+    process.exit(1);
+  }
+  if (v.length < MIN_SECRET_LEN) {
+    console.error(
+      `[SnapAPI] FATAL: ${name} must be at least ${MIN_SECRET_LEN} characters. Refusing to start.`
+    );
+    process.exit(1);
+  }
+  return v;
 }
+
+const SESSION_SECRET = requireSecretEnv("SESSION_SECRET");
+requireSecretEnv("JWT_SECRET");
 
 const fastify = Fastify({
   logger: true,
@@ -52,14 +59,11 @@ const fastify = Fastify({
 
 fastify.decorateRequest("snapUser", null);
 
-/** Earliest trace: any URL containing `nowpayments` (NP may use trailing slash or proxies rewrite). */
+/** NOWPayments IPN: single high-signal log when a POST hits a nowpayments path. */
 fastify.addHook("onRequest", async (request) => {
-  const u = String(request.url || "");
-  if (u.toLowerCase().includes("nowpayments")) {
-    console.log("!!! RAW REQUEST ARRIVED !!!", request.url);
-  }
-  if (u.toLowerCase().includes("webhook")) {
-    console.log("!!! WEBHOOK HIT AT ONREQUEST LEVEL !!!", request.method, request.url);
+  const rawUrl = String(request.url || "").toLowerCase();
+  if (request.method === "POST" && rawUrl.includes("nowpayments")) {
+    console.log("!!! WEBHOOK HIT !!!", request.method, request.url);
   }
 });
 
@@ -522,10 +526,6 @@ async function start() {
       console.error(
         "[SnapAPI] NOWPayments invoices require NP_API_KEY (Railway → Variables → NP_API_KEY)."
       );
-    }
-    const jwtSecret = String(process.env.JWT_SECRET || "").trim();
-    if (!jwtSecret || jwtSecret.length < 32) {
-      console.warn("[SnapAPI] Set JWT_SECRET (min 32 chars) if you use Bearer JWT with /api/user/me.");
     }
   }
 
