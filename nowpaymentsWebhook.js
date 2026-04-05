@@ -82,7 +82,7 @@ async function sendApiKeyActivatedEmail(to, apiKey) {
         <p><strong>API key</strong> (keep it secret):</p>
         <pre style="background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;word-break:break-all;">${safeKey}</pre>
         <p><a href="${dash}/dashboard">Open dashboard</a></p>
-        <p style="color:#64748b;font-size:12px;">付款已确认，您的 API Key 已激活，可在上方复制使用。</p>`,
+        <p style="font-size:12px;">付款已确认，您的 API Key 已激活，可在上方复制使用。</p>`,
     }),
   });
   if (!res.ok) {

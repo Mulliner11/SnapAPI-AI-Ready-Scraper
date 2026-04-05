@@ -18,12 +18,6 @@
         } catch (e) {}
       })();
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-      rel="stylesheet"
-    />
     <link rel="stylesheet" href="/globals.css">
     <script src="/ds-tailwind-config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -89,7 +83,7 @@
       <div class="mx-auto max-w-7xl px-6 sm:px-8">
         <div class="relative flex h-14 items-center justify-between gap-4">
           <a href="/" class="flex shrink-0 items-center" aria-label="SnapAPI home">
-            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" />
+            <img src="/logo.png" alt="SnapAPI Logo" class="h-8 w-auto object-contain" />
           </a>
           <nav
             class="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 text-sm font-medium text-gray-800 dark:text-gray-300 md:flex"
@@ -546,47 +540,47 @@
       </div>
     </div>
 
-    <div class="border-t border-white/20 bg-[#070712] py-12 md:py-16">
+    <div class="border-t border-gray-200 bg-white py-12 md:py-16">
       <div class="mx-auto max-w-7xl px-6 sm:px-8">
       <!-- Pricing -->
       <section id="pricing" class="mb-20 mt-0 md:mt-2 scroll-mt-24" aria-labelledby="pricing-heading">
         <div class="mb-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
-          <span class="shrink-0 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Plans</span>
-          <div class="h-px flex-1 bg-gradient-to-r from-white/20 via-white/10 to-transparent" aria-hidden="true"></div>
+          <span class="shrink-0 text-[11px] font-bold uppercase tracking-[0.22em] text-gray-500">Plans</span>
+          <div class="h-px flex-1 bg-gradient-to-r from-gray-200 via-gray-100 to-transparent" aria-hidden="true"></div>
         </div>
-        <h2 id="pricing-heading" class="text-2xl font-bold tracking-tight text-white md:text-3xl">Pricing</h2>
-        <p class="mt-2 max-w-2xl text-sm text-slate-400">
+        <h2 id="pricing-heading" class="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">Pricing</h2>
+        <p class="mt-2 max-w-2xl text-sm text-gray-600">
           Three tiers: free to try, production-grade Pro, and Business for teams. All paid plans bill monthly via NOWPayments (300+ cryptocurrencies).
         </p>
 
-        <div class="mt-8 overflow-x-auto rounded-2xl border border-white/20 shadow-xl shadow-black/30 ring-1 ring-white/[0.06]">
+        <div class="mt-8 overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
           <table class="w-full min-w-[560px] border-collapse text-left text-sm">
             <thead>
-              <tr class="border-b border-white/20 bg-slate-950/90">
+              <tr class="border-b border-gray-200 bg-gray-50">
                 <th
                   scope="col"
-                  class="sticky left-0 z-20 w-[28%] min-w-[140px] border-r border-white/20 bg-slate-950/95 px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 backdrop-blur-sm"
+                  class="sticky left-0 z-20 w-[28%] min-w-[140px] border-r border-gray-200 bg-gray-50 px-4 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500"
                 >
                   Compare
                 </th>
-                <th scope="col" class="px-4 py-4 align-bottom text-base font-bold text-white">Free</th>
+                <th scope="col" class="px-4 py-4 align-bottom text-base font-bold text-gray-900">Free</th>
                 <th
                   scope="col"
-                  class="relative overflow-hidden px-4 pb-4 pt-5 align-bottom text-base font-bold text-white bg-gradient-to-b from-indigo-500/22 to-indigo-500/[0.07] ring-1 ring-inset ring-indigo-400/40"
+                  class="relative overflow-hidden border-x border-indigo-100 bg-indigo-50/90 px-4 pb-4 pt-5 align-bottom text-base font-bold text-gray-900"
                 >
                   <span
                     class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-500"
                     aria-hidden="true"
                   ></span>
                   <span
-                    class="absolute right-3 top-3 rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white"
+                    class="absolute right-3 top-3 rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white"
                     >Popular</span
                   >
                   Pro
                 </th>
                 <th
                   scope="col"
-                  class="relative overflow-hidden px-4 pb-4 pt-5 align-bottom text-base font-bold text-white bg-gradient-to-b from-fuchsia-500/20 to-fuchsia-500/[0.06] ring-1 ring-inset ring-fuchsia-400/45"
+                  class="relative overflow-hidden border-x border-fuchsia-100 bg-fuchsia-50/90 px-4 pb-4 pt-5 align-bottom text-base font-bold text-gray-900"
                 >
                   <span
                     class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-fuchsia-400 via-pink-400 to-fuchsia-500"
@@ -600,92 +594,92 @@
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-white/20 bg-slate-950/40">
-              <tr class="hover:bg-white/[0.02]">
+            <tbody class="divide-y divide-gray-200 bg-white">
+              <tr class="hover:bg-gray-50/80">
                 <th
                   scope="row"
-                  class="sticky left-0 z-10 border-r border-white/20 bg-slate-950/95 px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-slate-500 backdrop-blur-sm"
+                  class="sticky left-0 z-10 border-r border-gray-200 bg-gray-50 px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-gray-500"
                 >
                   Price
                 </th>
-                <td class="px-4 py-3.5 text-slate-200">$0<span class="text-slate-500"> / mo</span></td>
-                <td class="bg-indigo-500/[0.06] px-4 py-3.5 font-medium text-white">$29<span class="font-normal text-indigo-200/80"> / mo</span></td>
-                <td class="bg-fuchsia-500/[0.07] px-4 py-3.5 font-medium text-white">$89<span class="font-normal text-fuchsia-200/85"> / mo</span></td>
+                <td class="px-4 py-3.5 text-gray-900">$0<span class="text-gray-500"> / mo</span></td>
+                <td class="bg-indigo-50/80 px-4 py-3.5 font-medium text-gray-900">$29<span class="font-normal text-indigo-700"> / mo</span></td>
+                <td class="bg-fuchsia-50/80 px-4 py-3.5 font-medium text-gray-900">$89<span class="font-normal text-fuchsia-800"> / mo</span></td>
               </tr>
-              <tr class="hover:bg-white/[0.02]">
+              <tr class="hover:bg-gray-50/80">
                 <th
                   scope="row"
-                  class="sticky left-0 z-10 border-r border-white/20 bg-slate-950/95 px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-slate-500 backdrop-blur-sm"
+                  class="sticky left-0 z-10 border-r border-gray-200 bg-gray-50 px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-gray-500"
                 >
                   Scrape calls / mo
                 </th>
-                <td class="px-4 py-3.5 text-slate-300"><span class="font-semibold text-white">200</span></td>
-                <td class="bg-indigo-500/[0.06] px-4 py-3.5 text-slate-200"><span class="font-semibold text-white">5,000</span></td>
-                <td class="bg-fuchsia-500/[0.07] px-4 py-3.5 text-slate-200"><span class="font-semibold text-white">50,000</span></td>
+                <td class="px-4 py-3.5 text-gray-700"><span class="font-semibold text-gray-900">200</span></td>
+                <td class="bg-indigo-50/80 px-4 py-3.5 text-gray-700"><span class="font-semibold text-gray-900">5,000</span></td>
+                <td class="bg-fuchsia-50/80 px-4 py-3.5 text-gray-700"><span class="font-semibold text-gray-900">50,000</span></td>
               </tr>
-              <tr class="hover:bg-white/[0.02]">
+              <tr class="hover:bg-gray-50/80">
                 <th
                   scope="row"
-                  class="sticky left-0 z-10 border-r border-white/20 bg-slate-950/95 px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-slate-500 backdrop-blur-sm"
+                  class="sticky left-0 z-10 border-r border-gray-200 bg-gray-50 px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-gray-500"
                 >
                   Best for
                 </th>
-                <td class="px-4 py-3.5 text-slate-400">Trying the API &amp; light workflows</td>
-                <td class="bg-indigo-500/[0.06] px-4 py-3.5 text-slate-300">Production apps, agents &amp; full feature access</td>
-                <td class="bg-fuchsia-500/[0.07] px-4 py-3.5 text-slate-300">Teams, higher volume &amp; priority support</td>
+                <td class="px-4 py-3.5 text-gray-600">Trying the API &amp; light workflows</td>
+                <td class="bg-indigo-50/80 px-4 py-3.5 text-gray-700">Production apps, agents &amp; full feature access</td>
+                <td class="bg-fuchsia-50/80 px-4 py-3.5 text-gray-700">Teams, higher volume &amp; priority support</td>
               </tr>
-              <tr class="hover:bg-white/[0.02]">
+              <tr class="hover:bg-gray-50/80">
                 <th
                   scope="row"
-                  class="sticky left-0 z-10 border-r border-white/20 bg-slate-950/95 px-4 py-3.5 align-top text-xs font-medium uppercase tracking-wide text-slate-500 backdrop-blur-sm"
+                  class="sticky left-0 z-10 border-r border-gray-200 bg-gray-50 px-4 py-3.5 align-top text-xs font-medium uppercase tracking-wide text-gray-500"
                 >
                   Includes
                 </th>
-                <td class="px-4 py-3.5 align-top text-slate-400">
-                  <ul class="list-inside list-disc space-y-1.5 marker:text-slate-600">
+                <td class="px-4 py-3.5 align-top text-gray-600">
+                  <ul class="list-inside list-disc space-y-1.5 marker:text-gray-400">
                     <li>Markdown + metadata output</li>
                     <li>Dashboard &amp; API key</li>
                   </ul>
                 </td>
-                <td class="bg-indigo-500/[0.06] px-4 py-3.5 align-top text-slate-300">
-                  <ul class="list-inside list-disc space-y-1.5 marker:text-indigo-400/80">
+                <td class="bg-indigo-50/80 px-4 py-3.5 align-top text-gray-700">
+                  <ul class="list-inside list-disc space-y-1.5 marker:text-indigo-500">
                     <li>All advanced scrape options</li>
                     <li>Email support</li>
                   </ul>
                 </td>
-                <td class="bg-fuchsia-500/[0.07] px-4 py-3.5 align-top text-slate-300">
-                  <ul class="list-inside list-disc space-y-1.5 marker:text-fuchsia-400/80">
+                <td class="bg-fuchsia-50/80 px-4 py-3.5 align-top text-gray-700">
+                  <ul class="list-inside list-disc space-y-1.5 marker:text-fuchsia-500">
                     <li>Team-friendly scale</li>
                     <li>Priority support</li>
                   </ul>
                 </td>
               </tr>
-              <tr class="border-t border-white/20 bg-white/[0.02]">
+              <tr class="border-t border-gray-200 bg-gray-50/50">
                 <th
                   scope="row"
-                  class="sticky left-0 z-10 border-r border-white/20 bg-slate-950/95 px-4 py-4 text-xs font-medium uppercase tracking-wide text-slate-500 backdrop-blur-sm"
+                  class="sticky left-0 z-10 border-r border-gray-200 bg-gray-50 px-4 py-4 text-xs font-medium uppercase tracking-wide text-gray-500"
                 ></th>
                 <td class="px-4 py-4 align-top">
                   <a
                     href="/login"
-                    class="inline-flex w-full min-w-[7rem] items-center justify-center rounded-xl border border-white/20 bg-white/5 px-3 py-2.5 text-center text-xs font-medium text-slate-200 transition hover:bg-white/10"
+                    class="inline-flex w-full min-w-[7rem] items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-center text-xs font-medium text-gray-900 shadow-sm transition hover:bg-gray-50"
                     >Get started</a
                   >
                 </td>
-                <td class="bg-indigo-500/[0.08] px-4 py-4 align-top">
+                <td class="bg-indigo-50 px-4 py-4 align-top">
                   <button
                     type="button"
                     data-subscribe-plan="pro"
-                    class="subscribe-open inline-flex w-full min-w-[7rem] items-center justify-center rounded-xl border border-indigo-300/50 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-3 py-2.5 text-center text-xs font-semibold text-white shadow-md shadow-indigo-900/30 transition hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/25"
+                    class="subscribe-open inline-flex w-full min-w-[7rem] items-center justify-center rounded-xl border border-indigo-300/50 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-3 py-2.5 text-center text-xs font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/25"
                   >
                     Subscribe
                   </button>
                 </td>
-                <td class="bg-fuchsia-500/[0.1] px-4 py-4 align-top ring-1 ring-inset ring-fuchsia-400/25">
+                <td class="bg-fuchsia-50 px-4 py-4 align-top ring-1 ring-inset ring-fuchsia-200">
                   <button
                     type="button"
                     data-subscribe-plan="business"
-                    class="subscribe-open inline-flex w-full min-w-[7rem] items-center justify-center rounded-xl border border-fuchsia-400/60 bg-gradient-to-r from-fuchsia-600/50 to-pink-600/45 px-3 py-2.5 text-center text-xs font-bold text-white shadow-md shadow-fuchsia-950/40 transition hover:brightness-110"
+                    class="subscribe-open inline-flex w-full min-w-[7rem] items-center justify-center rounded-xl border border-fuchsia-400/60 bg-gradient-to-r from-fuchsia-600 to-pink-600 px-3 py-2.5 text-center text-xs font-bold text-white shadow-md shadow-fuchsia-500/25 transition hover:brightness-110"
                   >
                     Subscribe
                   </button>
@@ -695,66 +689,66 @@
           </table>
         </div>
 
-        <p class="mt-6 text-center text-sm italic text-slate-400">
+        <p class="mt-6 text-center text-sm italic text-gray-600">
           Cheaper than building and maintaining your own scraper.
         </p>
-        <p class="mt-3 text-center text-xs text-slate-500">Powered by NOWPayments. We accept 300+ cryptocurrencies.</p>
+        <p class="mt-3 text-center text-xs text-gray-500">Powered by NOWPayments. We accept 300+ cryptocurrencies.</p>
       </section>
 
       <!-- Docs / Quickstart — minimal playground strip -->
       <section
-        class="mb-10 rounded-2xl border border-white/20 bg-black/25 py-24 px-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] backdrop-blur-sm md:px-10"
+        class="mb-10 rounded-2xl border border-gray-200 bg-white py-16 px-6 shadow-sm md:px-10 md:py-24"
         aria-labelledby="quickstart-heading"
       >
-        <h2 id="quickstart-heading" class="text-xl font-bold tracking-tight text-white md:text-2xl">API Quickstart</h2>
-        <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-          <code class="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[13px] text-indigo-200/95">POST /api/scrape</code>
-          with header <code class="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[13px] text-indigo-200/95">x-api-key</code>.
-          JSON body: required <code class="text-emerald-200/90">url</code> (string). Replace the host when self-hosting;
-          <span class="doc-api-key-slot font-mono text-slate-300">YOUR_API_KEY</span> fills in when you are logged in.
+        <h2 id="quickstart-heading" class="text-xl font-bold tracking-tight text-gray-900 md:text-2xl">API Quickstart</h2>
+        <p class="mt-3 max-w-2xl text-sm leading-relaxed text-gray-600">
+          <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[13px] text-indigo-700">POST /api/scrape</code>
+          with header <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[13px] text-indigo-700">x-api-key</code>.
+          JSON body: required <code class="font-mono text-emerald-700">url</code> (string). Replace the host when self-hosting;
+          <span class="doc-api-key-slot font-mono text-gray-800">YOUR_API_KEY</span> fills in when you are logged in.
         </p>
 
         <div class="mt-10 grid gap-10 lg:grid-cols-2 lg:gap-14 lg:items-start">
           <div>
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">Request</p>
+            <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-500">Request</p>
             <pre
-              class="doc-code overflow-x-auto rounded-lg border border-white/[0.08] bg-[#050508]/80 p-5 text-left text-slate-200"
-            ><code><span class="text-cyan-300">curl</span> <span class="text-slate-500">-X POST</span> https://getsnapapi.uk/api/scrape \
-  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"Content-Type: application/json"</span> \
-  <span class="text-violet-300">-H</span> <span class="text-emerald-300/90">"x-api-key: <span class="doc-api-key-slot">YOUR_API_KEY</span>"</span> \
-  <span class="text-violet-300">-d</span> <span class="text-emerald-300/90">'{"url":"https://example.com"}'</span></code></pre>
+              class="doc-code overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-5 text-left text-gray-800"
+            ><code><span class="text-cyan-700">curl</span> <span class="text-gray-500">-X POST</span> https://getsnapapi.uk/api/scrape \
+  <span class="text-violet-700">-H</span> <span class="text-emerald-700">"Content-Type: application/json"</span> \
+  <span class="text-violet-700">-H</span> <span class="text-emerald-700">"x-api-key: <span class="doc-api-key-slot">YOUR_API_KEY</span>"</span> \
+  <span class="text-violet-700">-d</span> <span class="text-emerald-700">'{"url":"https://example.com"}'</span></code></pre>
           </div>
           <div>
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">Response <span class="font-normal text-slate-600">· HTTP 200</span></p>
+            <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-500">Response <span class="font-normal text-gray-500">· HTTP 200</span></p>
             <pre
-              class="doc-code overflow-x-auto rounded-lg border border-white/[0.08] bg-[#050508]/80 p-5 text-left text-slate-100"
+              class="doc-code overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-5 text-left text-gray-900"
             ><code>{
-  <span class="text-fuchsia-300/90">"title"</span>: <span class="text-emerald-300/90">"Example Domain"</span>,
-  <span class="text-fuchsia-300/90">"markdown"</span>: <span class="text-emerald-300/90">"# Example Domain\\n\\n…"</span>,
-  <span class="text-fuchsia-300/90">"text_content"</span>: <span class="text-emerald-300/90">"Example Domain This domain is …"</span>
+  <span class="text-fuchsia-700">"title"</span>: <span class="text-emerald-700">"Example Domain"</span>,
+  <span class="text-fuchsia-700">"markdown"</span>: <span class="text-emerald-700">"# Example Domain\\n\\n…"</span>,
+  <span class="text-fuchsia-700">"text_content"</span>: <span class="text-emerald-700">"Example Domain This domain is …"</span>
 }</code></pre>
           </div>
         </div>
       </section>
 
-      <footer class="mt-4 border-t border-white/20 pt-10 pb-6">
+      <footer class="mt-4 border-t border-gray-200 pt-10 pb-6">
         <div class="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
           <div class="max-w-md">
-            <p class="text-sm font-medium text-white">SnapAPI</p>
-            <p class="mt-2 text-xs leading-relaxed text-slate-500">
+            <p class="text-sm font-medium text-gray-900">SnapAPI</p>
+            <p class="mt-2 text-xs leading-relaxed text-gray-600">
               AI-ready scraping: one endpoint from URL to structured text you can trust in pipelines.
             </p>
           </div>
           <div class="flex flex-wrap gap-x-8 gap-y-3 text-xs">
             <div class="flex flex-col gap-2">
-              <span class="font-medium uppercase tracking-wider text-slate-500">Legal</span>
-              <a class="text-slate-400 transition hover:text-indigo-300" href="/privacy">Privacy Policy</a>
-              <a class="text-slate-400 transition hover:text-indigo-300" href="/terms">Terms of Service</a>
+              <span class="font-medium uppercase tracking-wider text-gray-500">Legal</span>
+              <a class="text-gray-600 transition hover:text-indigo-600" href="/privacy">Privacy Policy</a>
+              <a class="text-gray-600 transition hover:text-indigo-600" href="/terms">Terms of Service</a>
             </div>
             <div class="flex flex-col gap-2">
-              <span class="font-medium uppercase tracking-wider text-slate-500">Resources</span>
+              <span class="font-medium uppercase tracking-wider text-gray-500">Resources</span>
               <a
-                class="text-slate-400 transition hover:text-indigo-300"
+                class="text-gray-600 transition hover:text-indigo-600"
                 href="https://snapapi.betteruptime.com"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -762,22 +756,22 @@
               >
               <a
                 id="footer-support-link"
-                class="text-slate-400 transition hover:text-indigo-300"
+                class="text-gray-600 transition hover:text-indigo-600"
                 href="#"
                 >Support</a
               >
             </div>
           </div>
         </div>
-        <p class="mt-6 text-center text-xs text-slate-500 lg:text-left">
+        <p class="mt-6 text-center text-xs text-gray-600 lg:text-left">
           Contact us:
           <a
             id="footer-contact-link"
-            class="text-indigo-300 underline-offset-2 hover:text-indigo-200 hover:underline"
+            class="text-indigo-600 underline-offset-2 hover:text-indigo-800 hover:underline"
             href="#"
           ></a>
         </p>
-        <p class="mt-8 text-center text-[11px] text-slate-600 lg:text-left">© SnapAPI. All rights reserved.</p>
+        <p class="mt-8 text-center text-[11px] text-gray-500 lg:text-left">© SnapAPI. All rights reserved.</p>
       </footer>
       </div>
     </div>
