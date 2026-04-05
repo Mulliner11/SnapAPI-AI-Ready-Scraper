@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 138 32" fill="none" aria-hidden="true">
+  <style>
+    .mark-bg {
+      fill: #1a1a1a;
+    }
+    .sq-tl {
+      fill: #ffffff;
+      fill-opacity: 1;
+    }
+    .sq-tr {
+      fill: #ffffff;
+      fill-opacity: 0.6;
+    }
+    .sq-bl {
+      fill: #ffffff;
+      fill-opacity: 0.4;
+    }
+    .sq-br {
+      fill: #ffffff;
+      fill-opacity: 0.2;
+    }
+    .word {
+      fill: #1a1a1a;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+    @media (prefers-color-scheme: dark) {
+      .mark-bg {
+        fill: #fafaf8;
+      }
+      .sq-tl {
+        fill: #1a1a1a;
+        fill-opacity: 1;
+      }
+      .sq-tr {
+        fill: #1a1a1a;
+        fill-opacity: 0.6;
+      }
+      .sq-bl {
+        fill: #1a1a1a;
+        fill-opacity: 0.4;
+      }
+      .sq-br {
+        fill: #1a1a1a;
+        fill-opacity: 0.2;
+      }
+      .word {
+        fill: #fafaf8;
+      }
+    }
+  </style>
+  <rect class="mark-bg" x="0" y="0" width="32" height="32" rx="6" ry="6" />
+  <rect class="sq-tl" x="7" y="7" width="8" height="8" />
+  <rect class="sq-tr" x="17" y="7" width="8" height="8" />
+  <rect class="sq-bl" x="7" y="17" width="8" height="8" />
+  <rect class="sq-br" x="17" y="17" width="8" height="8" />
+  <text class="word" x="40" y="16" dominant-baseline="central">SnapAPI</text>
+</svg>

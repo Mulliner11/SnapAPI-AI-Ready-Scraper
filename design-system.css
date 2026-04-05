@@ -1,0 +1,2 @@
+/* Re-exports globals for backwards compatibility with older links. */
+@import url("globals.css");
