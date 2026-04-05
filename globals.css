@@ -26,6 +26,30 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Native wordmark — <img src="/logo.png">, no background crop */
+.snapapi-nav-logo {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.snapapi-nav-logo img {
+  display: block;
+  height: 2.25rem; /* h-9 */
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: top;
+  mix-blend-mode: multiply;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.dark .snapapi-nav-logo img,
+html.dark .snapapi-nav-logo img {
+  mix-blend-mode: normal;
+}
+
 ::selection {
   background: rgba(191, 219, 254, 0.9);
 }
