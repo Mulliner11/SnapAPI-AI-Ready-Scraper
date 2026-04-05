@@ -49,7 +49,7 @@
       "</ul>" +
       '<div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap">' +
       '<button type="button" class="snapapi-pc-cancel inline-flex flex-1 min-h-[48px] min-w-[8rem] items-center justify-center rounded-xl border border-white/20 bg-white/5 px-5 py-3.5 text-sm font-medium text-slate-200 transition hover:bg-white/10">Cancel</button>' +
-      '<button type="button" class="snapapi-pc-continue inline-flex flex-1 min-h-[48px] min-w-[8rem] items-center justify-center rounded-xl border border-indigo-400/50 bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-950/40 transition hover:brightness-110">Continue</button>' +
+      '<button type="button" class="snapapi-pc-continue btn-primary flex-1 min-h-[48px] min-w-[8rem] justify-center">Continue</button>' +
       "</div>" +
       "</div>";
 
