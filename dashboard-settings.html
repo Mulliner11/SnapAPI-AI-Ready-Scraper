@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Billing · SnapAPI</title>
+    <title>Settings · SnapAPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -41,27 +41,27 @@
       <div class="flex flex-wrap items-center justify-end gap-2">
         <a
           href="/dashboard/billing"
-          class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-5 py-5 text-sm font-semibold text-white"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-4 py-5 text-xs font-semibold text-zinc-200 sm:text-sm"
           >Billing</a
         >
         <a
           href="/dashboard/logs"
-          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-4 py-5 text-xs font-semibold text-zinc-200 sm:text-sm"
           >Logs</a
         >
         <a
           href="/dashboard/settings"
-          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-4 py-5 text-xs font-semibold text-white sm:text-sm"
           >Settings</a
         >
         <a
           href="/dashboard/mcp"
-          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-4 py-5 text-xs font-semibold text-zinc-200 sm:text-sm"
           >MCP</a
         >
         <button
           type="button"
-          class="snap-logout rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          class="snap-logout rounded-xl border border-white/15 bg-white/[0.04] px-4 py-5 text-xs font-semibold text-zinc-200 sm:text-sm"
         >
           Log out
         </button>
@@ -90,12 +90,12 @@
             >
             <a
               href="/dashboard/billing"
-              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-8 py-6 text-xl font-semibold text-white shadow-sm"
+              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
               >Billing</a
             >
             <a
               href="/dashboard/settings"
-              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-8 py-6 text-xl font-semibold text-white shadow-sm"
               >Settings</a
             >
             <a
@@ -141,27 +141,21 @@
           <div class="flex w-full items-center justify-between gap-4">
             <div>
               <h1 class="text-lg font-semibold uppercase tracking-widest text-zinc-500">Console</h1>
-              <p class="mt-2 text-2xl font-semibold text-white lg:text-3xl">Billing</p>
+              <p class="mt-2 text-2xl font-semibold text-white lg:text-3xl">Settings</p>
             </div>
             <p id="userEmailTop" class="max-w-md truncate text-lg text-zinc-500"></p>
           </div>
         </header>
 
         <main class="mx-auto w-full max-w-3xl px-6 py-12 sm:px-10 lg:px-16 xl:px-20 lg:py-16">
-          <div id="billingPageRoot"></div>
+          <div id="settingsPageRoot"></div>
         </main>
       </div>
     </div>
 
-    <script src="/billingPage.js"></script>
+    <script src="/settingsPage.js"></script>
     <script>
       const JWT_KEY = "snapapi_jwt";
-
-      /**
-       * Optional: your NOWPayments payment link, e.g. https://nowpayments.io/payment/?iid=...
-       * Leave empty to open in-app crypto checkout (`/checkout`).
-       */
-      const MANAGE_SUBSCRIPTION_URL = "";
 
       function authHeaders() {
         const t = localStorage.getItem(JWT_KEY);
@@ -188,6 +182,10 @@
           return;
         }
         const d = await r.json().catch(() => ({}));
+        if (d.loggedIn === false) {
+          window.location.href = "/login";
+          return;
+        }
         if (!r.ok) return;
         const email = d.email || "";
         document.getElementById("userEmailSide").textContent = email;
@@ -204,9 +202,9 @@
       });
 
       hydrateUser();
-      SnapapiBillingPage.mount(document.getElementById("billingPageRoot"), {
+      SnapapiSettingsPage.mount(document.getElementById("settingsPageRoot"), {
         getAuthHeaders: authHeaders,
-        manageSubscriptionUrl: MANAGE_SUBSCRIPTION_URL.trim() || undefined,
+        jwtStorageKey: JWT_KEY,
       });
     </script>
   </body>

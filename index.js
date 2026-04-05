@@ -194,6 +194,29 @@ function sendCwdFile(reply, filename, contentType) {
   return reply.type(contentType).send(buf);
 }
 
+/** Brand assets under `assets/brand/` (single-segment filename, safe path). */
+function sendBrandFile(reply, filename) {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(filename)) {
+    return reply.code(400).type("text/plain; charset=utf-8").send("Bad filename");
+  }
+  const rel = join("assets", "brand", filename);
+  const full = join(process.cwd(), rel);
+  if (!existsSync(full)) {
+    return reply.code(404).type("text/plain; charset=utf-8").send("Not found");
+  }
+  const ext = filename.split(".").pop()?.toLowerCase();
+  const ct =
+    ext === "png"
+      ? "image/png"
+      : ext === "svg"
+        ? "image/svg+xml"
+        : ext === "webp"
+          ? "image/webp"
+          : "application/octet-stream";
+  reply.header("Cache-Control", "public, max-age=86400");
+  return reply.type(ct).send(readFileSync(full));
+}
+
 const NOWPAYMENTS_IPN_OPTS = { config: { rawBody: true } };
 
 /** Must run after `fastify-raw-body` is registered; before global rate-limit and API-key onRequest hooks. */
@@ -205,6 +228,10 @@ function registerNowpaymentsWebhookRoutes(instance) {
 }
 
 async function registerRoutes() {
+  fastify.get("/assets/brand/:filename", async (request, reply) => {
+    return sendBrandFile(reply, request.params.filename);
+  });
+
   fastify.get("/", async (request, reply) => {
     return sendCwdFile(reply, "index.html", "text/html; charset=utf-8");
   });
@@ -217,6 +244,10 @@ async function registerRoutes() {
     return sendCwdFile(reply, "app.js", "application/javascript; charset=utf-8");
   });
 
+  fastify.get("/landing-theme.js", async (request, reply) => {
+    return sendCwdFile(reply, "landing-theme.js", "application/javascript; charset=utf-8");
+  });
+
   fastify.get("/paymentConfirmModal.js", async (request, reply) => {
     return sendCwdFile(reply, "paymentConfirmModal.js", "application/javascript; charset=utf-8");
   });
@@ -227,6 +258,10 @@ async function registerRoutes() {
 
   fastify.get("/billingPage.js", async (request, reply) => {
     return sendCwdFile(reply, "billingPage.js", "application/javascript; charset=utf-8");
+  });
+
+  fastify.get("/settingsPage.js", async (request, reply) => {
+    return sendCwdFile(reply, "settingsPage.js", "application/javascript; charset=utf-8");
   });
 
   fastify.get("/login", async (request, reply) => {
@@ -261,12 +296,20 @@ async function registerRoutes() {
     return sendCwdFile(reply, "dashboard-billing.html", "text/html; charset=utf-8");
   });
 
+  fastify.get("/dashboard/settings", async (request, reply) => {
+    return sendCwdFile(reply, "dashboard-settings.html", "text/html; charset=utf-8");
+  });
+
   fastify.get("/docs", async (request, reply) => {
     return sendCwdFile(reply, "docs.html", "text/html; charset=utf-8");
   });
 
   fastify.get("/docs.html", async (request, reply) => {
     return sendCwdFile(reply, "docs.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/blog", async (request, reply) => {
+    return sendCwdFile(reply, "blog.html", "text/html; charset=utf-8");
   });
 
   fastify.get("/privacy", async (request, reply) => {
