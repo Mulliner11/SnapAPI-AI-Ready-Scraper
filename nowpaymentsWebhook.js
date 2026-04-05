@@ -1,10 +1,10 @@
 /**
  * POST /webhooks/nowpayments and POST /api/webhooks/nowpayments — NOWPayments IPN.
- * TEMPORARY: HMAC verification disabled so payments can activate plan while debugging.
- * Re-enable x-nowpayments-sig checks (nowpaymentsIpn.js) before public production hardening.
+ * HMAC-SHA512 verification using x-nowpayments-sig header.
  */
 import { getPool, upgradeUserSubscriptionByEmail } from "./db.js";
 import { prisma } from "./prismaClient.js";
+import { verifyNowPaymentsIpnSignature, verifyNowPaymentsIpnRawBody } from "./nowpaymentsIpn.js";
 
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
 const RESEND_FROM = "SnapAPI <support@getsnapapi.uk>";
@@ -92,6 +92,35 @@ async function sendApiKeyActivatedEmail(to, apiKey) {
 }
 
 export async function postNowpaymentsWebhook(request, reply) {
+  // HMAC-SHA512 verification
+  const signature = request.headers["x-nowpayments-sig"];
+  const secret = String(process.env.NP_IPN_SECRET || process.env.NOWPAYMENTS_IPN_SECRET || "").trim();
+  
+  if (!secret) {
+    request.log.warn("[NP IPN] NP_IPN_SECRET/NOWPAYMENTS_IPN_SECRET not set, skipping HMAC verification");
+  } else if (!signature) {
+    return reply.code(401).send({ error: "Missing x-nowpayments-sig header" });
+  } else {
+    // Try raw body verification first (preferred)
+    const rawBody = getWebhookBuffer(request);
+    let verified = false;
+    
+    if (rawBody && rawBody.length > 0) {
+      verified = verifyNowPaymentsIpnRawBody(rawBody, signature, secret);
+    }
+    
+    // If raw body verification fails or raw body not available, try canonical JSON verification
+    if (!verified) {
+      const payloadForVerification = rawBody && rawBody.length > 0 ? rawBody : request.body;
+      verified = verifyNowPaymentsIpnSignature(payloadForVerification, signature, secret);
+    }
+    
+    if (!verified) {
+      request.log.warn({ signature, hasRawBody: !!rawBody?.length }, "[NP IPN] HMAC verification failed");
+      return reply.code(401).send({ error: "Invalid signature" });
+    }
+  }
+
   const payload = parseWebhookPayload(request);
   if (!payload || typeof payload !== "object") {
     return reply.code(400).send({ error: "Invalid or empty JSON body" });
