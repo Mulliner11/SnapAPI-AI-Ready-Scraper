@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Billing · SnapAPI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              panel: "#09090b",
+              panelElevated: "#0c0c0f",
+            },
+            fontSize: {
+              base: ["1.0625rem", { lineHeight: "1.65" }],
+            },
+            boxShadow: {
+              console: "0 1px 0 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.06)",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-zinc-950 text-base text-zinc-100 antialiased leading-relaxed">
+    <div class="pointer-events-none fixed inset-0 -z-10">
+      <div
+        class="absolute left-1/2 top-[-200px] h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-violet-600/12 blur-[120px]"
+      ></div>
+      <div
+        class="absolute bottom-[-120px] right-[-80px] h-[360px] w-[360px] rounded-full bg-indigo-600/10 blur-[100px]"
+      ></div>
+    </div>
+
+    <header
+      class="sticky top-0 z-30 flex min-h-[8.5rem] items-center justify-between gap-4 border-b border-white/15 bg-zinc-950/95 px-6 py-6 backdrop-blur-xl md:hidden"
+    >
+      <a href="/" class="text-5xl font-bold tracking-tight text-white">SnapAPI</a>
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        <a
+          href="/dashboard/billing"
+          class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-5 py-5 text-sm font-semibold text-white"
+          >Billing</a
+        >
+        <a
+          href="/dashboard/logs"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          >Logs</a
+        >
+        <a
+          href="/dashboard/mcp"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          >MCP</a
+        >
+        <button
+          type="button"
+          class="snap-logout rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+        >
+          Log out
+        </button>
+      </div>
+    </header>
+
+    <div class="flex min-h-[calc(100vh-8.5rem)] md:min-h-screen">
+      <aside
+        class="relative z-20 hidden w-72 shrink-0 flex-col border-r border-white/15 bg-zinc-950/80 backdrop-blur-xl md:flex lg:w-80"
+        aria-label="Main navigation"
+      >
+        <div class="flex flex-1 flex-col px-6 pb-10 pt-12 lg:px-8 lg:pt-14">
+          <a href="/" class="text-5xl font-bold tracking-tight text-white">SnapAPI</a>
+          <p class="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Production console</p>
+
+          <nav class="mt-14 flex flex-col gap-3">
+            <a
+              href="/dashboard"
+              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              >Dashboard</a
+            >
+            <a
+              href="/dashboard/logs"
+              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              >Request log</a
+            >
+            <a
+              href="/dashboard/billing"
+              class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-8 py-6 text-xl font-semibold text-white shadow-sm"
+              >Billing</a
+            >
+            <a
+              href="/dashboard/mcp"
+              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              >Enable MCP</a
+            >
+            <a
+              href="/"
+              class="rounded-xl border border-transparent px-8 py-6 text-xl font-semibold text-zinc-500 transition hover:text-zinc-300"
+              >Marketing site</a
+            >
+          </nav>
+
+          <div class="mt-auto border-t border-white/10 pt-8">
+            <div class="flex items-center gap-4 rounded-xl border border-white/12 bg-white/[0.03] p-4 shadow-console">
+              <div
+                id="userAvatar"
+                class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-base font-bold text-white shadow-lg shadow-indigo-950/50"
+                aria-hidden="true"
+              >
+                —
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium text-zinc-400">Signed in</p>
+                <p id="userEmailSide" class="truncate text-base font-semibold text-zinc-100"></p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="snap-logout mt-6 w-full rounded-xl border border-white/12 bg-white/[0.04] px-8 py-6 text-xl font-semibold text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
+            >
+              Log out
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="min-w-0 flex-1">
+        <header
+          class="sticky top-0 z-10 hidden min-h-[10rem] border-b border-white/15 bg-zinc-950/90 px-8 py-8 backdrop-blur-xl md:flex md:items-center md:px-12 lg:px-16"
+        >
+          <div class="flex w-full items-center justify-between gap-4">
+            <div>
+              <h1 class="text-lg font-semibold uppercase tracking-widest text-zinc-500">Console</h1>
+              <p class="mt-2 text-2xl font-semibold text-white lg:text-3xl">Billing</p>
+            </div>
+            <p id="userEmailTop" class="max-w-md truncate text-lg text-zinc-500"></p>
+          </div>
+        </header>
+
+        <main class="mx-auto w-full max-w-3xl px-6 py-12 sm:px-10 lg:px-16 xl:px-20 lg:py-16">
+          <div id="billingPageRoot"></div>
+        </main>
+      </div>
+    </div>
+
+    <script src="/billingPage.js"></script>
+    <script>
+      const JWT_KEY = "snapapi_jwt";
+
+      /**
+       * Optional: your NOWPayments payment link, e.g. https://nowpayments.io/payment/?iid=...
+       * Leave empty to open in-app crypto checkout (`/checkout`).
+       */
+      const MANAGE_SUBSCRIPTION_URL = "";
+
+      function authHeaders() {
+        const t = localStorage.getItem(JWT_KEY);
+        const h = {};
+        if (t) h.Authorization = "Bearer " + t;
+        return h;
+      }
+
+      function initialsFromEmail(email) {
+        const s = String(email || "").trim();
+        if (!s) return "?";
+        const local = s.split("@")[0] || s;
+        return local.slice(0, 2).toUpperCase();
+      }
+
+      async function hydrateUser() {
+        const r = await fetch("/api/user/me", {
+          headers: authHeaders(),
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (r.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) return;
+        const email = d.email || "";
+        document.getElementById("userEmailSide").textContent = email;
+        document.getElementById("userEmailTop").textContent = email;
+        document.getElementById("userAvatar").textContent = initialsFromEmail(email);
+      }
+
+      document.querySelectorAll(".snap-logout").forEach((b) => {
+        b.onclick = async () => {
+          localStorage.removeItem(JWT_KEY);
+          await fetch("/auth/logout", { method: "POST", credentials: "include" });
+          window.location.href = "/login";
+        };
+      });
+
+      hydrateUser();
+      SnapapiBillingPage.mount(document.getElementById("billingPageRoot"), {
+        getAuthHeaders: authHeaders,
+        manageSubscriptionUrl: MANAGE_SUBSCRIPTION_URL.trim() || undefined,
+      });
+    </script>
+  </body>
+</html>

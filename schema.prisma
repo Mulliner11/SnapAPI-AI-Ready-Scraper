@@ -18,7 +18,8 @@ model User {
   expiresAt DateTime?
   createdAt DateTime  @default(now())
 
-  orders Order[]
+  orders      Order[]
+  requestLogs RequestLog[]
 
   @@map("app_users")
 }
@@ -41,6 +42,22 @@ model Order {
   @@index([paymentId])
   @@index([orderRef])
   @@map("app_orders")
+}
+
+model RequestLog {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  url          String
+  status       Int
+  duration     Int
+  responseSize Int
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("app_request_logs")
 }
 
 /// One-time magic link tokens (plain token never stored; SHA-256 hash only).

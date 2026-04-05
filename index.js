@@ -27,6 +27,11 @@ import { postPaymentCreateInvoice } from "./paymentCreateInvoice.js";
 import { postNowpaymentsWebhook } from "./nowpaymentsWebhook.js";
 import { getUserIdFromRequest } from "./authContext.js";
 import { getAuthVerify, postAuthPendingRedirect, postAuthSendMagicLink } from "./authMagicLinkApi.js";
+import { getUserPlanPayloadByEmail } from "./userPlanApi.js";
+import {
+  listRequestLogsForLegacyUserId,
+  recordPrismaRequestLogForScrape,
+} from "./requestLogsService.js";
 
 /** HMAC for NOWPayments IPN lives in `nowpaymentsIpn.js` (`import crypto from "node:crypto"`). */
 
@@ -216,6 +221,14 @@ async function registerRoutes() {
     return sendCwdFile(reply, "paymentConfirmModal.js", "application/javascript; charset=utf-8");
   });
 
+  fastify.get("/logsPage.js", async (request, reply) => {
+    return sendCwdFile(reply, "logsPage.js", "application/javascript; charset=utf-8");
+  });
+
+  fastify.get("/billingPage.js", async (request, reply) => {
+    return sendCwdFile(reply, "billingPage.js", "application/javascript; charset=utf-8");
+  });
+
   fastify.get("/login", async (request, reply) => {
     return sendCwdFile(reply, "login.html", "text/html; charset=utf-8");
   });
@@ -238,6 +251,14 @@ async function registerRoutes() {
 
   fastify.get("/dashboard/mcp", async (request, reply) => {
     return sendCwdFile(reply, "dashboard-mcp.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/dashboard/logs", async (request, reply) => {
+    return sendCwdFile(reply, "dashboard-logs.html", "text/html; charset=utf-8");
+  });
+
+  fastify.get("/dashboard/billing", async (request, reply) => {
+    return sendCwdFile(reply, "dashboard-billing.html", "text/html; charset=utf-8");
   });
 
   fastify.get("/docs", async (request, reply) => {
@@ -367,6 +388,25 @@ async function registerRoutes() {
     });
   });
 
+  fastify.get("/api/user/plan", async (request, reply) => {
+    reply.header("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    reply.header("Pragma", "no-cache");
+    const uid = await getUserIdFromRequest(request);
+    if (!uid) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    const pool = getPool();
+    if (!pool) {
+      return reply.code(503).send({ error: "Database not configured" });
+    }
+    const row = await getUserDashboardRow(uid);
+    if (!row) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    const payload = await getUserPlanPayloadByEmail(row.email, row.plan);
+    return reply.send(payload);
+  });
+
   /** Session or Bearer JWT. Returns new api_key (old key invalidated). */
   fastify.post("/api/user/rotate-key", async (request, reply) => {
     const pool = getPool();
@@ -430,6 +470,21 @@ async function registerRoutes() {
     });
   });
 
+  fastify.get("/api/dashboard/request-logs", async (request, reply) => {
+    reply.header("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    reply.header("Pragma", "no-cache");
+    const pool = getPool();
+    if (!pool) {
+      return reply.code(503).send({ error: "Database not configured" });
+    }
+    const uid = await getUserIdFromRequest(request);
+    if (!uid) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    const logs = await listRequestLogsForLegacyUserId(uid, 20);
+    return reply.send({ logs });
+  });
+
   fastify.post(
     "/api/scrape",
     {
@@ -440,6 +495,7 @@ async function registerRoutes() {
     },
     async (request, reply) => {
       const user = request.snapUser;
+      const scrapeStarted = Date.now();
       let sourceUrl = "";
       try {
         sourceUrl = normalizeSourceUrl(request.body.url);
@@ -455,21 +511,42 @@ async function registerRoutes() {
           await recordScrapeRequest(user.id, sourceUrl, 200, { rawTokensEst, cleanTokensEst });
         }
 
-        return reply.send({ title, markdown, text_content, metadata });
+        const payload = { title, markdown, text_content, metadata };
+        const durationMs = Date.now() - scrapeStarted;
+        const responseSize = Buffer.byteLength(JSON.stringify(payload), "utf8");
+        if (user?.id && getPool()) {
+          await recordPrismaRequestLogForScrape(user, {
+            url: sourceUrl,
+            status: 200,
+            durationMs,
+            responseSize,
+          });
+        }
+
+        return reply.send(payload);
       } catch (err) {
         const code = Number(err?.statusCode);
         const st = code >= 400 && code < 600 ? code : 500;
         const logUrl =
           sourceUrl ||
           (typeof request.body?.url === "string" ? String(request.body.url).slice(0, 2000) : "(invalid url)");
+        const errBody = { error: err?.message || "Scrape failed" };
+        const durationMs = Date.now() - scrapeStarted;
+        const responseSize = Buffer.byteLength(JSON.stringify(errBody), "utf8");
         if (user?.id && getPool()) {
           try {
             await recordScrapeRequest(user.id, logUrl, st, null);
           } catch (logErr) {
             request.log.error(logErr, "[scrape] recordScrapeRequest");
           }
+          await recordPrismaRequestLogForScrape(user, {
+            url: logUrl,
+            status: st,
+            durationMs,
+            responseSize,
+          });
         }
-        return reply.code(st).send({ error: err?.message || "Scrape failed" });
+        return reply.code(st).send(errBody);
       }
     }
   );

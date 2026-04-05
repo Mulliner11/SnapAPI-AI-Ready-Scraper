@@ -52,10 +52,20 @@
       class="sticky top-0 z-30 flex min-h-[8.5rem] items-center justify-between gap-4 border-b border-white/15 bg-zinc-950/95 px-6 py-6 backdrop-blur-xl md:hidden"
     >
       <a href="/" class="text-5xl font-bold tracking-tight text-white">SnapAPI</a>
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        <a
+          href="/dashboard/billing"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          >Billing</a
+        >
+        <a
+          href="/dashboard/logs"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
+          >Logs</a
+        >
         <a
           href="/dashboard/mcp"
-          class="rounded-xl border border-white/15 bg-white/[0.04] px-8 py-5 text-base font-semibold text-zinc-200"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-5 text-sm font-semibold text-zinc-200"
           >MCP</a
         >
         <button
@@ -82,6 +92,16 @@
               href="/dashboard"
               class="rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-8 py-6 text-xl font-semibold text-white shadow-sm"
               >Dashboard</a
+            >
+            <a
+              href="/dashboard/logs"
+              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              >Request log</a
+            >
+            <a
+              href="/dashboard/billing"
+              class="rounded-xl border border-white/10 bg-transparent px-8 py-6 text-xl font-semibold text-zinc-400 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-zinc-100"
+              >Billing</a
             >
             <a
               href="/dashboard/mcp"
