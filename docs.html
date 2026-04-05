@@ -24,7 +24,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/design-system.css" />
+    <link rel="stylesheet" href="/globals.css" />
     <script src="/ds-tailwind-config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -58,7 +58,7 @@
       }
     </style>
   </head>
-  <body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
+  <body class="min-h-screen bg-white font-sans text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
     <div id="ds-marketing-header-root"></div>
     <div class="mx-auto flex max-w-6xl flex-col gap-0 lg:flex-row">
       <!-- Sidebar -->
@@ -68,39 +68,39 @@
         <nav class="flex gap-1 overflow-x-auto px-4 py-4 lg:flex-col lg:gap-0.5 lg:px-5 lg:py-8" id="docNav" aria-label="Documentation">
           <a
             href="#authentication"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-white hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Authentication</a
           >
           <a
             href="#endpoints"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-white hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Endpoints</a
           >
           <a
             href="#parameters"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-white hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Parameters</a
           >
           <a
             href="#errors"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-white hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Errors</a
           >
           <a
             href="#limits"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-white hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >Limits</a
           >
           <a
             href="#sdk"
-            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
+            class="nav-link whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-600 transition hover:border-neutral-200 hover:bg-white hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-neutral-200"
             >SDK</a
           >
         </nav>
       </aside>
 
       <!-- Main -->
-      <main class="min-w-0 flex-1 bg-neutral-50 px-6 py-10 dark:bg-neutral-950 lg:max-w-none lg:pl-10 lg:pr-12">
+      <main class="min-w-0 flex-1 bg-white px-6 py-10 dark:bg-neutral-950 lg:max-w-none lg:pl-10 lg:pr-12">
         <p class="text-xs font-medium uppercase tracking-widest text-violet-600 dark:text-violet-400/90">Reference</p>
         <h1 class="mt-2 text-3xl font-semibold tracking-tight text-neutral-900 dark:text-white">SnapAPI HTTP API</h1>
         <p class="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
@@ -183,21 +183,21 @@
           <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Errors usually return JSON: <code class="text-indigo-200/80">{ "error": "..." }</code>.</p>
 
           <div class="mt-6 space-y-3">
-            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.02] p-4">
+            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="font-mono text-lg font-semibold text-amber-200">400</span>
                 <span class="text-sm text-neutral-700 dark:text-neutral-300">Bad Request</span>
               </div>
               <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Body failed validation (e.g. missing <code class="text-indigo-200/80">url</code>, wrong types, or numeric out of range).</p>
             </div>
-            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.02] p-4">
+            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="font-mono text-lg font-semibold text-amber-200">401</span>
                 <span class="text-sm text-neutral-700 dark:text-neutral-300">Unauthorized</span>
               </div>
               <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Missing <code class="text-indigo-200/80">x-api-key</code>, or the key is not in the database.</p>
             </div>
-            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.02] p-4">
+            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="font-mono text-lg font-semibold text-amber-200">429</span>
                 <span class="text-sm text-neutral-700 dark:text-neutral-300">Too Many Requests</span>
@@ -207,7 +207,7 @@
                 <code class="text-neutral-500 dark:text-neutral-500">Quota exceeded for current period</code>).
               </p>
             </div>
-            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.02] p-4">
+            <div class="rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-4">
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="font-mono text-lg font-semibold text-amber-200">500</span>
                 <span class="text-sm text-neutral-700 dark:text-neutral-300">Internal Server Error</span>

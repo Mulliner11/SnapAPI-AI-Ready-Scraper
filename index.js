@@ -242,7 +242,12 @@ async function registerRoutes() {
     return sendCwdFile(reply, "logo.svg", "image/svg+xml; charset=utf-8");
   });
 
+  fastify.get("/logo.png", async (_request, reply) => {
+    return sendCwdFile(reply, "logo.png", "image/png");
+  });
+
   for (const [path, file, contentType] of [
+    ["/globals.css", "globals.css", "text/css; charset=utf-8"],
     ["/design-system.css", "design-system.css", "text/css; charset=utf-8"],
     ["/ds-tailwind-config.js", "ds-tailwind-config.js", "application/javascript; charset=utf-8"],
     ["/ds-marketing-header-boot.js", "ds-marketing-header-boot.js", "application/javascript; charset=utf-8"],
