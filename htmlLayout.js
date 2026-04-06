@@ -4,7 +4,7 @@
  * Global base styles: `/globals.css`.
  *
  * Marketing chrome: `<div id="ds-marketing-header-root"></div>` + `/ds-marketing-header-boot.js` defer.
- * Brand mark: inline SVG (asymmetric particles + stream bar, `fill="currentColor"`, `h-8`) + wordmark “SnapAPI” (`text-xl font-bold tracking-tighter`) in headers, hero, and dashboards.
+ * Brand: `/logo.svg` lockup via `<img alt="SnapAPI" class="h-8 w-auto object-contain block" />` in marketing header partial and dashboard shells (no inline SVG).
  */
 
 export const SNAPAPI_LAYOUT = {
@@ -13,6 +13,7 @@ export const SNAPAPI_LAYOUT = {
   landingThemeJs: "/landing-theme.js",
   marketingHeaderBootJs: "/ds-marketing-header-boot.js",
   marketingHeaderPartial: "/partials/marketing-header.html",
-  /** Legacy PNG route still served; UI uses inline SVG + text. */
+  logoSvg: "/logo.svg",
+  /** Legacy asset; UI prefers `logoSvg`. */
   logoPng: "/logo.png",
 };

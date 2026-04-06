@@ -26,7 +26,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Brand mark: inline SVG (asymmetric data-flow mark, h-8) + “SnapAPI” wordmark in HTML (fill="currentColor"). */
+/* Brand: single <img src="/logo.svg" class="h-8 w-auto object-contain block" /> in headers (see partials + dashboards). */
 
 ::selection {
   background: rgba(191, 219, 254, 0.9);
