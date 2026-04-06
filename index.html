@@ -55,12 +55,16 @@
         <div class="relative flex h-14 items-center justify-between gap-4">
           <a
             href="/"
-            class="flex shrink-0 cursor-pointer items-center transition-opacity hover:opacity-80"
+            class="flex shrink-0 cursor-pointer items-center gap-2 text-gray-900 transition-opacity hover:opacity-80 dark:text-white"
             aria-label="SnapAPI home"
           >
-            <span class="snapapi-nav-logo">
-              <img src="/logo.png" alt="" decoding="async" />
-            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6 shrink-0" aria-hidden="true">
+              <rect x="2" y="2" width="9" height="9" rx="2" fill="currentColor" />
+              <rect x="13" y="2" width="9" height="9" rx="2" fill="currentColor" />
+              <rect x="2" y="13" width="9" height="9" rx="2" fill="currentColor" />
+              <rect x="13" y="13" width="9" height="9" rx="2" fill="currentColor" />
+            </svg>
+            <span class="text-lg font-semibold tracking-tight">SnapAPI</span>
           </a>
           <nav
             class="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 text-sm font-medium text-gray-900 md:flex"
@@ -343,77 +347,131 @@
       </div>
     </div>
 
-    <div class="border-t border-gray-200 bg-white py-24 dark:border-white/10 dark:bg-zinc-950">
+    <div class="border-t border-gray-200 bg-white dark:border-white/10 dark:bg-zinc-950">
       <div class="mx-auto max-w-7xl px-6 sm:px-8">
       <!-- Pricing -->
       <section
         id="pricing"
-        class="mb-24 mt-0 scroll-mt-24 rounded-lg border border-gray-200 bg-[#f9fafb] p-8 dark:border-white/10 dark:bg-zinc-900 md:mt-2 md:p-10"
+        class="scroll-mt-24 py-24 mb-24 dark:border-white/10"
         aria-labelledby="pricing-heading"
       >
-        <div class="mb-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
-          <span class="shrink-0 text-[11px] font-bold uppercase tracking-[0.22em] text-gray-600 dark:text-gray-400">Plans</span>
-          <div class="h-px flex-1 bg-gray-200 dark:bg-white/10" aria-hidden="true"></div>
-        </div>
-        <h2 id="pricing-heading" class="text-2xl font-semibold tracking-tight leading-tight text-gray-900 md:text-3xl dark:text-white">Pricing</h2>
-        <p class="mt-2 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
-          Three tiers: free to try, production-grade Pro, and Business for teams. All paid plans bill monthly via NOWPayments (300+ cryptocurrencies).
-        </p>
+        <header class="mb-12 max-w-2xl">
+          <h2 id="pricing-heading" class="text-2xl font-semibold tracking-tight text-gray-900 md:text-3xl dark:text-white">
+            Pricing
+          </h2>
+          <p class="mt-3 text-sm leading-relaxed text-gray-900 dark:text-gray-200">
+            Three tiers: try free, run production workloads on Pro, or scale with Business. Paid plans bill monthly via NOWPayments (300+ cryptocurrencies).
+          </p>
+        </header>
 
-        <div class="mt-10 grid gap-6 lg:grid-cols-3">
-          <article class="flex flex-col rounded-lg border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-zinc-950">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Free</h3>
-            <p class="mt-4 text-3xl font-semibold tabular-nums text-gray-900 dark:text-white">
-              $0<span class="text-lg font-normal text-gray-600 dark:text-gray-400"> / mo</span>
-            </p>
-            <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">200 scrape calls / mo</p>
-            <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">Trying the API &amp; light workflows</p>
-            <ul class="mt-4 flex-1 list-inside list-disc space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li>Markdown + metadata output</li>
-              <li>Dashboard &amp; API key</li>
-            </ul>
-            <a href="/login" class="btn-primary btn-primary--lg mt-8 w-full">Get started</a>
-          </article>
-
-          <article class="relative flex flex-col rounded-lg border border-gray-200 border-t-2 border-t-blue-600 bg-white p-6 pt-7 dark:border-white/10 dark:bg-zinc-950 dark:border-t-blue-500">
-            <span
-              class="absolute right-4 top-4 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-700 dark:border-white/10 dark:bg-zinc-900 dark:text-gray-300"
-              >Popular</span
+        <div class="grid gap-6 lg:grid-cols-3 lg:items-stretch">
+          <article
+            class="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-white/10 dark:bg-zinc-950"
+            aria-labelledby="plan-free-heading"
+          >
+            <div class="flex flex-1 flex-col space-y-6">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 id="plan-free-heading" class="text-lg font-semibold text-gray-900 dark:text-white">Free</h3>
+              </div>
+              <p class="tabular-nums text-gray-900 dark:text-white">
+                <span class="text-4xl font-bold">$0</span><span class="text-sm font-normal text-gray-500 dark:text-gray-400"> / mo</span>
+              </p>
+              <p class="text-sm leading-relaxed text-gray-900 dark:text-gray-200">
+                For testing the API and low-volume workflows
+              </p>
+              <ul class="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-900 dark:text-gray-200">
+                <li>200 credits per month</li>
+                <li>Clean Markdown output</li>
+                <li>Basic community support</li>
+              </ul>
+            </div>
+            <a
+              href="/login"
+              class="mt-8 inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >Get started</a
             >
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pro</h3>
-            <p class="mt-4 text-3xl font-semibold tabular-nums text-gray-900 dark:text-white">
-              $29<span class="text-lg font-normal text-gray-600 dark:text-gray-400"> / mo</span>
-            </p>
-            <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">5,000 scrape calls / mo</p>
-            <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">Production apps, agents &amp; full feature access</p>
-            <ul class="mt-4 flex-1 list-inside list-disc space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li>All advanced scrape options</li>
-              <li>Email support</li>
-            </ul>
-            <button type="button" data-subscribe-plan="pro" class="subscribe-open btn-primary btn-primary--lg mt-8 w-full">Subscribe</button>
           </article>
 
-          <article class="flex flex-col rounded-lg border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-zinc-950">
-            <span
-              class="self-start rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-700 dark:border-white/10 dark:bg-zinc-900 dark:text-gray-300"
-              >Teams</span
+          <article
+            class="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-white/10 dark:bg-zinc-950"
+            aria-labelledby="plan-pro-heading"
+          >
+            <div class="flex flex-1 flex-col space-y-6">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 id="plan-pro-heading" class="text-lg font-semibold text-gray-900 dark:text-white">Pro</h3>
+                <span
+                  class="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:border-white/10 dark:bg-zinc-900 dark:text-gray-400"
+                  >POPULAR</span
+                >
+              </div>
+              <p class="tabular-nums text-gray-900 dark:text-white">
+                <span class="text-4xl font-bold">$29</span><span class="text-sm font-normal text-gray-500 dark:text-gray-400"> / mo</span>
+              </p>
+              <p class="text-sm leading-relaxed text-gray-900 dark:text-gray-200">
+                For production agents and high-performance apps
+              </p>
+              <ul class="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-900 dark:text-gray-200">
+                <li>5,000 credits per month</li>
+                <li>Metadata &amp; JSON extraction</li>
+                <li>Priority email support</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              data-subscribe-plan="pro"
+              class="subscribe-open mt-8 inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-700"
             >
-            <h3 class="mt-3 text-lg font-semibold text-gray-900 dark:text-white">Business</h3>
-            <p class="mt-4 text-3xl font-semibold tabular-nums text-gray-900 dark:text-white">
-              $89<span class="text-lg font-normal text-gray-600 dark:text-gray-400"> / mo</span>
-            </p>
-            <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">50,000 scrape calls / mo</p>
-            <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">Teams, higher volume &amp; priority support</p>
-            <ul class="mt-4 flex-1 list-inside list-disc space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li>Team-friendly scale</li>
-              <li>Priority support</li>
-            </ul>
-            <button type="button" data-subscribe-plan="business" class="subscribe-open btn-primary btn-primary--lg mt-8 w-full">Subscribe</button>
+              Subscribe
+            </button>
+          </article>
+
+          <article
+            class="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-white/10 dark:bg-zinc-950"
+            aria-labelledby="plan-business-heading"
+          >
+            <div class="flex flex-1 flex-col space-y-6">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 id="plan-business-heading" class="text-lg font-semibold text-gray-900 dark:text-white">Business</h3>
+                <span
+                  class="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:border-white/10 dark:bg-zinc-900 dark:text-gray-400"
+                  >TEAMS</span
+                >
+              </div>
+              <p class="tabular-nums text-gray-900 dark:text-white">
+                <span class="text-4xl font-bold">$89</span><span class="text-sm font-normal text-gray-500 dark:text-gray-400"> / mo</span>
+              </p>
+              <p class="text-sm leading-relaxed text-gray-900 dark:text-gray-200">
+                For teams requiring scale and dedicated support
+              </p>
+              <ul class="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-900 dark:text-gray-200">
+                <li>50,000 credits per month</li>
+                <li>Shared team usage</li>
+                <li>Dedicated account manager</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              data-subscribe-plan="business"
+              class="subscribe-open mt-8 inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Subscribe
+            </button>
           </article>
         </div>
 
-        <p class="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">Cheaper than building and maintaining your own scraper.</p>
-        <p class="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">Powered by NOWPayments. We accept 300+ cryptocurrencies.</p>
+        <footer class="mt-12 space-y-2 text-center">
+          <p class="text-sm text-gray-900 dark:text-gray-200">Cheaper than building and maintaining your own scraper.</p>
+          <p class="text-xs text-gray-900 dark:text-gray-300">Powered by NOWPayments. We accept 300+ cryptocurrencies.</p>
+          <p class="text-xs text-gray-900 dark:text-gray-300">
+            Contact us:
+            <a
+              class="font-medium text-blue-600 underline-offset-2 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+              href="mailto:ritchiemulliner@outlook.com"
+              >ritchiemulliner@outlook.com</a
+            >
+            for billing, plans, or support.
+          </p>
+        </footer>
       </section>
 
       <!-- Docs / Quickstart -->
@@ -478,8 +536,8 @@
               <a
                 id="footer-support-link"
                 class="text-gray-600 transition hover:text-blue-600 dark:hover:text-blue-400"
-                href="#"
-                >Support</a
+                href="mailto:ritchiemulliner@outlook.com"
+                >Email support</a
               >
             </div>
           </div>
@@ -489,8 +547,9 @@
           <a
             id="footer-contact-link"
             class="text-blue-600 underline-offset-2 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
-            href="#"
-          ></a>
+            href="mailto:ritchiemulliner@outlook.com"
+            >ritchiemulliner@outlook.com</a
+          >
         </p>
         <p class="mt-8 text-center text-[11px] text-gray-600 lg:text-left dark:text-gray-400">© SnapAPI. All rights reserved.</p>
       </footer>
@@ -501,17 +560,6 @@
     <script src="./app.js"></script>
     <script>
       (function () {
-        function injectFooterEmail() {
-          var local = ["hello", "@", "getsnapapi", ".", "uk"].join("");
-          var contact = document.getElementById("footer-contact-link");
-          if (contact) {
-            contact.textContent = local;
-            contact.href = "mailto:" + local;
-          }
-          var support = document.getElementById("footer-support-link");
-          if (support) support.href = "mailto:" + local;
-        }
-        injectFooterEmail();
         (async function () {
           try {
             var jwt = localStorage.getItem("snapapi_jwt");

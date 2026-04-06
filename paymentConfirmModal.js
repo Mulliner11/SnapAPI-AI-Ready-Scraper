@@ -3,7 +3,7 @@
  * Exposes: window.snapapiOpenPaymentConfirmation(onContinue)
  */
 (function () {
-  const SUPPORT_EMAIL = "support@getsnapapi.uk";
+  const SUPPORT_EMAIL = "ritchiemulliner@outlook.com";
 
   function closeModal(root) {
     root.classList.add("hidden");

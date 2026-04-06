@@ -4,7 +4,7 @@
  * Global base styles: `/globals.css`.
  *
  * Marketing chrome: `<div id="ds-marketing-header-root"></div>` + `/ds-marketing-header-boot.js` defer.
- * Logo: `/logo.png` as CSS background, `background-size: 100% 200%`, `background-position: top`, 140×32 — shows light (top) half only.
+ * Brand mark: inline SVG (2×2 rounded squares, `fill="currentColor"`, `h-6`) + wordmark “SnapAPI” in the header partial and dashboard shells.
  */
 
 export const SNAPAPI_LAYOUT = {
@@ -13,5 +13,6 @@ export const SNAPAPI_LAYOUT = {
   landingThemeJs: "/landing-theme.js",
   marketingHeaderBootJs: "/ds-marketing-header-boot.js",
   marketingHeaderPartial: "/partials/marketing-header.html",
+  /** Legacy PNG route still served; UI uses inline SVG + text. */
   logoPng: "/logo.png",
 };
