@@ -1,22 +1,24 @@
 <header class="sticky top-0 z-50 border-b border-gray-200 bg-white">
   <div class="mx-auto max-w-7xl px-6 sm:px-8">
-    <div class="relative flex h-14 items-center justify-between gap-4">
+    <div
+      class="flex h-14 items-center justify-between gap-4 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-baseline md:justify-between md:gap-x-4"
+    >
       <a
         href="/"
-        class="flex shrink-0 cursor-pointer items-center transition-opacity hover:opacity-80"
+        class="inline-block shrink-0 cursor-pointer transition-opacity hover:opacity-80 md:justify-self-start md:self-baseline"
         aria-label="SnapAPI home"
       >
-        <img src="/logo.svg" alt="SnapAPI" class="h-8 w-auto object-contain block shrink-0 max-w-none" />
+        <img src="/logo.svg" alt="SnapAPI" class="h-7 w-auto block" />
       </a>
       <nav
-        class="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 text-sm font-medium text-gray-900 md:flex"
+        class="hidden text-sm font-medium leading-none text-gray-900 md:flex md:items-baseline md:justify-self-center md:gap-8 md:self-baseline"
         aria-label="Primary"
       >
         <a href="/docs" class="transition hover:opacity-80">Docs</a>
         <a href="/#pricing" class="transition hover:opacity-80">Pricing</a>
         <a href="/blog" class="transition hover:opacity-80">Blog</a>
       </nav>
-      <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+      <div class="flex shrink-0 items-center gap-2 sm:gap-3 md:justify-self-end md:self-center">
         <div class="relative">
           <button
             type="button"

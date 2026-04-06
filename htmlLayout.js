@@ -4,7 +4,7 @@
  * Global base styles: `/globals.css`.
  *
  * Marketing chrome: `<div id="ds-marketing-header-root"></div>` + `/ds-marketing-header-boot.js` defer.
- * Brand: `/logo.svg` lockup via `<img alt="SnapAPI" class="h-8 w-auto object-contain block" />` in marketing header partial and dashboard shells (no inline SVG).
+ * Brand: `<img src="/logo.svg" alt="SnapAPI" class="h-7 w-auto block" />` in marketing header partial and dashboard shells (logo link contains only this img).
  */
 
 export const SNAPAPI_LAYOUT = {
