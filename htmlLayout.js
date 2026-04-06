@@ -4,7 +4,7 @@
  * Global base styles: `/globals.css`.
  *
  * Marketing chrome: `<div id="ds-marketing-header-root"></div>` + `/ds-marketing-header-boot.js` defer.
- * Brand mark: inline SVG (2×2 rounded squares, `fill="currentColor"`, `h-6`) + wordmark “SnapAPI” in the header partial and dashboard shells.
+ * Brand mark: inline SVG (asymmetric particles + stream bar, `fill="currentColor"`, `h-8`) + wordmark “SnapAPI” (`text-xl font-bold tracking-tighter`) in headers, hero, and dashboards.
  */
 
 export const SNAPAPI_LAYOUT = {
