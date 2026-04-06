@@ -10,7 +10,7 @@ export default function IndexPage() {
     <div className="ds-root min-h-screen bg-white font-sans text-gray-900 antialiased dark:bg-black dark:text-gray-100">
       {/* Hero — matches index.html hero section classes */}
       <section className="border-b border-gray-200 bg-white dark:border-white/10 dark:bg-zinc-950">
-        <div className="mx-auto max-w-7xl px-6 py-16 sm:px-8 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
           <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-600 dark:text-gray-400">
@@ -73,9 +73,9 @@ export default function IndexPage() {
         </div>
       </section>
 
-      {/* Pricing — same shell + typography rhythm as hero (max-w-7xl, px-6 sm:px-8, light table) */}
+      {/* Pricing — same shell + typography rhythm as hero (max-w-7xl, px-4 sm:px-6 lg:px-8, light table) */}
       <section id="pricing" className="scroll-mt-24 border-t border-gray-200 bg-white py-16 dark:border-white/20 dark:bg-black md:py-20">
-        <div className="mx-auto max-w-7xl px-6 sm:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
             <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.22em] text-gray-600 dark:text-gray-400">
               Plans

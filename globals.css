@@ -26,7 +26,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Brand: <img src="/logo.svg" alt="SnapAPI" class="h-7 w-auto block" /> — no wrapper styles; sits on header background. */
+/* Brand: <img src="/logo.svg" alt="SnapAPI" class="block h-10 w-auto shrink-0" /> — no wrapper styles; sits on header background. */
 
 ::selection {
   background: rgba(191, 219, 254, 0.9);

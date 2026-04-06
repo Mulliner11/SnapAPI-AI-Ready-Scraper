@@ -1,10 +1,10 @@
-<svg width="120" height="28" viewBox="0 0 120 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Mark: Rounded Square with Slash -->
-  <rect x="0" y="4" width="20" height="20" rx="5" fill="#1A1A1A"/>
-  <path d="M13.5 8L7.5 20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+<svg width="140" height="32" viewBox="0 0 140 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mark: Rounded Square with Slash - Perfectly Centered -->
+  <rect x="0" y="4" width="24" height="24" rx="6" fill="#1A1A1A"/>
+  <path d="M16 10L8 22" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
   
-  <!-- Wordmark: SnapAPI -->
-  <text x="28" y="20" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="600" fill="#1A1A1A" letter-spacing="-0.03em">
+  <!-- Wordmark: SnapAPI - Increased size and tighter tracking -->
+  <text x="34" y="23" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1A1A1A" letter-spacing="-0.04em">
     Snap<tspan font-weight="400" fill="#888888">API</tspan>
   </text>
 </svg>
