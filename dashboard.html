@@ -23,6 +23,20 @@
         font-size: 0.875rem;
         line-height: 1.65;
       }
+      @keyframes snapapi-copy-pop {
+        0% {
+          transform: scale(1);
+        }
+        40% {
+          transform: scale(0.96);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      .snapapi-copy-flash {
+        animation: snapapi-copy-pop 0.4s ease;
+      }
     </style>
   </head>
   <body class="ds-body-app min-h-screen bg-[#f9fafb] text-base text-gray-600 antialiased leading-relaxed">
@@ -176,9 +190,33 @@
                 <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm lg:p-9">
                   <p class="text-xs font-bold uppercase tracking-wider text-gray-600 lg:text-sm">Tokens saved</p>
                   <p id="insightTokens" class="mt-4 font-mono text-4xl font-semibold tabular-nums text-gray-900 lg:text-5xl">—</p>
-                  <p class="mt-3 text-sm leading-relaxed text-gray-600">
-                    vs. raw HTML (est., last 100 successful scrapes)
+                  <p class="mt-2 text-xs leading-relaxed text-gray-500">
+                    Estimated as (Raw HTML chars - Markdown chars) / 4. Total below sums your last 100 successful scrapes.
                   </p>
+                  <p id="insightTokensLastScrape" class="mt-4 text-sm font-medium text-gray-900"></p>
+                  <div id="insightTokensBarWrap" class="mt-3 hidden">
+                    <div
+                      class="flex h-2.5 w-full overflow-hidden rounded-full bg-gray-100 ring-1 ring-inset ring-gray-200/80"
+                      role="img"
+                      aria-label="Estimated token volume: cleaned output versus raw HTML on your last scrape"
+                    >
+                      <div
+                        id="insightTokensBarClean"
+                        class="h-full shrink-0 bg-blue-600 transition-[width] duration-500"
+                        style="width: 0%"
+                      ></div>
+                      <div
+                        id="insightTokensBarSaved"
+                        class="h-full shrink-0 bg-gray-300 transition-[width] duration-500"
+                        style="width: 0%"
+                      ></div>
+                    </div>
+                    <div class="mt-1.5 flex justify-between gap-2 text-[11px] text-gray-500">
+                      <span>Clean output (est. tokens)</span>
+                      <span>Removed noise (est.)</span>
+                    </div>
+                  </div>
+                  <p id="insightTokensHint" class="mt-3 text-xs leading-relaxed text-gray-600"></p>
                 </div>
                 <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm lg:p-9">
                   <p class="text-xs font-bold uppercase tracking-wider text-gray-600 lg:text-sm">Usage</p>
@@ -370,12 +408,46 @@
                 </button>
               </div>
 
+              <div
+                id="playgroundPresets"
+                class="mt-4 flex flex-col gap-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center"
+              >
+                <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">Hard examples</span>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    class="playground-preset rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+                    data-preset-url="https://polymarket.com/"
+                    title="Dense markets UI — lots of HTML noise"
+                  >
+                    Polymarket
+                  </button>
+                  <button
+                    type="button"
+                    class="playground-preset rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+                    data-preset-url="https://github.com/microsoft/vscode/blob/main/README.md"
+                    title="GitHub file page — chrome + README body"
+                  >
+                    GitHub README
+                  </button>
+                  <button
+                    type="button"
+                    class="playground-preset rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+                    data-preset-url="https://en.wikipedia.org/wiki/Artificial_intelligence"
+                    title="Long encyclopedia article"
+                  >
+                    Wikipedia (long)
+                  </button>
+                </div>
+                <span class="text-xs text-gray-500 sm:ml-auto">Fills URL and runs — see where denoise shines.</span>
+              </div>
+
               <p id="testApiErr" class="mt-4 hidden rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-base text-red-800"></p>
 
               <div id="playgroundResult" class="mt-6 hidden">
                 <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-3" role="tablist" aria-label="Response format">
                   <button type="button" class="play-tab tab-active rounded-lg border px-5 py-2.5 text-base font-semibold" data-tab="md">
-                    Markdown
+                    Compare
                   </button>
                   <button
                     type="button"
@@ -392,17 +464,76 @@
                     Metadata
                   </button>
                 </div>
-                <div class="mt-5 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <p id="testApiTitle" class="mb-3 text-sm font-semibold text-gray-900"></p>
-                  <div id="panelMd" class="play-panel max-h-[min(420px,55vh)] overflow-auto">
-                    <pre id="tabMd" class="doc-code whitespace-pre-wrap break-words text-gray-700"></pre>
+
+                <div id="playgroundPanelMd" class="playground-panel mt-5 space-y-5">
+                  <p id="testApiTitle" class="text-sm font-semibold text-gray-900"></p>
+
+                  <div
+                    class="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3"
+                    role="status"
+                    aria-live="polite"
+                    aria-label="Estimated token comparison"
+                  >
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center shadow-sm">
+                      <p class="text-[11px] font-bold uppercase tracking-wider text-gray-500">Raw</p>
+                      <p id="playgroundRawTok" class="mt-1 font-mono text-lg font-semibold tabular-nums text-gray-900 sm:text-xl">—</p>
+                    </div>
+                    <div
+                      class="rounded-xl border-2 border-emerald-500 bg-emerald-50 px-4 py-3 text-center shadow-sm ring-1 ring-emerald-500/20"
+                    >
+                      <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Saved</p>
+                      <p id="playgroundSavedPct" class="mt-1 font-mono text-xl font-bold tabular-nums text-emerald-900 sm:text-2xl">—</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center shadow-sm">
+                      <p class="text-[11px] font-bold uppercase tracking-wider text-gray-500">Clean</p>
+                      <p id="playgroundCleanTok" class="mt-1 font-mono text-lg font-semibold tabular-nums text-gray-900 sm:text-xl">—</p>
+                    </div>
                   </div>
-                  <div id="panelJson" class="play-panel hidden max-h-[min(420px,55vh)] overflow-auto">
-                    <pre id="tabJson" class="doc-code text-gray-700"></pre>
+
+                  <div class="grid min-h-0 gap-4 lg:grid-cols-2 lg:gap-5">
+                    <div class="flex min-h-[min(520px,58vh)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                      <div class="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                        <p class="text-xs font-bold uppercase tracking-wider text-gray-600">Raw HTML</p>
+                        <p id="playgroundRawMeta" class="mt-0.5 text-xs text-gray-500"></p>
+                      </div>
+                      <pre
+                        id="tabRawPreview"
+                        class="doc-code min-h-0 flex-1 overflow-auto whitespace-pre-wrap break-all p-4 text-gray-700"
+                      ></pre>
+                    </div>
+                    <div class="flex min-h-[min(520px,58vh)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                        <div>
+                          <p class="text-xs font-bold uppercase tracking-wider text-gray-600">SnapAPI Markdown</p>
+                          <p id="playgroundCleanMeta" class="mt-0.5 text-xs text-gray-500"></p>
+                        </div>
+                        <button
+                          type="button"
+                          id="copyMarkdownBtn"
+                          class="inline-flex shrink-0 items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        >
+                          Copy Markdown
+                        </button>
+                      </div>
+                      <pre
+                        id="tabMd"
+                        class="doc-code min-h-0 flex-1 overflow-auto whitespace-pre-wrap break-words p-4 text-gray-700"
+                      ></pre>
+                    </div>
                   </div>
-                  <div id="panelMeta" class="play-panel hidden max-h-[min(420px,55vh)] overflow-auto">
-                    <pre id="tabMeta" class="doc-code text-gray-700"></pre>
-                  </div>
+                </div>
+
+                <div
+                  id="playgroundPanelJson"
+                  class="playground-panel mt-5 hidden max-h-[min(520px,70vh)] overflow-auto rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+                >
+                  <pre id="tabJson" class="doc-code text-gray-700"></pre>
+                </div>
+                <div
+                  id="playgroundPanelMeta"
+                  class="playground-panel mt-5 hidden max-h-[min(520px,70vh)] overflow-auto rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+                >
+                  <pre id="tabMeta" class="doc-code text-gray-700"></pre>
                 </div>
               </div>
             </section>
@@ -548,10 +679,18 @@
         const succ = document.getElementById("insightSuccess");
         const succSub = document.getElementById("insightSuccessSub");
         const tok = document.getElementById("insightTokens");
+        const lastScrapeEl = document.getElementById("insightTokensLastScrape");
+        const barWrap = document.getElementById("insightTokensBarWrap");
+        const barClean = document.getElementById("insightTokensBarClean");
+        const barSaved = document.getElementById("insightTokensBarSaved");
+        const hintEl = document.getElementById("insightTokensHint");
         if (!hasDb) {
           succ.textContent = "—";
           succSub.textContent = "Requires database";
           tok.textContent = "—";
+          lastScrapeEl.textContent = "";
+          barWrap.classList.add("hidden");
+          hintEl.textContent = "";
           renderLogs([]);
           return;
         }
@@ -566,6 +705,47 @@
         }
         const saved = insights?.tokensSavedLast100 ?? 0;
         tok.textContent = saved > 0 ? saved.toLocaleString() : n === 0 ? "—" : "0";
+
+        const lastRaw = insights?.lastScrapeRawTokensEst;
+        const lastClean = insights?.lastScrapeCleanTokensEst;
+        if (lastRaw != null && lastRaw > 0 && lastClean != null && lastClean >= 0) {
+          const reduction = Math.max(0, Math.min(100, Math.round(((lastRaw - lastClean) / lastRaw) * 100)));
+          lastScrapeEl.textContent = "Last scrape: " + reduction + "% reduction (est.)";
+          const cleanPct = Math.min(100, (lastClean / lastRaw) * 100);
+          const savedPct = Math.max(0, 100 - cleanPct);
+          barClean.style.width = cleanPct + "%";
+          barSaved.style.width = savedPct + "%";
+          barWrap.classList.remove("hidden");
+          if (lastClean > 0) {
+            const mult = lastRaw / lastClean;
+            if (mult >= 1.15) {
+              const label =
+                mult >= 9.5
+                  ? "~10×"
+                  : mult >= 3
+                    ? mult.toFixed(1) + "×"
+                    : mult.toFixed(1) + "×";
+              hintEl.textContent =
+                "Without SnapAPI, that page could cost roughly " +
+                label +
+                " more in billable tokens than sending cleaned Markdown — often a large multiple vs. OpenAI pricing.";
+            } else {
+              hintEl.textContent =
+                "Smaller payloads mean fewer tokens per request; at scale, raw HTML adds up fast on your model bill.";
+            }
+          } else {
+            hintEl.textContent =
+              "Clean output was near-empty on the last scrape; run another URL to see a fuller before/after split.";
+          }
+        } else {
+          lastScrapeEl.textContent =
+            n === 0
+              ? "Run a scrape in the playground to see per-request savings."
+              : "Per-scrape breakdown appears after your next successful scrape with token estimates.";
+          barWrap.classList.add("hidden");
+          hintEl.textContent = "";
+        }
+
         renderLogs(insights?.recentLogs || []);
       }
 
@@ -585,33 +765,145 @@
         else up.classList.add("hidden");
       }
 
+      const COPY_MD_BTN_CLASS =
+        "inline-flex shrink-0 items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2";
+
+      function resetCopyMarkdownButton() {
+        const b = document.getElementById("copyMarkdownBtn");
+        if (!b) return;
+        b.textContent = "Copy Markdown";
+        b.className = COPY_MD_BTN_CLASS;
+        b.classList.remove("snapapi-copy-flash");
+      }
+
+      function formatPlaygroundTokEst(n) {
+        if (n == null || !Number.isFinite(Number(n))) return "—";
+        return "~" + Math.round(Number(n)).toLocaleString() + " tokens";
+      }
+
       function setTab(name) {
+        const tab = name === "json" ? "json" : name === "meta" ? "meta" : "md";
         document.querySelectorAll(".play-tab").forEach((b) => {
-          const on = b.getAttribute("data-tab") === name;
+          const on = b.getAttribute("data-tab") === tab;
           b.classList.toggle("tab-active", on);
           b.classList.toggle("border-transparent", !on);
           b.classList.toggle("text-gray-600", !on);
           if (on) b.classList.remove("text-gray-600");
         });
-        document.getElementById("panelMd").classList.toggle("hidden", name !== "md");
-        document.getElementById("panelJson").classList.toggle("hidden", name !== "json");
-        document.getElementById("panelMeta").classList.toggle("hidden", name !== "meta");
+        const showMd = tab === "md";
+        document.getElementById("playgroundPanelMd").classList.toggle("hidden", !showMd);
+        document.getElementById("playgroundPanelJson").classList.toggle("hidden", tab !== "json");
+        document.getElementById("playgroundPanelMeta").classList.toggle("hidden", tab !== "meta");
       }
 
       function fillPlaygroundFromPayload(data) {
         if (!data) return;
+        resetCopyMarkdownButton();
         document.getElementById("testApiTitle").textContent = data.title || "(no title)";
-        document.getElementById("tabMd").textContent = data.markdown || data.text_content || "";
+        const md = data.markdown || data.text_content || "";
+        document.getElementById("tabMd").textContent = md;
+
+        const rawPreview = data.raw_html_preview != null ? String(data.raw_html_preview) : "";
+        const rawPre = document.getElementById("tabRawPreview");
+        if (rawPre) {
+          rawPre.textContent = rawPreview || "(No raw HTML preview in this response.)";
+        }
+
+        const rawChars = data.raw_html_char_count != null ? Number(data.raw_html_char_count) : null;
+        const cleanChars = data.clean_text_char_count != null ? Number(data.clean_text_char_count) : md.length;
+        const rawMeta = document.getElementById("playgroundRawMeta");
+        const cleanMeta = document.getElementById("playgroundCleanMeta");
+        if (rawMeta) {
+          rawMeta.textContent =
+            rawChars != null && Number.isFinite(rawChars)
+              ? rawChars.toLocaleString() + " characters in fetched HTML"
+              : "Character count unavailable";
+        }
+        if (cleanMeta) {
+          cleanMeta.textContent =
+            Number.isFinite(cleanChars) && cleanChars >= 0
+              ? cleanChars.toLocaleString() + " characters in Markdown output"
+              : "";
+        }
+
+        let rawEst = data.tokens_est_raw != null ? Number(data.tokens_est_raw) : null;
+        let cleanEst = data.tokens_est_clean != null ? Number(data.tokens_est_clean) : null;
+        if ((rawEst == null || !Number.isFinite(rawEst)) && rawChars != null && Number.isFinite(rawChars)) {
+          rawEst = Math.ceil(rawChars / 4);
+        }
+        if ((cleanEst == null || !Number.isFinite(cleanEst)) && md.length >= 0) {
+          cleanEst = Math.ceil(md.length / 4);
+        }
+
+        document.getElementById("playgroundRawTok").textContent = formatPlaygroundTokEst(rawEst);
+        document.getElementById("playgroundCleanTok").textContent = formatPlaygroundTokEst(cleanEst);
+
+        let savedLabel = "—";
+        if (rawEst != null && rawEst > 0 && cleanEst != null && Number.isFinite(cleanEst)) {
+          savedLabel = Math.max(0, Math.min(100, Math.round(((rawEst - cleanEst) / rawEst) * 100))) + "%";
+        }
+        document.getElementById("playgroundSavedPct").textContent = savedLabel;
+
         const slim = {
           title: data.title,
           markdown: data.markdown,
           text_content: data.text_content,
           metadata: data.metadata,
+          stats: data.stats,
+          raw_html_char_count: data.raw_html_char_count,
+          clean_text_char_count: data.clean_text_char_count,
+          tokens_est_raw: data.tokens_est_raw,
+          tokens_est_clean: data.tokens_est_clean,
+          raw_html_preview_omitted: true,
+          raw_html_preview_note: "Full preview is in the Compare tab; omitted here for JSON size.",
         };
         document.getElementById("tabJson").textContent = JSON.stringify(slim, null, 2);
         document.getElementById("tabMeta").textContent = JSON.stringify(data.metadata || {}, null, 2);
         document.getElementById("playgroundResult").classList.remove("hidden");
         setTab("md");
+      }
+
+      async function runPlaygroundRequest() {
+        const key = document.getElementById("apiKeyDisplay").textContent.trim();
+        const btn = document.getElementById("testApi");
+        const errEl = document.getElementById("testApiErr");
+        const rawUrl = document.getElementById("playgroundUrl").value;
+        const target = normalizePlaygroundUrl(rawUrl);
+        if (!key || key === "—") return;
+        if (!target) {
+          errEl.textContent = "Enter a valid http(s) URL.";
+          errEl.classList.remove("hidden");
+          return;
+        }
+        document.getElementById("playgroundUrl").value = target;
+        errEl.classList.add("hidden");
+        document.getElementById("playgroundResult").classList.add("hidden");
+        btn.disabled = true;
+        try {
+          const r = await fetch("/api/scrape", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", "x-api-key": key },
+            body: JSON.stringify({ url: target }),
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            errEl.textContent = data.error || data.message || "Request failed (" + r.status + ")";
+            errEl.classList.remove("hidden");
+          } else {
+            fillPlaygroundFromPayload(data);
+          }
+          const fresh = await refreshSummary();
+          if (fresh) {
+            applyUsage(fresh);
+            applyInsights(fresh.insights, true);
+          }
+        } catch (e) {
+          errEl.textContent = e?.message || String(e);
+          errEl.classList.remove("hidden");
+        } finally {
+          btn.disabled = false;
+        }
       }
 
       async function refreshSummary() {
@@ -667,6 +959,8 @@
               successRatePct: null,
               scrapeSamples: 0,
               tokensSavedLast100: 0,
+              lastScrapeRawTokensEst: null,
+              lastScrapeCleanTokensEst: null,
               recentLogs: [],
             },
           };
@@ -778,6 +1072,37 @@
         btn.addEventListener("click", () => setTab(btn.getAttribute("data-tab") || "md"));
       });
 
+      document.getElementById("playgroundPresets").addEventListener("click", (e) => {
+        const preset = e.target.closest("[data-preset-url]");
+        if (!preset) return;
+        const u = preset.getAttribute("data-preset-url");
+        if (u) {
+          document.getElementById("playgroundUrl").value = u;
+          runPlaygroundRequest();
+        }
+      });
+
+      document.getElementById("copyMarkdownBtn").addEventListener("click", async () => {
+        const md = document.getElementById("tabMd");
+        const btn = document.getElementById("copyMarkdownBtn");
+        const text = md ? md.textContent : "";
+        const emeraldClass =
+          "inline-flex shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2";
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = "Copied!";
+          btn.className = emeraldClass;
+          btn.classList.remove("snapapi-copy-flash");
+          void btn.offsetWidth;
+          btn.classList.add("snapapi-copy-flash");
+          setTimeout(() => {
+            resetCopyMarkdownButton();
+          }, 1800);
+        } catch {
+          prompt("Copy markdown:", text);
+        }
+      });
+
       document.getElementById("copyKey").onclick = async () => {
         const t = document.getElementById("apiKeyDisplay").textContent;
         const toast = document.getElementById("copyToast");
@@ -853,48 +1178,7 @@
         }
       };
 
-      document.getElementById("testApi").onclick = async () => {
-        const key = document.getElementById("apiKeyDisplay").textContent.trim();
-        const btn = document.getElementById("testApi");
-        const errEl = document.getElementById("testApiErr");
-        const rawUrl = document.getElementById("playgroundUrl").value;
-        const target = normalizePlaygroundUrl(rawUrl);
-        if (!key || key === "—") return;
-        if (!target) {
-          errEl.textContent = "Enter a valid http(s) URL.";
-          errEl.classList.remove("hidden");
-          return;
-        }
-        document.getElementById("playgroundUrl").value = target;
-        errEl.classList.add("hidden");
-        document.getElementById("playgroundResult").classList.add("hidden");
-        btn.disabled = true;
-        try {
-          const r = await fetch("/api/scrape", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json", "x-api-key": key },
-            body: JSON.stringify({ url: target }),
-          });
-          const data = await r.json().catch(() => ({}));
-          if (!r.ok) {
-            errEl.textContent = data.error || data.message || "Request failed (" + r.status + ")";
-            errEl.classList.remove("hidden");
-          } else {
-            fillPlaygroundFromPayload(data);
-          }
-          const fresh = await refreshSummary();
-          if (fresh) {
-            applyUsage(fresh);
-            applyInsights(fresh.insights, true);
-          }
-        } catch (e) {
-          errEl.textContent = e?.message || String(e);
-          errEl.classList.remove("hidden");
-        } finally {
-          btn.disabled = false;
-        }
-      };
+      document.getElementById("testApi").onclick = () => runPlaygroundRequest();
 
       document.querySelectorAll(".snap-logout").forEach((b) => {
         b.onclick = async () => {

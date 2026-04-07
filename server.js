@@ -127,6 +127,8 @@ const scrapeBodySchema = {
   },
 };
 
+const RAW_HTML_PREVIEW_MAX = 14_000;
+
 const scrapeResponseSchema = {
   type: "object",
   properties: {
@@ -142,8 +144,33 @@ const scrapeResponseSchema = {
       },
       required: ["word_count", "estimated_reading_time", "language"],
     },
+    raw_html_char_count: { type: "integer" },
+    raw_html_preview: { type: "string" },
+    clean_text_char_count: { type: "integer" },
+    tokens_est_raw: { type: "integer" },
+    tokens_est_clean: { type: "integer" },
+    stats: {
+      type: "object",
+      properties: {
+        rawSize: { type: "integer" },
+        cleanSize: { type: "integer" },
+        tokenSaved: { type: "integer" },
+      },
+      required: ["rawSize", "cleanSize", "tokenSaved"],
+    },
   },
-  required: ["title", "markdown", "text_content", "metadata"],
+  required: [
+    "title",
+    "markdown",
+    "text_content",
+    "metadata",
+    "raw_html_char_count",
+    "raw_html_preview",
+    "clean_text_char_count",
+    "tokens_est_raw",
+    "tokens_est_clean",
+    "stats",
+  ],
 };
 
 function headerApiKey(request) {
@@ -547,6 +574,8 @@ async function registerRoutes() {
         successRatePct: null,
         scrapeSamples: 0,
         tokensSavedLast100: 0,
+        lastScrapeRawTokensEst: null,
+        lastScrapeCleanTokensEst: null,
         recentLogs: [],
       },
     });
@@ -585,15 +614,34 @@ async function registerRoutes() {
           launchOptions: CHROMIUM_LAUNCH_OPTIONS,
           gotoTimeoutMs,
         });
-        const { title, markdown, text_content, metadata } = extractReadableMarkdown(html, sourceUrl);
+        const { title, markdown, text_content, metadata, stats } = extractReadableMarkdown(html, sourceUrl);
         const rawTokensEst = Math.ceil(html.length / 4);
-        const cleanTokensEst = Math.ceil(String(markdown || text_content || "").length / 4);
+        const cleanStr = String(markdown || text_content || "");
+        const cleanTokensEst = Math.ceil(cleanStr.length / 4);
+        const rawPreview =
+          html.length > RAW_HTML_PREVIEW_MAX
+            ? html.slice(0, RAW_HTML_PREVIEW_MAX) +
+              "\n\n/* … " +
+              (html.length - RAW_HTML_PREVIEW_MAX).toLocaleString("en-US") +
+              " more characters not shown */"
+            : html;
 
         if (user?.id && getPool()) {
           await recordScrapeRequest(user.id, sourceUrl, 200, { rawTokensEst, cleanTokensEst });
         }
 
-        const payload = { title, markdown, text_content, metadata };
+        const payload = {
+          title,
+          markdown,
+          text_content,
+          metadata,
+          stats,
+          raw_html_char_count: html.length,
+          raw_html_preview: rawPreview,
+          clean_text_char_count: cleanStr.length,
+          tokens_est_raw: rawTokensEst,
+          tokens_est_clean: cleanTokensEst,
+        };
         const durationMs = Date.now() - scrapeStarted;
         const responseSize = Buffer.byteLength(JSON.stringify(payload), "utf8");
         if (user?.id && getPool()) {

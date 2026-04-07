@@ -461,7 +461,7 @@ export async function getRecentLogs(userId, limit = 20) {
 }
 
 /**
- * @returns {{ successRatePct: number | null, scrapeSamples: number, tokensSavedLast100: number, recentLogs: object[] } | null}
+ * @returns {{ successRatePct: number | null, scrapeSamples: number, tokensSavedLast100: number, lastScrapeRawTokensEst: number | null, lastScrapeCleanTokensEst: number | null, recentLogs: object[] } | null}
  */
 export async function getDashboardInsights(userId) {
   if (!pool) return null;
@@ -496,6 +496,21 @@ export async function getDashboardInsights(userId) {
     [uid]
   );
 
+  const lastTokR = await pool.query(
+    `SELECT raw_tokens_est, clean_tokens_est
+     FROM request_logs
+     WHERE user_id = $1 AND endpoint = 'scrape'
+       AND COALESCE(http_status, 200) >= 200 AND COALESCE(http_status, 200) < 300
+       AND raw_tokens_est IS NOT NULL AND clean_tokens_est IS NOT NULL
+       AND raw_tokens_est > 0
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [uid]
+  );
+  const lastTok = lastTokR.rows[0];
+  const lastRaw = lastTok != null ? Number(lastTok.raw_tokens_est) : null;
+  const lastClean = lastTok != null ? Number(lastTok.clean_tokens_est) : null;
+
   const recentLogs = await getRecentLogs(uid, 5);
   const row = rateR.rows[0] || { total: 0, ok: 0 };
   const total = row.total || 0;
@@ -506,6 +521,9 @@ export async function getDashboardInsights(userId) {
     successRatePct,
     scrapeSamples: total,
     tokensSavedLast100: Number(tokR.rows[0]?.total_saved ?? 0),
+    lastScrapeRawTokensEst: Number.isFinite(lastRaw) && lastRaw > 0 ? lastRaw : null,
+    lastScrapeCleanTokensEst:
+      Number.isFinite(lastClean) && lastClean != null && lastClean >= 0 ? lastClean : null,
     recentLogs,
   };
 }
