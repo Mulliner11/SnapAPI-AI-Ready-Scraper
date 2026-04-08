@@ -88,6 +88,14 @@
 
       const red = params.get("redirect");
       const pl = params.get("plan");
+      if (red === "/playground") {
+        fetch("/api/auth/pending-redirect", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ redirect: "/playground" }),
+        }).catch(function () {});
+      }
       if (red === "/checkout" && (pl === "pro" || pl === "business")) {
         fetch("/api/auth/pending-redirect", {
           method: "POST",

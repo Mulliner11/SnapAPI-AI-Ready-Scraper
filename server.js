@@ -454,7 +454,7 @@ async function registerRoutes() {
       schema: {
         body: {
           type: "object",
-          required: ["redirect", "plan"],
+          required: ["redirect"],
           properties: {
             redirect: { type: "string", minLength: 1 },
             plan: { type: "string", enum: ["pro", "business"] },

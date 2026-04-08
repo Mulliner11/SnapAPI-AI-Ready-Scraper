@@ -507,13 +507,63 @@
                           <p class="text-xs font-bold uppercase tracking-wider text-gray-600">SnapAPI Markdown</p>
                           <p id="playgroundCleanMeta" class="mt-0.5 text-xs text-gray-500"></p>
                         </div>
-                        <button
-                          type="button"
-                          id="copyMarkdownBtn"
-                          class="inline-flex shrink-0 items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                        >
-                          Copy Markdown
-                        </button>
+                        <div class="flex shrink-0 flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            id="copyMarkdownBtn"
+                            class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                          >
+                            Copy Markdown
+                          </button>
+                          <div class="relative">
+                            <button
+                              type="button"
+                              id="playgroundDownloadBtn"
+                              disabled
+                              class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+                              aria-expanded="false"
+                              aria-haspopup="true"
+                              aria-controls="playgroundDownloadMenu"
+                              aria-disabled="true"
+                            >
+                              Download
+                              <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                            <div
+                              id="playgroundDownloadMenu"
+                              class="absolute right-0 z-[60] mt-1.5 hidden min-w-[12.5rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
+                              role="menu"
+                              aria-hidden="true"
+                            >
+                              <button
+                                type="button"
+                                role="menuitem"
+                                class="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-gray-900 transition hover:bg-gray-50"
+                                data-playground-download="md"
+                              >
+                                Markdown (.md)
+                              </button>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                class="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-gray-900 transition hover:bg-gray-50"
+                                data-playground-download="json"
+                              >
+                                JSON (.json)
+                              </button>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                class="block w-full px-3.5 py-2.5 text-left text-sm font-medium text-gray-900 transition hover:bg-gray-50"
+                                data-playground-download="csv"
+                              >
+                                CSV (.csv)
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <pre
                         id="tabMd"
@@ -766,7 +816,122 @@
       }
 
       const COPY_MD_BTN_CLASS =
-        "inline-flex shrink-0 items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2";
+        "inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2";
+
+      let lastPlaygroundFullPayload = null;
+      let lastPlaygroundSourceUrl = "";
+
+      function playgroundExportFilename(ext) {
+        return "snapapi-export-" + Date.now() + "." + ext;
+      }
+
+      function playgroundTriggerDownload(body, mimeType, ext) {
+        const blob = new Blob([body], { type: mimeType + ";charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = playgroundExportFilename(ext);
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      }
+
+      function csvEscapeCell(val) {
+        const s = String(val ?? "");
+        if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      }
+
+      function parseMarkdownTablesToCsv(md) {
+        if (!md || typeof md !== "string") return "";
+        const lines = md.split(/\r?\n/);
+        const chunks = [];
+        let i = 0;
+        while (i < lines.length) {
+          const trimmed = lines[i].trim();
+          if (!trimmed.startsWith("|")) {
+            i++;
+            continue;
+          }
+          const sepLine = (lines[i + 1] || "").trim();
+          if (!/^\|[\s\-:|]+\|\s*$/.test(sepLine)) {
+            i++;
+            continue;
+          }
+          const splitCells = (row) => {
+            const inner = row.replace(/^\|/, "").replace(/\|\s*$/, "");
+            return inner.split("|").map((c) => c.trim().replace(/\\\|/g, "|"));
+          };
+          const header = splitCells(trimmed);
+          const sepCells = splitCells(sepLine);
+          if (header.length < 2 || header.length !== sepCells.length) {
+            i++;
+            continue;
+          }
+          i += 2;
+          const dataRows = [];
+          while (i < lines.length) {
+            const rowLine = lines[i].trim();
+            if (!rowLine.startsWith("|")) break;
+            dataRows.push(splitCells(rowLine));
+            i++;
+          }
+          let block = header.map(csvEscapeCell).join(",") + "\n";
+          for (const r of dataRows) {
+            const padded = header.map((_, idx) => (r[idx] != null ? r[idx] : ""));
+            block += padded.map(csvEscapeCell).join(",") + "\n";
+          }
+          chunks.push(block.replace(/\n$/, ""));
+          continue;
+        }
+        return chunks.length ? chunks.join("\n\n") : "";
+      }
+
+      function buildPlaygroundExportCsv(payload, sourceUrl) {
+        const rows = [
+          ["key", "value"],
+          ["source_url", sourceUrl || ""],
+          ["title", payload.title || ""],
+        ];
+        const md = payload.markdown || payload.text_content || "";
+        rows.push(["markdown_char_count", String(md.length)]);
+
+        const meta = payload.metadata && typeof payload.metadata === "object" ? payload.metadata : {};
+        for (const [k, v] of Object.entries(meta)) {
+          rows.push(["metadata_" + k, typeof v === "object" ? JSON.stringify(v) : String(v)]);
+        }
+        const stats = payload.stats && typeof payload.stats === "object" ? payload.stats : {};
+        for (const [k, v] of Object.entries(stats)) {
+          rows.push(["stats_" + k, String(v)]);
+        }
+        if (payload.raw_html_char_count != null) rows.push(["raw_html_char_count", String(payload.raw_html_char_count)]);
+        if (payload.clean_text_char_count != null) rows.push(["clean_text_char_count", String(payload.clean_text_char_count)]);
+        if (payload.tokens_est_raw != null) rows.push(["tokens_est_raw", String(payload.tokens_est_raw)]);
+        if (payload.tokens_est_clean != null) rows.push(["tokens_est_clean", String(payload.tokens_est_clean)]);
+
+        let s = rows.map((r) => r.map(csvEscapeCell).join(",")).join("\n");
+        const tables = parseMarkdownTablesToCsv(md);
+        if (tables) s += "\n\n" + tables;
+        return "\ufeff" + s;
+      }
+
+      function setPlaygroundDownloadMenuOpen(open) {
+        const menu = document.getElementById("playgroundDownloadMenu");
+        const btn = document.getElementById("playgroundDownloadBtn");
+        if (!menu || !btn) return;
+        menu.classList.toggle("hidden", !open);
+        menu.setAttribute("aria-hidden", open ? "false" : "true");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+
+      function updatePlaygroundDownloadButtonState() {
+        const btn = document.getElementById("playgroundDownloadBtn");
+        if (!btn) return;
+        const ok = !!lastPlaygroundFullPayload;
+        btn.disabled = !ok;
+        btn.setAttribute("aria-disabled", ok ? "false" : "true");
+      }
 
       function resetCopyMarkdownButton() {
         const b = document.getElementById("copyMarkdownBtn");
@@ -796,8 +961,10 @@
         document.getElementById("playgroundPanelMeta").classList.toggle("hidden", tab !== "meta");
       }
 
-      function fillPlaygroundFromPayload(data) {
+      function fillPlaygroundFromPayload(data, sourceUrl) {
         if (!data) return;
+        lastPlaygroundFullPayload = data;
+        lastPlaygroundSourceUrl = sourceUrl != null ? String(sourceUrl) : "";
         resetCopyMarkdownButton();
         document.getElementById("testApiTitle").textContent = data.title || "(no title)";
         const md = data.markdown || data.text_content || "";
@@ -860,6 +1027,8 @@
         document.getElementById("tabJson").textContent = JSON.stringify(slim, null, 2);
         document.getElementById("tabMeta").textContent = JSON.stringify(data.metadata || {}, null, 2);
         document.getElementById("playgroundResult").classList.remove("hidden");
+        updatePlaygroundDownloadButtonState();
+        setPlaygroundDownloadMenuOpen(false);
         setTab("md");
       }
 
@@ -891,7 +1060,7 @@
             errEl.textContent = data.error || data.message || "Request failed (" + r.status + ")";
             errEl.classList.remove("hidden");
           } else {
-            fillPlaygroundFromPayload(data);
+            fillPlaygroundFromPayload(data, target);
           }
           const fresh = await refreshSummary();
           if (fresh) {
@@ -1087,7 +1256,7 @@
         const btn = document.getElementById("copyMarkdownBtn");
         const text = md ? md.textContent : "";
         const emeraldClass =
-          "inline-flex shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2";
+          "inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2";
         try {
           await navigator.clipboard.writeText(text);
           btn.textContent = "Copied!";
@@ -1101,6 +1270,50 @@
         } catch {
           prompt("Copy markdown:", text);
         }
+      });
+
+      document.getElementById("playgroundDownloadBtn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!lastPlaygroundFullPayload) return;
+        const menu = document.getElementById("playgroundDownloadMenu");
+        const open = menu && menu.classList.contains("hidden");
+        setPlaygroundDownloadMenuOpen(!!open);
+      });
+
+      document.getElementById("playgroundDownloadMenu").addEventListener("click", (e) => {
+        const item = e.target.closest("[data-playground-download]");
+        if (!item) return;
+        e.preventDefault();
+        if (!lastPlaygroundFullPayload) return;
+        const kind = item.getAttribute("data-playground-download");
+        const p = lastPlaygroundFullPayload;
+        if (kind === "md") {
+          const md = p.markdown || p.text_content || "";
+          playgroundTriggerDownload(md, "text/markdown", "md");
+        } else if (kind === "json") {
+          playgroundTriggerDownload(JSON.stringify(p, null, 2), "application/json", "json");
+        } else if (kind === "csv") {
+          playgroundTriggerDownload(
+            buildPlaygroundExportCsv(p, lastPlaygroundSourceUrl),
+            "text/csv",
+            "csv"
+          );
+        }
+        setPlaygroundDownloadMenuOpen(false);
+      });
+
+      document.addEventListener("click", function (e) {
+        const menu = document.getElementById("playgroundDownloadMenu");
+        if (!menu || menu.classList.contains("hidden")) return;
+        const wrap = document.getElementById("playgroundDownloadBtn")?.closest(".relative");
+        if (wrap && wrap.contains(e.target)) return;
+        setPlaygroundDownloadMenuOpen(false);
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        const menu = document.getElementById("playgroundDownloadMenu");
+        if (menu && !menu.classList.contains("hidden")) setPlaygroundDownloadMenuOpen(false);
       });
 
       document.getElementById("copyKey").onclick = async () => {
@@ -1204,6 +1417,7 @@
         });
       })();
 
+      updatePlaygroundDownloadButtonState();
       load();
     </script>
   </body>

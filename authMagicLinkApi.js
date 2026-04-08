@@ -187,6 +187,10 @@ export async function getAuthVerify(request, reply) {
     delete request.session.postLoginRedirect;
     delete request.session.postLoginPlan;
 
+    if (pendingPath === "/playground") {
+      return reply.redirect("/#landing-try-url");
+    }
+
     if (pendingPath === "/checkout" && (pendingPlan === "pro" || pendingPlan === "business")) {
       return reply.redirect(`/checkout?plan=${pendingPlan}`);
     }
@@ -207,11 +211,12 @@ export async function getAuthVerify(request, reply) {
   }
 }
 
-const ALLOWED_POST_LOGIN_PATH = "/checkout";
+const ALLOWED_POST_LOGIN_CHECKOUT = "/checkout";
+const ALLOWED_POST_LOGIN_PLAYGROUND = "/playground";
 
 /**
  * Store where to send the user after magic-link verify (same browser session).
- * Only `/checkout` is allowed to avoid open redirects.
+ * Allowlisted paths only (`/checkout` with plan, or `/playground` → home try-URL anchor).
  */
 export async function postAuthPendingRedirect(request, reply) {
   const redirect = String(request.body?.redirect ?? "").trim();
@@ -225,7 +230,13 @@ export async function postAuthPendingRedirect(request, reply) {
           ? "pro"
           : null;
 
-  if (redirect !== ALLOWED_POST_LOGIN_PATH || !plan) {
+  if (redirect === ALLOWED_POST_LOGIN_PLAYGROUND) {
+    request.session.postLoginRedirect = ALLOWED_POST_LOGIN_PLAYGROUND;
+    delete request.session.postLoginPlan;
+    return reply.send({ ok: true });
+  }
+
+  if (redirect !== ALLOWED_POST_LOGIN_CHECKOUT || !plan) {
     return reply.code(400).send({ error: "Invalid redirect or plan" });
   }
 

@@ -1,3 +1,5 @@
+const JWT_KEY = "snapapi_jwt";
+
 const urlInput = document.getElementById("urlInput");
 const apiKeyInput = document.getElementById("apiKeyInput");
 const tryScrapeBtn = document.getElementById("tryScrapeBtn");
@@ -6,6 +8,23 @@ const result = document.getElementById("result");
 const statusText = document.getElementById("statusText");
 const compareAfter = document.getElementById("compareAfter");
 const compareAfterTitle = document.getElementById("compareAfterTitle");
+
+function authHeaders() {
+  const h = {};
+  const t = localStorage.getItem(JWT_KEY);
+  if (t) h.Authorization = "Bearer " + t;
+  return h;
+}
+
+async function isUserLoggedIn() {
+  const r = await fetch("/api/user/me", {
+    credentials: "include",
+    headers: authHeaders(),
+  });
+  if (!r.ok) return false;
+  const d = await r.json().catch(() => ({}));
+  return !!(d.apiKey || d.api_key);
+}
 
 const savedKey = localStorage.getItem("snapapi_demo_key");
 if (apiKeyInput) {
@@ -76,6 +95,11 @@ function setAfterSuccess(title, markdown) {
 }
 
 async function runScrape() {
+  if (!(await isUserLoggedIn())) {
+    window.location.href = "/login?redirect=" + encodeURIComponent("/playground");
+    return;
+  }
+
   const normalizedUrl = normalizeInputUrl(urlInput?.value);
   if (!normalizedUrl) {
     if (result) result.classList.remove("hidden");
@@ -139,29 +163,10 @@ if (urlInput) {
 }
 
 (function initSubscribePricing() {
-  const JWT_KEY = "snapapi_jwt";
-
-  function authHeaders() {
-    const h = {};
-    const t = localStorage.getItem(JWT_KEY);
-    if (t) h.Authorization = "Bearer " + t;
-    return h;
-  }
-
-  async function isLoggedIn() {
-    const r = await fetch("/api/user/me", {
-      credentials: "include",
-      headers: authHeaders(),
-    });
-    if (!r.ok) return false;
-    const d = await r.json().catch(() => ({}));
-    return !!(d.apiKey || d.api_key);
-  }
-
   async function onSubscribeClick(plan) {
     const p = plan === "business" ? "business" : "pro";
     async function navigate() {
-      if (await isLoggedIn()) {
+      if (await isUserLoggedIn()) {
         window.location.href = "/checkout?plan=" + encodeURIComponent(p);
         return;
       }
