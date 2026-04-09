@@ -1,77 +1,51 @@
-# Screenshot API (Fastify + Playwright + Cloudflare R2)
+# 🚀 SnapAPI: AI-Ready Web Scraper & Data Pipeline
 
-This service exposes two endpoints to generate web page screenshots and PDFs, then uploads the result to **Cloudflare R2** (S3-compatible) and returns a public URL.
+**SnapAPI** is a high-performance web scraping engine designed specifically for the AI era. It transforms any messy URL into clean, denoised Markdown or structured JSON, ready to be fed into LLMs (GPT-4, Claude, Gemini) or RAG pipelines.
 
-## Endpoints
+[🌐 Live Demo](https://getsnapapi.uk) | [📖 Documentation](https://getsnapapi.uk/docs) | [📦 MCP Server Included](#-mcp-integration)
 
-### `POST /screenshot`
+---
 
-Request body (JSON):
-```json
-{
-  "url": "https://example.com"
-}
-```
+## ✨ Key Features
 
-Response (200):
-```json
-{
-  "status": "success",
-  "message": "Screenshot saved",
-  "path": "https://<public-r2-base-url>/screenshot-<timestamp>.png"
-}
-```
+- **🎯 Extreme Denoising:** Automatically removes headers, footers, navbars, and ads. Focus only on the content that matters.
+- **💰 Token Efficiency:** Reduces token usage by up to 90% compared to raw HTML.
+- **🔌 MCP Ready:** Built-in Model Context Protocol (MCP) server for native integration with Claude Desktop and Cursor.
+- **⚡ Production-Grade:** Built with Node.js (Fastify) and Playwright (Chromium) for speed and reliability.
+- **🛠 Developer First:** Clean API, one-click downloads (MD/JSON/CSV), and easy self-hosting.
 
-### `POST /pdf`
+---
 
-Request body (JSON):
-```json
-{
-  "url": "https://example.com"
-}
-```
+## 🚀 Quick Start (API)
 
-Response (200):
-```json
-{
-  "status": "success",
-  "message": "PDF saved",
-  "path": "https://<public-r2-base-url>/export-<timestamp>.pdf"
-}
-```
-
-## Authentication (API Key)
-
-Every request must include the header:
-
-`x-api-key: <MASTER_API_KEY>`
-
-If the key is missing or invalid, the API returns `401`.
-
-Example with curl:
 ```bash
-curl -X POST http://localhost:3000/screenshot \
+curl -X POST https://getsnapapi.uk/api/scrape \
   -H "Content-Type: application/json" \
-  -H "x-api-key: sk-test-666" \
-  -d '{"url":"https://example.com"}'
-```
+  -H "x-api-key: YOUR_API_KEY" \
+  -d '{"url": "https://example.com"}'
+  🔌 MCP Integration
+SnapAPI supports the Model Context Protocol. To use it in Claude Desktop, add this to your claude_desktop_config.json:
+{
+  "mcpServers": {
+    "snapapi": {
+      "command": "npx",
+      "args": ["-y", "@mulliner/snapapi-mcp"]
+    }
+  }
+}
+🛠 Tech Stack
+Backend: Node.js (ESM), Fastify
 
-## Environment variables
+Scraping: Playwright (Chromium)
 
-The service reads configuration from environment variables (you can use `.env` locally).
+Database: PostgreSQL + Prisma
 
-- `MASTER_API_KEY`
-- `R2_ENDPOINT`
-- `R2_ACCESS_KEY_ID`
-- `R2_SECRET_ACCESS_KEY`
-- `R2_BUCKET_NAME`
-- `R2_PUBLIC_BASE_URL`
+Infrastructure: Docker, Railway
 
-## Run locally
+📄 License
+Distributed under the MIT License. See LICENSE for more information.
 
-```bash
-npm install
-npm start
-```
+🤝 Contributing
+This is an open-source project. Feel free to fork, submit PRs, or open issues!
 
-# my-screenshot-api
+Built with ❤️ by a Solo Dev.
